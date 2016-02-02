@@ -1,0 +1,43 @@
+﻿    //==============================================================================================================
+    // WEB SOCKET SPECIFIC CODE BELOW
+    //==============================================================================================================
+
+    export class ConnectorWebSocket extends ConnectorBase {
+
+        m_socket: any;
+        m_ConnectionId: number;
+
+        protected ConnectTransport() {
+            var _this_ = this;
+            this.m_socket = new WebSocket("ws://localhost:8088", "binary");
+            this.m_socket.binaryType = "arraybuffer";
+
+            this.m_socket.onopen = function (event: any) {
+                _this_.OnTransportConnected(true);
+            }
+
+            this.m_socket.onmessage = function (e: any) {
+                _this_.OnDataReceived(new Uint8Array(e.data));
+            }
+
+            this.m_socket.onerror = function (e: any) {
+                _this_.OnTransportConnected(false);
+            }
+        }
+
+        protected WriteData(data: Uint8Array) {
+            this.m_socket.send(data);
+        }
+
+        private OnSendSuccess() {
+            console.log("SEND SUCCESS");
+        }
+
+        private OnSendFailed() {
+            console.log("SEND FAILED");
+        }
+
+        protected ReadData() {
+            // nothing to do in this implementation
+        }
+    }
