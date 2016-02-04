@@ -9,15 +9,6 @@ class Greeter {
     templateJS: string = "";
     templateWebSocketJS: string = "";
 
-    // HTML fragments
-    htmlFront: string = "";
-    htmlBootstrap: string = "";
-    htmlCreate: string = "";
-    htmlExplore: string = "";
-    htmlSamples: string = "";
-    htmlSetup: string = "";
-    htmlHelp: string = "";
-
     constructor(element: HTMLElement) {
         this.element = element;
         this.AppendLog("The time is: ");
@@ -32,13 +23,6 @@ class Greeter {
         this.RetrieveTemplate("template-websocket.ts.txt", "templateWebSocketTS");
         this.RetrieveTemplate("template.js.txt", "templateJS");
         this.RetrieveTemplate("template-websocket.js.txt", "templateWebSocketJS");
-        this.RetrieveTemplate("front.html", "htmlFront");
-        this.RetrieveTemplate("bootstrap.html", "htmlBootstrap");
-        this.RetrieveTemplate("create.html", "htmlCreate");
-        this.RetrieveTemplate("explore.html", "htmlExplore");
-        this.RetrieveTemplate("samples.html", "htmlSamples");
-        this.RetrieveTemplate("setup.html", "htmlSetup");
-        this.RetrieveTemplate("help.html", "htmlHelp");
     }
 
     start() {
@@ -161,49 +145,6 @@ class Greeter {
 
         // try to restart with new service
         this.start();
-    }
-
-    GoToFrontPage() {
-        var el = window.document.getElementById("main");
-        (el as HTMLElement).innerHTML = this.htmlFront;
-    }
-
-    GoToBootstrap() {
-        var el = window.document.getElementById("main");
-        (el as HTMLElement).innerHTML = this.htmlBootstrap;
-    }
-
-    GoToCreate() {
-        var el = window.document.getElementById("main");
-        (el as HTMLElement).innerHTML = this.htmlCreate;
-
-        (window as any).editor = (window as any).CodeMirror.fromTextArea(window.document.getElementById("introspectionXml"), {
-            lineNumbers: true, mode: "text/xml", theme: "ttcn"
-        });
-        (window as any).editorScript = (window as any).CodeMirror.fromTextArea(window.document.getElementById("generatedCode"), {
-            lineNumbers: true, mode: "text/typescript", theme: "ttcn"
-        });
-
-    }
-
-    GoToExplore() {
-        var el = window.document.getElementById("main");
-        (el as HTMLElement).innerHTML = this.htmlExplore;
-    }
-
-    GoToSamples() {
-        var el = window.document.getElementById("main");
-        (el as HTMLElement).innerHTML = this.htmlSamples;
-    }
-
-    GoToSetup() {
-        var el = window.document.getElementById("main");
-        (el as HTMLElement).innerHTML = this.htmlSetup;
-    }
-
-    GoToHelp() {
-        var el = window.document.getElementById("main");
-        (el as HTMLElement).innerHTML = this.htmlHelp;
     }
 
     private RetrieveTemplate(filename: string, field: string) {

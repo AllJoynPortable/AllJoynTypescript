@@ -23,18 +23,11 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="app.css" />
-    <Content Include="samples.html" />
-    <Content Include="setup.html" />
-    <Content Include="help.html" />
-    <Content Include="explore.html" />
-    <Content Include="create.html" />
-    <Content Include="bootstrap.html" />
     <Content Include="cloud-download-32.png" />
     <Content Include="ajts-logo.png" />
     <Content Include="cobalt.css" />
     <Content Include="codemirror.css" />
     <Content Include="codemirror.js" />
-    <Content Include="front.html" />
     <Content Include="help-24.png" />
     <Content Include="index.html" />
     <Content Include="javascript.js" />
