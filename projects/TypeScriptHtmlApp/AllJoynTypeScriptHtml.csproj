@@ -24,7 +24,7 @@
   <ItemGroup>
     <Content Include="app.css" />
     <Content Include="cloud-download-32.png" />
-    <Content Include="cloud-gears.png" />
+    <Content Include="ajts-logo.png" />
     <Content Include="cobalt.css" />
     <Content Include="codemirror.css" />
     <Content Include="codemirror.js" />
