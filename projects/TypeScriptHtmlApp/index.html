@@ -70,35 +70,36 @@
 <body>
 
     <div style="border-bottom:  1px solid #2098d1;">
-        <img src="ajts-logo.png" width="80" height="80"></img>
+        <img src="ajts-logo.png" width="80" height="80" onmousedown="greeter.GoToFrontPage();"></img>
 
-        <div class="hvr-underline-reveal" style="padding:10px;font-family:Yu Gothic UI Light;font-size:20px;">
+        <div class="hvr-underline-reveal" style="padding:10px;font-family:Yu Gothic UI Light;font-size:20px;" onclick="greeter.GoToBootstrap();">
             <!--<img src="services-24.png" />-->
             Bootstrap
         </div>
-        <div class="hvr-underline-reveal" style="padding:10px;font-family:Yu Gothic UI Light;font-size:20px;" onclick="greeter.onGenerate();">
+        <div class="hvr-underline-reveal" style="padding:10px;font-family:Yu Gothic UI Light;font-size:20px;" onclick="greeter.GoToCreate();">
             <!--<img src="services-24.png" />-->
             Create
         </div>
-        <div class="hvr-underline-reveal" style="padding:10px;font-family:Yu Gothic UI Light;font-size:20px;" onclick="greeter.onTest();">
+        <div class="hvr-underline-reveal" style="padding:10px;font-family:Yu Gothic UI Light;font-size:20px;" onclick="greeter.GoToExplore();">
             <!--<img src="test-tube-24.png" />-->
             Explore
         </div>
-        <div class="hvr-underline-reveal" style="padding:10px;font-family:Yu Gothic UI Light;font-size:20px;">
+        <div class="hvr-underline-reveal" style="padding:10px;font-family:Yu Gothic UI Light;font-size:20px;" onclick="greeter.GoToSamples();">
             <!--<img src="cloud-download-32.png" width="24" height="24" />-->
             Samples
         </div>
-        <div class="hvr-underline-reveal" style="padding:10px;font-family:Yu Gothic UI Light;font-size:20px;" >
+        <div class="hvr-underline-reveal" style="padding:10px;font-family:Yu Gothic UI Light;font-size:20px;"  onclick="greeter.GoToSetup();">
             <!--<img id="RouterIcon" src="network-24.png" />-->
             Setup
         </div>
 
-        <div class="hvr-underline-reveal" style="padding:10px;font-family:Yu Gothic UI Light;font-size:20px;">
+        <div class="hvr-underline-reveal" style="padding:10px;font-family:Yu Gothic UI Light;font-size:20px;" onclick="greeter.GoToHelp();">
             <!--<img src="help-24.png" />-->
             Help
         </div>
     </div>
 
+    <div id="main">
         <div id="editors" style="position:absolute;width:50%;left:0px;height:calc(100vh - 150px);">
             <div style="padding:10px;">
                 <div>Introspection XML</div>
@@ -120,7 +121,7 @@
                 </div>
             </div>
         </div>
-
+    </div>
 </body>
 
 <script>

@@ -4,6 +4,14 @@ var Greeter = (function () {
         this.templateWebSocketTS = "";
         this.templateJS = "";
         this.templateWebSocketJS = "";
+        // HTML fragments
+        this.htmlFront = "";
+        this.htmlBootstrap = "";
+        this.htmlCreate = "";
+        this.htmlExplore = "";
+        this.htmlSamples = "";
+        this.htmlSetup = "";
+        this.htmlHelp = "";
         this.element = element;
         this.AppendLog("The time is: ");
         this.span = document.createElement('span');
@@ -15,6 +23,13 @@ var Greeter = (function () {
         this.RetrieveTemplate("template-websocket.ts.txt", "templateWebSocketTS");
         this.RetrieveTemplate("template.js.txt", "templateJS");
         this.RetrieveTemplate("template-websocket.js.txt", "templateWebSocketJS");
+        this.RetrieveTemplate("front.html", "htmlFront");
+        this.RetrieveTemplate("bootstrap.html", "htmlBootstrap");
+        this.RetrieveTemplate("create.html", "htmlCreate");
+        this.RetrieveTemplate("explore.html", "htmlExplore");
+        this.RetrieveTemplate("samples.html", "htmlSamples");
+        this.RetrieveTemplate("setup.html", "htmlSetup");
+        this.RetrieveTemplate("help.html", "htmlHelp");
     }
     Greeter.prototype.start = function () {
         this.element.innerHTML = "";
@@ -108,6 +123,40 @@ var Greeter = (function () {
         geval(out);
         // try to restart with new service
         this.start();
+    };
+    Greeter.prototype.GoToFrontPage = function () {
+        var el = window.document.getElementById("main");
+        el.innerHTML = this.htmlFront;
+    };
+    Greeter.prototype.GoToBootstrap = function () {
+        var el = window.document.getElementById("main");
+        el.innerHTML = this.htmlBootstrap;
+    };
+    Greeter.prototype.GoToCreate = function () {
+        var el = window.document.getElementById("main");
+        el.innerHTML = this.htmlCreate;
+        window.editor = window.CodeMirror.fromTextArea(window.document.getElementById("introspectionXml"), {
+            lineNumbers: true, mode: "text/xml", theme: "ttcn"
+        });
+        window.editorScript = window.CodeMirror.fromTextArea(window.document.getElementById("generatedCode"), {
+            lineNumbers: true, mode: "text/typescript", theme: "ttcn"
+        });
+    };
+    Greeter.prototype.GoToExplore = function () {
+        var el = window.document.getElementById("main");
+        el.innerHTML = this.htmlExplore;
+    };
+    Greeter.prototype.GoToSamples = function () {
+        var el = window.document.getElementById("main");
+        el.innerHTML = this.htmlSamples;
+    };
+    Greeter.prototype.GoToSetup = function () {
+        var el = window.document.getElementById("main");
+        el.innerHTML = this.htmlSetup;
+    };
+    Greeter.prototype.GoToHelp = function () {
+        var el = window.document.getElementById("main");
+        el.innerHTML = this.htmlHelp;
     };
     Greeter.prototype.RetrieveTemplate = function (filename, field) {
         var __this__ = this;
