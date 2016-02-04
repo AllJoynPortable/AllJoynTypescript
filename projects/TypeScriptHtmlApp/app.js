@@ -1,5 +1,3 @@
-/// <reference path="generator.ts"/>
-/// <reference path="generated.ts"/>
 var Greeter = (function () {
     function Greeter(element) {
         this.templateTS = "";

@@ -44,9 +44,13 @@
     <Content Include="zenburn.css" />
   </ItemGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="..\..\lib\ts\generated.ts">
+      <Link>generated.ts</Link>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="..\..\lib\ts\generator.ts">
+      <Link>generator.ts</Link>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="app.ts" />
-    <TypeScriptCompile Include="generated.ts" />
-    <TypeScriptCompile Include="generator.ts" />
     <Content Include="template.ts.txt" />
     <Content Include="template-websocket.ts.txt" />
   </ItemGroup>
