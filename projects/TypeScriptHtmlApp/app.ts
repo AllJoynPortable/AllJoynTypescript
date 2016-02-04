@@ -1,6 +1,4 @@
-﻿/// <reference path="generator.ts"/>
-/// <reference path="generated.ts"/>
-
+﻿
 class Greeter {
     element: HTMLElement;
     span: HTMLElement;
