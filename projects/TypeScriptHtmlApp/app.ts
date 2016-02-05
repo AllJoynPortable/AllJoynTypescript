@@ -1,5 +1,5 @@
 ﻿
-class Greeter {
+class AllJoynTsApp {
     element: HTMLElement;
     span: HTMLElement;
     timerToken: number;
@@ -245,6 +245,6 @@ var greeter = null;
 
 window.onload = () => {
     var el = document.getElementById('content');
-    greeter = new Greeter(el);
+    greeter = new AllJoynTsApp(el);
     greeter.start();
 };

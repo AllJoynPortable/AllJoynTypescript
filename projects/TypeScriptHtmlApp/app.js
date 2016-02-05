@@ -1,5 +1,5 @@
-var Greeter = (function () {
-    function Greeter(element) {
+var AllJoynTsApp = (function () {
+    function AllJoynTsApp(element) {
         this.templateTS = "";
         this.templateWebSocketTS = "";
         this.templateJS = "";
@@ -32,7 +32,7 @@ var Greeter = (function () {
         this.RetrieveTemplate("setup.html", "htmlSetup");
         this.RetrieveTemplate("help.html", "htmlHelp");
     }
-    Greeter.prototype.start = function () {
+    AllJoynTsApp.prototype.start = function () {
         this.element.innerHTML = "";
         if (null != this.connector) {
             this.connector.Disconnect();
@@ -45,10 +45,10 @@ var Greeter = (function () {
         });
         this.connector.ConnectAndAuthenticate();
     };
-    Greeter.prototype.stop = function () {
+    AllJoynTsApp.prototype.stop = function () {
         clearTimeout(this.timerToken);
     };
-    Greeter.prototype.onConnectorEvent = function (e, d) {
+    AllJoynTsApp.prototype.onConnectorEvent = function (e, d) {
         var el = this.element;
         if (e == AJ.ConnectorEventType.ConnectorEventConnected) {
             this.AppendLog("<br/>ALLJOYN CONNECTED");
@@ -70,7 +70,7 @@ var Greeter = (function () {
             this.AppendLog("<br/>Message Received: " + d.hdr_GetMsgType() + " " + d.hdr_GetMember());
         }
     };
-    Greeter.prototype.onGenerate = function () {
+    AllJoynTsApp.prototype.onGenerate = function () {
         var xml = window.editor.getValue();
         //(window.document.getElementById("introspectionXml") as HTMLTextAreaElement).textContent;
         var p = new Generator.IntrospectionXmlParser();
@@ -95,7 +95,7 @@ var Greeter = (function () {
         window.editorScript.setValue(out);
         //(window.document.getElementById("generatedCode") as HTMLTextAreaElement).textContent = out;
     };
-    Greeter.prototype.onTest = function () {
+    AllJoynTsApp.prototype.onTest = function () {
         var xml = window.editor.getValue();
         var p = new Generator.IntrospectionXmlParser();
         // first, parse introspection xml
@@ -125,15 +125,15 @@ var Greeter = (function () {
         // try to restart with new service
         this.start();
     };
-    Greeter.prototype.GoToFrontPage = function () {
+    AllJoynTsApp.prototype.GoToFrontPage = function () {
         var el = window.document.getElementById("main");
         el.innerHTML = this.htmlFront;
     };
-    Greeter.prototype.GoToBootstrap = function () {
+    AllJoynTsApp.prototype.GoToBootstrap = function () {
         var el = window.document.getElementById("main");
         el.innerHTML = this.htmlBootstrap;
     };
-    Greeter.prototype.GoToCreate = function () {
+    AllJoynTsApp.prototype.GoToCreate = function () {
         var el = window.document.getElementById("main");
         el.innerHTML = this.htmlCreate;
         window.editor = window.CodeMirror.fromTextArea(window.document.getElementById("introspectionXml"), {
@@ -144,23 +144,23 @@ var Greeter = (function () {
         });
         window.editor.setValue(this.introspectionXml);
     };
-    Greeter.prototype.GoToExplore = function () {
+    AllJoynTsApp.prototype.GoToExplore = function () {
         var el = window.document.getElementById("main");
         el.innerHTML = this.htmlExplore;
     };
-    Greeter.prototype.GoToSamples = function () {
+    AllJoynTsApp.prototype.GoToSamples = function () {
         var el = window.document.getElementById("main");
         el.innerHTML = this.htmlSamples;
     };
-    Greeter.prototype.GoToSetup = function () {
+    AllJoynTsApp.prototype.GoToSetup = function () {
         var el = window.document.getElementById("main");
         el.innerHTML = this.htmlSetup;
     };
-    Greeter.prototype.GoToHelp = function () {
+    AllJoynTsApp.prototype.GoToHelp = function () {
         var el = window.document.getElementById("main");
         el.innerHTML = this.htmlHelp;
     };
-    Greeter.prototype.RetrieveTemplate = function (filename, field) {
+    AllJoynTsApp.prototype.RetrieveTemplate = function (filename, field) {
         var __this__ = this;
         var client = new XMLHttpRequest();
         client.onreadystatechange = function () {
@@ -180,17 +180,17 @@ var Greeter = (function () {
         client.send();
         client["dataField"] = field;
     };
-    Greeter.prototype.AppendLog = function (v) {
+    AllJoynTsApp.prototype.AppendLog = function (v) {
         var el = this.element;
         el.innerHTML += v;
         el.scrollTop += 100;
     };
-    return Greeter;
+    return AllJoynTsApp;
 })();
 var greeter = null;
 window.onload = function () {
     var el = document.getElementById('content');
-    greeter = new Greeter(el);
+    greeter = new AllJoynTsApp(el);
     greeter.start();
 };
 //# sourceMappingURL=app.js.map
