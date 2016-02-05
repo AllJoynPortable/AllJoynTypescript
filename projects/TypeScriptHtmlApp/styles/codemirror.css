@@ -1,10 +1,20 @@
 /* BASICS */
 
+
 .CodeMirror {
   /* Set height, width, borders, and global font properties here */
   font-family: monospace;
   height: 300px;
   color: black;
+}
+
+.CodeMirror {
+  border: 1px solid #eee;
+  height: 100%;
+  font: bold;
+  font-family: "Fira Mono",Monaco,"Andale Mono","Lucida Console","Bitstream Vera Sans Mono","Courier New",Courier,monospace;
+  font-size: 12px;
+  color: #39464e;
 }
 
 /* PADDING */

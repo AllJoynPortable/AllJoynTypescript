@@ -1,0 +1,15 @@
+﻿body {
+    font-family: 'Yu Gothic UI Light', sans-serif;
+    font-size: 18px;
+    font-style: normal;
+}
+
+span {
+    font-style: normal;
+}
+
+.tbd {
+    text-align: center;
+    color: #ff0000;
+    background-color: #ffffff;
+}
