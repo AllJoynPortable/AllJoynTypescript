@@ -12,13 +12,14 @@ var Greeter = (function () {
         this.htmlSamples = "";
         this.htmlSetup = "";
         this.htmlHelp = "";
+        this.introspectionXml = "";
         this.element = element;
         this.AppendLog("The time is: ");
         this.span = document.createElement('span');
         this.element.appendChild(this.span);
         this.span.innerText = new Date().toUTCString();
-        //(window.document.getElementById("introspectionXml") as HTMLTextAreaElement).textContent = Generator.DEFAULT_APP_INTROSPECTION_XML.replace(/></g, ">\r\n<");
-        window.editor.setValue(Generator.DEFAULT_APP_INTROSPECTION_XML.replace(/></g, ">\r\n<"));
+        this.introspectionXml = Generator.DEFAULT_APP_INTROSPECTION_XML.replace(/></g, ">\r\n<");
+        window.editor.setValue(this.introspectionXml);
         this.RetrieveTemplate("template.ts.txt", "templateTS");
         this.RetrieveTemplate("template-websocket.ts.txt", "templateWebSocketTS");
         this.RetrieveTemplate("template.js.txt", "templateJS");
@@ -141,6 +142,7 @@ var Greeter = (function () {
         window.editorScript = window.CodeMirror.fromTextArea(window.document.getElementById("generatedCode"), {
             lineNumbers: true, mode: "text/typescript", theme: "ttcn"
         });
+        window.editor.setValue(this.introspectionXml);
     };
     Greeter.prototype.GoToExplore = function () {
         var el = window.document.getElementById("main");

@@ -18,6 +18,8 @@ class Greeter {
     htmlSetup: string = "";
     htmlHelp: string = "";
 
+    introspectionXml: string = "";
+
     constructor(element: HTMLElement) {
         this.element = element;
         this.AppendLog("The time is: ");
@@ -25,8 +27,8 @@ class Greeter {
         this.element.appendChild(this.span);
         this.span.innerText = new Date().toUTCString();
 
-        //(window.document.getElementById("introspectionXml") as HTMLTextAreaElement).textContent = Generator.DEFAULT_APP_INTROSPECTION_XML.replace(/></g, ">\r\n<");
-        (window as any).editor.setValue(Generator.DEFAULT_APP_INTROSPECTION_XML.replace(/></g, ">\r\n<"));
+        this.introspectionXml = Generator.DEFAULT_APP_INTROSPECTION_XML.replace(/></g, ">\r\n<");
+        (window as any).editor.setValue(this.introspectionXml);
 
         this.RetrieveTemplate("template.ts.txt", "templateTS");
         this.RetrieveTemplate("template-websocket.ts.txt", "templateWebSocketTS");
@@ -184,6 +186,7 @@ class Greeter {
             lineNumbers: true, mode: "text/typescript", theme: "ttcn"
         });
 
+        (window as any).editor.setValue(this.introspectionXml);
     }
 
     GoToExplore() {
