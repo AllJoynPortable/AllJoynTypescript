@@ -23,6 +23,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="images\ajts-logo.png" />
+    <Content Include="images\alljoyn-explorer.png" />
+    <Content Include="images\allseen-logo.jpg" />
     <Content Include="images\blue_frame_large.png" />
     <Content Include="images\cloud-download-32.png" />
     <Content Include="images\cloud-gears.png" />
@@ -36,8 +38,10 @@
     <Content Include="images\test-tube-24.png" />
     <Content Include="images\thermostat_large.jpg" />
     <Content Include="images\thermostat_small.jpg" />
+    <Content Include="images\typescript-logo.png" />
     <Content Include="images\visualstudio_4096_black.png" />
     <Content Include="images\visualstudio_purple.png" />
+    <Content Include="images\websocket-proxy.png" />
     <Content Include="samples.html" />
     <Content Include="setup.html" />
     <Content Include="help.html" />
