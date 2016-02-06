@@ -1,3 +1,11 @@
+var ConnectionType;
+(function (ConnectionType) {
+    ConnectionType[ConnectionType["CONNECTION_LOOPBACK"] = 0] = "CONNECTION_LOOPBACK";
+    ConnectionType[ConnectionType["CONNECTION_DISCOVER"] = 1] = "CONNECTION_DISCOVER";
+    ConnectionType[ConnectionType["CONNECTION_WEBSOCKET"] = 2] = "CONNECTION_WEBSOCKET";
+    ConnectionType[ConnectionType["CONNECTION_AZURE"] = 3] = "CONNECTION_AZURE";
+})(ConnectionType || (ConnectionType = {}));
+;
 var AllJoynTsApp = (function () {
     function AllJoynTsApp(element) {
         this.templateTS = "";
@@ -12,6 +20,9 @@ var AllJoynTsApp = (function () {
         this.htmlSamples = "";
         this.htmlSetup = "";
         this.htmlHelp = "";
+        this.connectionType = ConnectionType.CONNECTION_WEBSOCKET;
+        this.connectionAzureParam = "<azure connection string>";
+        this.connectionWebsocketParam = "ws://127.0.0.1:8088";
         this.introspectionXml = "";
         this.element = element;
         this.AppendLog("The time is: ");
@@ -155,10 +166,44 @@ var AllJoynTsApp = (function () {
     AllJoynTsApp.prototype.GoToSetup = function () {
         var el = window.document.getElementById("main");
         el.innerHTML = this.htmlSetup;
+        switch (this.connectionType) {
+            case ConnectionType.CONNECTION_LOOPBACK:
+                window.document.getElementById("connection-loopback").checked = true;
+                break;
+            case ConnectionType.CONNECTION_DISCOVER:
+                window.document.getElementById("connection-discover").checked = true;
+                break;
+            case ConnectionType.CONNECTION_WEBSOCKET:
+                window.document.getElementById("connection-websocket").checked = true;
+                break;
+            case ConnectionType.CONNECTION_AZURE:
+                window.document.getElementById("connection-azure").checked = true;
+                break;
+        }
+        window.document.getElementById("connection-azure-text").value = this.connectionAzureParam;
+        window.document.getElementById("connection-websocket-text").value = this.connectionWebsocketParam;
     };
     AllJoynTsApp.prototype.GoToHelp = function () {
         var el = window.document.getElementById("main");
         el.innerHTML = this.htmlHelp;
+    };
+    AllJoynTsApp.prototype.OnLoopbackSelected = function () {
+        this.connectionType = ConnectionType.CONNECTION_LOOPBACK;
+    };
+    AllJoynTsApp.prototype.OnDiscoverSelected = function () {
+        this.connectionType = ConnectionType.CONNECTION_DISCOVER;
+    };
+    AllJoynTsApp.prototype.OnWebsocketSelected = function () {
+        this.connectionType = ConnectionType.CONNECTION_WEBSOCKET;
+    };
+    AllJoynTsApp.prototype.OnAzureSelected = function () {
+        this.connectionType = ConnectionType.CONNECTION_AZURE;
+    };
+    AllJoynTsApp.prototype.OnWebsocketChanged = function () {
+        this.connectionWebsocketParam = window.document.getElementById("connection-websocket-text").value;
+    };
+    AllJoynTsApp.prototype.OnAzureChanged = function () {
+        this.connectionAzureParam = window.document.getElementById("connection-azure-text").value;
     };
     AllJoynTsApp.prototype.RetrieveTemplate = function (filename, field) {
         var __this__ = this;

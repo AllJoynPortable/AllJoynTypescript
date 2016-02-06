@@ -1,5 +1,14 @@
 ﻿
+enum ConnectionType {
+    CONNECTION_LOOPBACK,
+    CONNECTION_DISCOVER,
+    CONNECTION_WEBSOCKET,
+    CONNECTION_AZURE
+};
+
+
 class AllJoynTsApp {
+
     element: HTMLElement;
     span: HTMLElement;
     timerToken: number;
@@ -17,6 +26,10 @@ class AllJoynTsApp {
     htmlSamples: string = "";
     htmlSetup: string = "";
     htmlHelp: string = "";
+
+    connectionType: ConnectionType = ConnectionType.CONNECTION_WEBSOCKET;
+    connectionAzureParam: string = "<azure connection string>";
+    connectionWebsocketParam: string = "ws://127.0.0.1:8088";
 
     introspectionXml: string = "";
 
@@ -202,11 +215,45 @@ class AllJoynTsApp {
     GoToSetup() {
         var el = window.document.getElementById("main");
         (el as HTMLElement).innerHTML = this.htmlSetup;
+
+        switch (this.connectionType) {
+            case ConnectionType.CONNECTION_LOOPBACK: (window.document.getElementById("connection-loopback") as HTMLInputElement).checked = true; break;
+            case ConnectionType.CONNECTION_DISCOVER: (window.document.getElementById("connection-discover") as HTMLInputElement).checked = true; break;
+            case ConnectionType.CONNECTION_WEBSOCKET: (window.document.getElementById("connection-websocket") as HTMLInputElement).checked = true; break;
+            case ConnectionType.CONNECTION_AZURE: (window.document.getElementById("connection-azure") as HTMLInputElement).checked = true; break;
+        }
+
+        (window.document.getElementById("connection-azure-text") as HTMLInputElement).value = this.connectionAzureParam;
+        (window.document.getElementById("connection-websocket-text") as HTMLInputElement).value = this.connectionWebsocketParam;
     }
 
     GoToHelp() {
         var el = window.document.getElementById("main");
         (el as HTMLElement).innerHTML = this.htmlHelp;
+    }
+
+    OnLoopbackSelected() {
+        this.connectionType = ConnectionType.CONNECTION_LOOPBACK;
+    }
+
+    OnDiscoverSelected() {
+        this.connectionType = ConnectionType.CONNECTION_DISCOVER;
+    }
+
+    OnWebsocketSelected() {
+        this.connectionType = ConnectionType.CONNECTION_WEBSOCKET;
+    }
+
+    OnAzureSelected() {
+        this.connectionType = ConnectionType.CONNECTION_AZURE;
+    }
+
+    OnWebsocketChanged() {
+        this.connectionWebsocketParam = (window.document.getElementById("connection-websocket-text") as HTMLInputElement).value;
+    }
+
+    OnAzureChanged() {
+        this.connectionAzureParam = (window.document.getElementById("connection-azure-text") as HTMLInputElement).value;
     }
 
     private RetrieveTemplate(filename: string, field: string) {
