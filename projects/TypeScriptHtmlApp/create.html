@@ -1,22 +1,56 @@
 ﻿
 <div id="editors" style="position:absolute;width:50%;left:0px;height:calc(100vh - 150px);">
+
+    <table style="padding:10px;">
+        <tr>
+            <td>Device Id</td>
+            <td><input id="device-id" type="text" onclick="app.OnDeviceIdChanged();"></td>
+        </tr>
+        <tr>
+            <td>Device Name</td>
+            <td><input id="device-name" type="text" onclick="app.OnDeviceIdChanged();"></td>
+        </tr>
+        <tr>
+            <td>Manufacturer</td>
+            <td><input id="device-name" type="text" onclick="app.OnDeviceIdChanged();"></td>
+        </tr>
+        <tr>
+            <td>Model Number</td>
+            <td><input id="device-name" type="text" onclick="app.OnDeviceIdChanged();"></td>
+        </tr>
+        <tr>
+            <td>Application Name</td>
+            <td><input id="device-name" type="text" onclick="app.OnDeviceIdChanged();"></td>
+        </tr>
+        <tr>
+            <td>Application Id</td>
+            <td><input id="device-name" type="text" onclick="app.OnDeviceIdChanged();"></td>
+        </tr>
+    </table>
+
     <div style="padding:10px;">
         <div>Introspection XML</div>
         <div style="height:calc((100vh - 150px) / 2 - 30px);background-color:#eee;">
             <textarea id="introspectionXml" cols="40" rows="10" style="height:100px; width:100px;"></textarea>
         </div>
-        <div>Generated Code</div>
+    </div>
 
-        <div style="height:calc((100vh - 150px) / 2 - 30px);background-color:#eee;">
-            <textarea id="generatedCode" cols="40" rows="10" style="height:100px; width:100px;"></textarea>
-        </div>
+    <div style="padding:10px">
+        <button class="button" >Generate TS</button>
+        <button class="button" >Generate JS</button>
+        <button class="button" >Test</button>
     </div>
 </div>
 
 <div style="position:absolute;width:50%;right:0px;height:calc(100vh - 150px);">
     <div style="padding:10px;height:100%;">
+        <div>Generated Code</div>
+
+        <div style="height:calc((100vh - 150px) / 2 - 30px);background-color:#eee;">
+            <textarea id="generatedCode" cols="40" rows="10" style="height:100px; width:100px;"></textarea>
+        </div>
         Log
-        <div id="content" style='height:100%;overflow:scroll;border: 1px solid #eee;font-family:"Fira Mono",Monaco,"Andale Mono","Lucida Console","Bitstream Vera Sans Mono","Courier New",Courier,monospace;font-size:12px;'>
+        <div id="content" style='height:calc((100vh - 150px) / 2 - 30px);overflow:scroll;border: 1px solid #eee;font-family:"Fira Mono",Monaco,"Andale Mono","Lucida Console","Bitstream Vera Sans Mono","Courier New",Courier,monospace;font-size:12px;'>
         </div>
     </div>
 </div>
