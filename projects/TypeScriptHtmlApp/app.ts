@@ -288,10 +288,10 @@ class AllJoynTsApp {
     }
 }
 
-var greeter = null;
+var app = null;
 
 window.onload = () => {
     var el = document.getElementById('content');
-    greeter = new AllJoynTsApp(el);
-    greeter.start();
+    app = new AllJoynTsApp(el);
+    app.start();
 };

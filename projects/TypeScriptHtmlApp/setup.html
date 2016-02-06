@@ -2,18 +2,18 @@
 <div style="font-family:Yu Gothic UI Light;font-size:20px;">
     <form action="/html/codes/html_form_handler.cfm" method="get">
         <div style="padding:10px;">
-            <input id="connection-loopback" type="radio" name="connection" value="loopback" onclick="greeter.OnLoopbackSelected();">Loopback (emulate AllJoyn router)<br />
+            <input id="connection-loopback" type="radio" name="connection" value="loopback" onclick="app.OnLoopbackSelected();">Loopback (emulate AllJoyn router)<br />
         </div>
         <div style="padding:10px;">
-            <input id="connection-discover" type="radio" name="connection" value="discover" onclick="greeter.OnDiscoverSelected();">Standard AllJoyn Discovery (not available in the browser)<br />
+            <input id="connection-discover" type="radio" name="connection" value="discover" onclick="app.OnDiscoverSelected();">Standard AllJoyn Discovery (not available in the browser)<br />
         </div>
         <div style="padding:10px;">
-            <input id="connection-websocket" type="radio" name="connection" value="websocket"  onclick="greeter.OnWebsocketSelected();">Via WebSocket (requires proxy, check help)<br />
-            <div style="padding-left:20px;"><input id="connection-websocket-text" type="text" onchange="greeter.OnWebsocketChanged();" style="width:400px;height:30px;"></div>
+            <input id="connection-websocket" type="radio" name="connection" value="websocket"  onclick="app.OnWebsocketSelected();">Via WebSocket (requires proxy, check help)<br />
+            <div style="padding-left:20px;"><input id="connection-websocket-text" type="text" onchange="app.OnWebsocketChanged();" style="width:400px;height:30px;"></div>
             </div>
         <div style="padding:10px;">
-            <input id="connection-azure" type="radio" name="connection" value="azure" onclick="greeter.OnAzureSelected();">Via Azure IoT Hub (requires proxy, check help)<br />
-            <div style="padding-left:20px;"><input id="connection-azure-text" type="text" onchange="greeter.OnAzureChanged();" style="width:400px;height:30px;"></div>
+            <input id="connection-azure" type="radio" name="connection" value="azure" onclick="app.OnAzureSelected();">Via Azure IoT Hub (requires proxy, check help)<br />
+            <div style="padding-left:20px;"><input id="connection-azure-text" type="text" onchange="app.OnAzureChanged();" style="width:400px;height:30px;"></div>
         </div>
 </form>
 </div>

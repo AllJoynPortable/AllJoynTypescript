@@ -232,10 +232,10 @@ var AllJoynTsApp = (function () {
     };
     return AllJoynTsApp;
 })();
-var greeter = null;
+var app = null;
 window.onload = function () {
     var el = document.getElementById('content');
-    greeter = new AllJoynTsApp(el);
-    greeter.start();
+    app = new AllJoynTsApp(el);
+    app.start();
 };
 //# sourceMappingURL=app.js.map
