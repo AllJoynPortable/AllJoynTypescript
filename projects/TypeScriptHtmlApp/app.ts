@@ -180,11 +180,13 @@ class AllJoynTsApp {
     GoToFrontPage() {
         var el = window.document.getElementById("main");
         (el as HTMLElement).innerHTML = this.htmlFront;
+        this.MenuHighlight("");
     }
 
     GoToBootstrap() {
         var el = window.document.getElementById("main");
         (el as HTMLElement).innerHTML = this.htmlBootstrap;
+        this.MenuHighlight("menu-bootstrap");
     }
 
     GoToCreate() {
@@ -199,16 +201,19 @@ class AllJoynTsApp {
         });
 
         (window as any).editor.setValue(this.introspectionXml);
+        this.MenuHighlight("menu-create");
     }
 
     GoToExplore() {
         var el = window.document.getElementById("main");
         (el as HTMLElement).innerHTML = this.htmlExplore;
+        this.MenuHighlight("menu-explore");
     }
 
     GoToSamples() {
         var el = window.document.getElementById("main");
         (el as HTMLElement).innerHTML = this.htmlSamples;
+        this.MenuHighlight("menu-samples");
     }
 
     GoToSetup() {
@@ -224,11 +229,34 @@ class AllJoynTsApp {
 
         (window.document.getElementById("connection-azure-text") as HTMLInputElement).value = this.connectionAzureParam;
         (window.document.getElementById("connection-websocket-text") as HTMLInputElement).value = this.connectionWebsocketParam;
+        this.MenuHighlight("menu-setup");
     }
 
     GoToHelp() {
         var el = window.document.getElementById("main");
         (el as HTMLElement).innerHTML = this.htmlHelp;
+        this.MenuHighlight("menu-help");
+    }
+
+    private MenuHighlight(id: string) {
+        var menu: HTMLDivElement = window.document.getElementById("menu") as HTMLDivElement;
+
+        var child: Element = menu.firstElementChild;
+
+        while (null != child) {
+            var childId = child.id;
+
+            if (childId.substring(0, 5) == "menu-") {
+                if (childId == id) {
+                    child.className = "hvr-underline-reveal-selected";
+                }
+                else {
+                    child.className = "hvr-underline-reveal";
+                }
+            }
+
+            child = child.nextElementSibling;
+        }
     }
 
     OnLoopbackSelected() {

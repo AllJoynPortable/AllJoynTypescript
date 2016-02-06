@@ -138,10 +138,12 @@ var AllJoynTsApp = (function () {
     AllJoynTsApp.prototype.GoToFrontPage = function () {
         var el = window.document.getElementById("main");
         el.innerHTML = this.htmlFront;
+        this.MenuHighlight("");
     };
     AllJoynTsApp.prototype.GoToBootstrap = function () {
         var el = window.document.getElementById("main");
         el.innerHTML = this.htmlBootstrap;
+        this.MenuHighlight("menu-bootstrap");
     };
     AllJoynTsApp.prototype.GoToCreate = function () {
         var el = window.document.getElementById("main");
@@ -153,14 +155,17 @@ var AllJoynTsApp = (function () {
             lineNumbers: true, mode: "text/typescript", theme: "ttcn"
         });
         window.editor.setValue(this.introspectionXml);
+        this.MenuHighlight("menu-create");
     };
     AllJoynTsApp.prototype.GoToExplore = function () {
         var el = window.document.getElementById("main");
         el.innerHTML = this.htmlExplore;
+        this.MenuHighlight("menu-explore");
     };
     AllJoynTsApp.prototype.GoToSamples = function () {
         var el = window.document.getElementById("main");
         el.innerHTML = this.htmlSamples;
+        this.MenuHighlight("menu-samples");
     };
     AllJoynTsApp.prototype.GoToSetup = function () {
         var el = window.document.getElementById("main");
@@ -181,10 +186,28 @@ var AllJoynTsApp = (function () {
         }
         window.document.getElementById("connection-azure-text").value = this.connectionAzureParam;
         window.document.getElementById("connection-websocket-text").value = this.connectionWebsocketParam;
+        this.MenuHighlight("menu-setup");
     };
     AllJoynTsApp.prototype.GoToHelp = function () {
         var el = window.document.getElementById("main");
         el.innerHTML = this.htmlHelp;
+        this.MenuHighlight("menu-help");
+    };
+    AllJoynTsApp.prototype.MenuHighlight = function (id) {
+        var menu = window.document.getElementById("menu");
+        var child = menu.firstElementChild;
+        while (null != child) {
+            var childId = child.id;
+            if (childId.substring(0, 5) == "menu-") {
+                if (childId == id) {
+                    child.className = "hvr-underline-reveal-selected";
+                }
+                else {
+                    child.className = "hvr-underline-reveal";
+                }
+            }
+            child = child.nextElementSibling;
+        }
     };
     AllJoynTsApp.prototype.OnLoopbackSelected = function () {
         this.connectionType = ConnectionType.CONNECTION_LOOPBACK;
