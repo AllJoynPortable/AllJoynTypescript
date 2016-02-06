@@ -1,3 +1,5 @@
+var editor = null;
+var editorScript = null;
 var ConnectionType;
 (function (ConnectionType) {
     ConnectionType[ConnectionType["CONNECTION_LOOPBACK"] = 0] = "CONNECTION_LOOPBACK";
@@ -7,7 +9,7 @@ var ConnectionType;
 })(ConnectionType || (ConnectionType = {}));
 ;
 var AllJoynTsApp = (function () {
-    function AllJoynTsApp(element) {
+    function AllJoynTsApp() {
         this.templateTS = "";
         this.templateWebSocketTS = "";
         this.templateJS = "";
@@ -24,13 +26,11 @@ var AllJoynTsApp = (function () {
         this.connectionAzureParam = "<azure connection string>";
         this.connectionWebsocketParam = "ws://127.0.0.1:8088";
         this.introspectionXml = "";
-        this.element = element;
         this.AppendLog("The time is: ");
         this.span = document.createElement('span');
-        this.element.appendChild(this.span);
         this.span.innerText = new Date().toUTCString();
         this.introspectionXml = Generator.DEFAULT_APP_INTROSPECTION_XML.replace(/></g, ">\r\n<");
-        window.editor.setValue(this.introspectionXml);
+        //(window as any).editor.setValue(this.introspectionXml);
         this.RetrieveTemplate("template.ts.txt", "templateTS");
         this.RetrieveTemplate("template-websocket.ts.txt", "templateWebSocketTS");
         this.RetrieveTemplate("template.js.txt", "templateJS");
@@ -44,7 +44,6 @@ var AllJoynTsApp = (function () {
         this.RetrieveTemplate("help.html", "htmlHelp");
     }
     AllJoynTsApp.prototype.start = function () {
-        this.element.innerHTML = "";
         if (null != this.connector) {
             this.connector.Disconnect();
         }
@@ -60,7 +59,7 @@ var AllJoynTsApp = (function () {
         clearTimeout(this.timerToken);
     };
     AllJoynTsApp.prototype.onConnectorEvent = function (e, d) {
-        var el = this.element;
+        var el = window.document.getElementById("content");
         if (e == AJ.ConnectorEventType.ConnectorEventConnected) {
             this.AppendLog("<br/>ALLJOYN CONNECTED");
             window.document.getElementById("RouterIcon").src = "network-green-24.png";
@@ -228,16 +227,19 @@ var AllJoynTsApp = (function () {
         client["dataField"] = field;
     };
     AllJoynTsApp.prototype.AppendLog = function (v) {
-        var el = this.element;
-        el.innerHTML += v;
-        el.scrollTop += 100;
+        var el = window.document.getElementById("content");
+        if (null != el) {
+            el.innerHTML += v;
+            el.scrollTop += 100;
+        }
     };
     return AllJoynTsApp;
 })();
 var app = null;
+var editor = null;
+var editorScript = null;
 window.onload = function () {
-    var el = document.getElementById('content');
-    app = new AllJoynTsApp(el);
+    app = new AllJoynTsApp();
     app.start();
 };
 //# sourceMappingURL=app.js.map

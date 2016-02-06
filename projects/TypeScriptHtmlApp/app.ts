@@ -1,4 +1,8 @@
 ﻿
+var editor = null;
+var editorScript = null;
+
+
 enum ConnectionType {
     CONNECTION_LOOPBACK,
     CONNECTION_DISCOVER,
@@ -9,7 +13,6 @@ enum ConnectionType {
 
 class AllJoynTsApp {
 
-    element: HTMLElement;
     span: HTMLElement;
     timerToken: number;
     connector: AJ.ConnectorWebSocket;
@@ -33,15 +36,13 @@ class AllJoynTsApp {
 
     introspectionXml: string = "";
 
-    constructor(element: HTMLElement) {
-        this.element = element;
+    constructor() {
         this.AppendLog("The time is: ");
         this.span = document.createElement('span');
-        this.element.appendChild(this.span);
         this.span.innerText = new Date().toUTCString();
 
         this.introspectionXml = Generator.DEFAULT_APP_INTROSPECTION_XML.replace(/></g, ">\r\n<");
-        (window as any).editor.setValue(this.introspectionXml);
+        //(window as any).editor.setValue(this.introspectionXml);
 
         this.RetrieveTemplate("template.ts.txt", "templateTS");
         this.RetrieveTemplate("template-websocket.ts.txt", "templateWebSocketTS");
@@ -57,8 +58,6 @@ class AllJoynTsApp {
     }
 
     start() {
-        this.element.innerHTML = "";
-
         if (null != this.connector) {
             this.connector.Disconnect();
         }
@@ -80,7 +79,7 @@ class AllJoynTsApp {
     }
 
     onConnectorEvent(e: AJ.ConnectorEventType, d: any) {
-        var el = this.element;
+        var el = window.document.getElementById("content");
 
         if (e == AJ.ConnectorEventType.ConnectorEventConnected) {
             this.AppendLog("<br/>ALLJOYN CONNECTED");
@@ -284,16 +283,20 @@ class AllJoynTsApp {
     }
 
     private AppendLog(v: string) {
-        var el = this.element;
-        el.innerHTML += v;
-        el.scrollTop += 100;
+        var el = window.document.getElementById("content");
+
+        if (null != el) {
+            el.innerHTML += v;
+            el.scrollTop += 100;
+        }
     }
 }
 
 var app = null;
+var editor = null;
+var editorScript = null;
 
 window.onload = () => {
-    var el = document.getElementById('content');
-    app = new AllJoynTsApp(el);
+    app = new AllJoynTsApp();
     app.start();
 };

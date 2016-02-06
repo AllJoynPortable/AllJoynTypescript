@@ -49,38 +49,8 @@
     </div>
 
     <div id="main">
-        <div id="editors" style="position:absolute;width:50%;left:0px;height:calc(100vh - 150px);">
-            <div style="padding:10px;">
-                <div>Introspection XML</div>
-                <div style="height:calc((100vh - 150px) / 2 - 30px);background-color:#eee;">
-                    <textarea id="introspectionXml" cols="40" rows="10" style="height:100px; width:100px;"></textarea>
-                </div>
-                <div>Generated Code</div>
-
-                <div style="height:calc((100vh - 150px) / 2 - 30px);background-color:#eee;">
-                    <textarea id="generatedCode" cols="40" rows="10" style="height:100px; width:100px;"></textarea>
-                </div>
-            </div>
-        </div>
-
-        <div style="position:absolute;width:50%;right:0px;height:calc(100vh - 150px);" >
-            <div style="padding:10px;height:100%;">
-                Log
-                <div id="content" style='height:100%;overflow:scroll;border: 1px solid #eee;font-family:"Fira Mono",Monaco,"Andale Mono","Lucida Console","Bitstream Vera Sans Mono","Courier New",Courier,monospace;font-size:12px;' >
-                </div>
-            </div>
-        </div>
     </div>
 </body>
-
-<script>
-        var editor = CodeMirror.fromTextArea(window.document.getElementById("introspectionXml"), {
-            lineNumbers: true, mode: "text/xml", theme: "ttcn"
-        });
-        var editorScript = CodeMirror.fromTextArea(window.document.getElementById("generatedCode"), {
-            lineNumbers: true, mode: "text/typescript", theme: "ttcn"
-        });
-</script>
 
 
 </html>
