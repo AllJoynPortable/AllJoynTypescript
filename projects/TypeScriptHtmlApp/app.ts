@@ -1,6 +1,18 @@
 ﻿
-class Greeter {
-    element: HTMLElement;
+var editor = null;
+var editorScript = null;
+
+
+enum ConnectionType {
+    CONNECTION_LOOPBACK,
+    CONNECTION_DISCOVER,
+    CONNECTION_WEBSOCKET,
+    CONNECTION_AZURE
+};
+
+
+class AllJoynTsApp {
+
     span: HTMLElement;
     timerToken: number;
     connector: AJ.ConnectorWebSocket;
@@ -18,15 +30,19 @@ class Greeter {
     htmlSetup: string = "";
     htmlHelp: string = "";
 
-    constructor(element: HTMLElement) {
-        this.element = element;
+    connectionType: ConnectionType = ConnectionType.CONNECTION_WEBSOCKET;
+    connectionAzureParam: string = "<azure connection string>";
+    connectionWebsocketParam: string = "ws://127.0.0.1:8088";
+
+    introspectionXml: string = "";
+
+    constructor() {
         this.AppendLog("The time is: ");
         this.span = document.createElement('span');
-        this.element.appendChild(this.span);
         this.span.innerText = new Date().toUTCString();
 
-        //(window.document.getElementById("introspectionXml") as HTMLTextAreaElement).textContent = Generator.DEFAULT_APP_INTROSPECTION_XML.replace(/></g, ">\r\n<");
-        (window as any).editor.setValue(Generator.DEFAULT_APP_INTROSPECTION_XML.replace(/></g, ">\r\n<"));
+        this.introspectionXml = Generator.DEFAULT_APP_INTROSPECTION_XML.replace(/></g, ">\r\n<");
+        //(window as any).editor.setValue(this.introspectionXml);
 
         this.RetrieveTemplate("template.ts.txt", "templateTS");
         this.RetrieveTemplate("template-websocket.ts.txt", "templateWebSocketTS");
@@ -42,8 +58,6 @@ class Greeter {
     }
 
     start() {
-        this.element.innerHTML = "";
-
         if (null != this.connector) {
             this.connector.Disconnect();
         }
@@ -65,7 +79,7 @@ class Greeter {
     }
 
     onConnectorEvent(e: AJ.ConnectorEventType, d: any) {
-        var el = this.element;
+        var el = window.document.getElementById("content");
 
         if (e == AJ.ConnectorEventType.ConnectorEventConnected) {
             this.AppendLog("<br/>ALLJOYN CONNECTED");
@@ -184,6 +198,7 @@ class Greeter {
             lineNumbers: true, mode: "text/typescript", theme: "ttcn"
         });
 
+        (window as any).editor.setValue(this.introspectionXml);
     }
 
     GoToExplore() {
@@ -199,11 +214,45 @@ class Greeter {
     GoToSetup() {
         var el = window.document.getElementById("main");
         (el as HTMLElement).innerHTML = this.htmlSetup;
+
+        switch (this.connectionType) {
+            case ConnectionType.CONNECTION_LOOPBACK: (window.document.getElementById("connection-loopback") as HTMLInputElement).checked = true; break;
+            case ConnectionType.CONNECTION_DISCOVER: (window.document.getElementById("connection-discover") as HTMLInputElement).checked = true; break;
+            case ConnectionType.CONNECTION_WEBSOCKET: (window.document.getElementById("connection-websocket") as HTMLInputElement).checked = true; break;
+            case ConnectionType.CONNECTION_AZURE: (window.document.getElementById("connection-azure") as HTMLInputElement).checked = true; break;
+        }
+
+        (window.document.getElementById("connection-azure-text") as HTMLInputElement).value = this.connectionAzureParam;
+        (window.document.getElementById("connection-websocket-text") as HTMLInputElement).value = this.connectionWebsocketParam;
     }
 
     GoToHelp() {
         var el = window.document.getElementById("main");
         (el as HTMLElement).innerHTML = this.htmlHelp;
+    }
+
+    OnLoopbackSelected() {
+        this.connectionType = ConnectionType.CONNECTION_LOOPBACK;
+    }
+
+    OnDiscoverSelected() {
+        this.connectionType = ConnectionType.CONNECTION_DISCOVER;
+    }
+
+    OnWebsocketSelected() {
+        this.connectionType = ConnectionType.CONNECTION_WEBSOCKET;
+    }
+
+    OnAzureSelected() {
+        this.connectionType = ConnectionType.CONNECTION_AZURE;
+    }
+
+    OnWebsocketChanged() {
+        this.connectionWebsocketParam = (window.document.getElementById("connection-websocket-text") as HTMLInputElement).value;
+    }
+
+    OnAzureChanged() {
+        this.connectionAzureParam = (window.document.getElementById("connection-azure-text") as HTMLInputElement).value;
     }
 
     private RetrieveTemplate(filename: string, field: string) {
@@ -217,6 +266,8 @@ class Greeter {
                     
 
                     __this__[this["dataField"]] = this.responseText;
+
+                    if (this["dataField"] == "htmlFront") __this__.GoToFrontPage();
                     return;
                 }
                 else {
@@ -232,16 +283,20 @@ class Greeter {
     }
 
     private AppendLog(v: string) {
-        var el = this.element;
-        el.innerHTML += v;
-        el.scrollTop += 100;
+        var el = window.document.getElementById("content");
+
+        if (null != el) {
+            el.innerHTML += v;
+            el.scrollTop += 100;
+        }
     }
 }
 
-var greeter = null;
+var app = null;
+var editor = null;
+var editorScript = null;
 
 window.onload = () => {
-    var el = document.getElementById('content');
-    greeter = new Greeter(el);
-    greeter.start();
+    app = new AllJoynTsApp();
+    app.start();
 };

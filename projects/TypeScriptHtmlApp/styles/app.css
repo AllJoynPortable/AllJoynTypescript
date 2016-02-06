@@ -1,0 +1,37 @@
+﻿body {
+    font-family: 'Yu Gothic UI Light', sans-serif;
+    font-size: 18px;
+    font-style: normal;
+}
+
+span {
+    font-style: normal;
+}
+
+.tbd {
+    text-align: center;
+    color: #ff0000;
+    background-color: #ffffff;
+}
+
+.button {
+	background-color:#bddbfa;
+	-moz-border-radius:5px;
+	-webkit-border-radius:5px;
+	border-radius:5px;
+	border:1px solid #84bbf3;
+	display:inline-block;
+	cursor:pointer;
+	color:#000000;
+	font-family:'Yu Gothic UI';
+	font-size:14px;
+	padding:10px 10px;
+	text-decoration:none;
+}
+.button:hover {
+	background-color:#80b5ea;
+}
+.button:active {
+	position:relative;
+	top:1px;
+}

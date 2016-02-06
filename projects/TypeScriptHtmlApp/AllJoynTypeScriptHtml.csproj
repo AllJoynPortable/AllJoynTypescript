@@ -22,33 +22,42 @@
     <Service Include="{4A0DDDB5-7A95-4FBF-97CC-616D07737A77}" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="app.css" />
+    <Content Include="images\ajts-logo.png" />
+    <Content Include="images\blue_frame_large.png" />
+    <Content Include="images\cloud-download-32.png" />
+    <Content Include="images\cloud-gears.png" />
+    <Content Include="images\help-24.png" />
+    <Content Include="images\lightbulb_small.jpg" />
+    <Content Include="images\network-24.png" />
+    <Content Include="images\network-green-24.png" />
+    <Content Include="images\services-24.png" />
+    <Content Include="images\settings-8-24.png" />
+    <Content Include="images\switch_small.jpg" />
+    <Content Include="images\test-tube-24.png" />
+    <Content Include="images\thermostat_large.jpg" />
+    <Content Include="images\thermostat_small.jpg" />
+    <Content Include="images\visualstudio_4096_black.png" />
+    <Content Include="images\visualstudio_purple.png" />
     <Content Include="samples.html" />
     <Content Include="setup.html" />
     <Content Include="help.html" />
     <Content Include="explore.html" />
     <Content Include="create.html" />
     <Content Include="bootstrap.html" />
-    <Content Include="cloud-download-32.png" />
-    <Content Include="ajts-logo.png" />
-    <Content Include="cobalt.css" />
-    <Content Include="codemirror.css" />
     <Content Include="codemirror.js" />
     <Content Include="front.html" />
-    <Content Include="help-24.png" />
     <Content Include="index.html" />
     <Content Include="javascript.js" />
-    <Content Include="network-24.png" />
-    <Content Include="network-green-24.png" />
-    <Content Include="services-24.png" />
-    <Content Include="settings-8-24.png" />
+    <Content Include="styles\app.css" />
+    <Content Include="styles\cobalt.css" />
+    <Content Include="styles\codemirror.css" />
+    <Content Include="styles\menu.css" />
+    <Content Include="styles\ttcn.css" />
+    <Content Include="styles\zenburn.css" />
     <Content Include="template.js.txt" />
     <Content Include="template-websocket.js.txt" />
-    <Content Include="ttcn.css" />
-    <Content Include="visualstudio_4096_black.png" />
     <Content Include="web.config" />
     <Content Include="xml.js" />
-    <Content Include="zenburn.css" />
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="..\..\lib\ts\generated.ts">
