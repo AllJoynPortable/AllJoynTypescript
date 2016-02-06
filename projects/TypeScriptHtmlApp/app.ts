@@ -267,6 +267,8 @@ class AllJoynTsApp {
                     
 
                     __this__[this["dataField"]] = this.responseText;
+
+                    if (this["dataField"] == "htmlFront") __this__.GoToFrontPage();
                     return;
                 }
                 else {
