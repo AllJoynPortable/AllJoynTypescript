@@ -9,7 +9,7 @@
 }
 
 /* Underline Reveal */ 
-.hvr-underline-reveal { 
+.hvr-underline-reveal, .hvr-underline-reveal-selected { 
     display: inline-block;
     vertical-align: middle;
     -webkit-transform: translateZ(0);
@@ -21,11 +21,15 @@
     position: relative;
     overflow: hidden;
     font-family: 'Yu Gothic UI Light', sans-serif;
-    font-style: bold;
     font-size: 20px;
     cursor:pointer;
     padding:10px;
-} 
+}
+
+.hvr-underline-reveal-selected {
+    font-weight: bolder;
+}
+
 .hvr-underline-reveal:before { 
     content: "";
     position: absolute;
