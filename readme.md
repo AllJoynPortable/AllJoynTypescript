@@ -34,12 +34,7 @@ What is the future?
 
 We are currently experimenting with TypeScript compiler. We are intending create customised emitters for C# and ANSI C. The goal is to maintain single TypeScript version of our protocol stack implementation, that can be easily transformed into C# anc C. In order to make this possible base protocol implementation must use restricted subset of JavaScript/TypeScript.
 
-**Compiling to Native**
+**AJ.TS for Cortex M**
 
-We are considering LLILUM project (https://github.com/NETMF/llilum) to enable porting of AJ.TS to Cortex M class devices. Thanks to porting restrictions mentioned in previous paragraph, we can achieve this easily, and the target footprint shall be very small.
-
-**Ultra small TypeScript Interpreter**
-
-We have been experimenting with **xsts** - ultra-small TypeScript interpreter with target footprint of around 40k (code), and 8k RAM required for running.  
-
+We are considering ways of deoploying AJ.TS to even smaller devices.
 
