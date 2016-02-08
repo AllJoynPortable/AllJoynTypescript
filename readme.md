@@ -1,5 +1,5 @@
-AllJoyn Typescript (AJ.TS)
-==========================
+AllJoyn Typescript (Part of the AllJoyn Portable Project)
+=========================================================
 
 What is AJ.TS project?
 ----------------------
@@ -41,9 +41,5 @@ We are considering LLILUM project (https://github.com/NETMF/llilum) to enable po
 **Ultra small TypeScript Interpreter**
 
 We have been experimenting with **xsts** - ultra-small TypeScript interpreter with target footprint of around 40k (code), and 8k RAM required for running.  
-
-
-Part of the AllJoyn Portable project
--------------------------------------
 
 
