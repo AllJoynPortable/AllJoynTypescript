@@ -9,6 +9,7 @@ bin
 bld
 obj
 bin
+.vs
 
 *.map
 *.suo
