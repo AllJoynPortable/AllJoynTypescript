@@ -61,13 +61,17 @@ var AJ;
         }
         MsgGeneric.prototype.FromBuffer = function (bytes) {
             if (bytes.length >= 16) {
+				console.log(bytes);
                 this.m_Data = bytes;
                 var length = 16 + this.RoundedHeaderLength() + this.hdr_GetBodyLength();
+				console.log("length : " + length);
                 if ((bytes.length >= length) && (length < 1024)) {
-                    if (bytes.length > length) {
-                        this.m_Data = new Uint8Array(length);
+				    this.m_Data = new Uint8Array(length);
+                    if (bytes.length == length) {    
                         this.m_Data.set(bytes);
-                    }
+                    } else {
+					    this.m_Data.set(bytes.subarray(0, lenght));
+					}
                     return length;
                 }
             }
