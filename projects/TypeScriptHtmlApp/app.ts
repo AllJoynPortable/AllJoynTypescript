@@ -83,7 +83,7 @@ class AllJoynTsApp {
 
         if (e == AJ.ConnectorEventType.ConnectorEventConnected) {
             this.AppendLog("<br/>ALLJOYN CONNECTED");
-            (window.document.getElementById("RouterIcon") as HTMLImageElement).src = "network-green-24.png";
+            //(window.document.getElementById("RouterIcon") as HTMLImageElement).src = "network-green-24.png";
         }
         else if (e == AJ.ConnectorEventType.ConnectorEventConnectionFailed) {
             this.AppendLog("<br/>ALLJOYN CONNECTION FAILED");
