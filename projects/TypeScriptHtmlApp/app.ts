@@ -103,6 +103,55 @@ class AllJoynTsApp {
     }
 
     public onGenerate() {
+        // XXX - just trying something here...
+        var w = window as any;
+        var programText = "class Foo { }";
+        var filename = 'file.ts';
+
+        console.log("PARSING...");
+
+        var tree = w.ts.createSourceFile('dummy.ts',
+            programText,
+            false /* is .d.ts? */,
+            false);
+
+        var SingleFileServiceHost = (function () {
+            function SingleFileServiceHost(options, filename, contents) {
+                var _this = this;
+                this.options = options;
+                this.filename = filename;
+                this.getCompilationSettings = function () { return _this.options; };
+                this.getScriptFileNames = function () { return [_this.filename]; };
+                this.getScriptVersion = function () { return '1'; };
+                this.getScriptSnapshot = function (name) { return name === _this.filename ? _this.file : _this.lib; };
+                this.getCurrentDirectory = function () { return ''; };
+                this.getDefaultLibFileName = function () { return 'lib.d.ts'; };
+                this.file = w.ts.ScriptSnapshot.fromString(programText);
+                this.lib = w.ts.ScriptSnapshot.fromString('');
+
+                this.log = function (text: string) {
+                    console.log(" ERROR: " + text);
+                }
+                this.getCancellationToken = function () { return null; }
+                this.getLocalizedDiagnosticMessages = function () { return null; }
+                this.getSourceFile = function (name) { return name == _this.filename ? _this.programText : " var a: string;"; }
+            }
+            return SingleFileServiceHost;
+        })(); 
+
+        console.log("TypeScript = " + w.TypeScript);
+        console.log("TypeScriptServicesFactory = " + w.ts.TypeScriptServicesFactory);
+
+        // assign(clone(options), { noResolve: true })
+        var serviceHost = new SingleFileServiceHost([{ noResolve: true }], filename, programText);
+        var service = (new w.ts.createLanguageService(serviceHost));
+        var output = service.getEmitOutput(filename);
+        console.log(output.outputFiles[0]);
+// What is the type of the first child?
+
+
+
+
         var xml: string = (window as any).editor.getValue();
             //(window.document.getElementById("introspectionXml") as HTMLTextAreaElement).textContent;
 
