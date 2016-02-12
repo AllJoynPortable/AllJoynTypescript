@@ -30,6 +30,12 @@ var AllJoynTsApp = (function () {
         this.editingTs = false;
         this.codeTs = "";
         this.codeJs = "";
+        this.m_ApplicationId = Generator.DEFAULT_APP_ID.toString();
+        this.m_ApplicationName = Generator.DEFAULT_APP_NAME;
+        this.m_DeviceId = Generator.DEFAULT_DEVICE_ID;
+        this.m_DeviceName = Generator.DEFAULT_DEVICE_NAME;
+        this.m_Manufacturer = Generator.DEFAULT_MANUFACTURER;
+        this.m_ModelNumber = Generator.DEFAULT_MODEL_NUMBER;
         this.AppendLog("The time is: ");
         this.span = document.createElement('span');
         this.span.innerText = new Date().toUTCString();
@@ -168,6 +174,12 @@ var AllJoynTsApp = (function () {
             }
         });
         window.editor.setValue(this.introspectionXml);
+        window.document.getElementById("create-application-id").value = this.m_ApplicationId;
+        window.document.getElementById("create-application-name").value = this.m_ApplicationName;
+        window.document.getElementById("create-device-id").value = this.m_DeviceId;
+        window.document.getElementById("create-device-name").value = this.m_DeviceName;
+        window.document.getElementById("create-manufacturer").value = this.m_Manufacturer;
+        window.document.getElementById("create-model-number").value = this.m_ModelNumber;
         this.MenuHighlight("menu-create");
     };
     AllJoynTsApp.prototype.GoToExplore = function () {

@@ -40,6 +40,13 @@ class AllJoynTsApp {
     codeTs: string = "";
     codeJs: string = "";
 
+    m_ApplicationId: string = Generator.DEFAULT_APP_ID.toString();
+    m_ApplicationName: string = Generator.DEFAULT_APP_NAME;
+    m_DeviceId: string = Generator.DEFAULT_DEVICE_ID;
+    m_DeviceName: string = Generator.DEFAULT_DEVICE_NAME;
+    m_Manufacturer: string = Generator.DEFAULT_MANUFACTURER;
+    m_ModelNumber: string = Generator.DEFAULT_MODEL_NUMBER;
+
     constructor() {
         this.AppendLog("The time is: ");
         this.span = document.createElement('span');
@@ -214,6 +221,14 @@ class AllJoynTsApp {
         });
 
         (window as any).editor.setValue(this.introspectionXml);
+
+        (window.document.getElementById("create-application-id") as HTMLInputElement).value = this.m_ApplicationId;
+        (window.document.getElementById("create-application-name") as HTMLInputElement).value = this.m_ApplicationName;
+        (window.document.getElementById("create-device-id") as HTMLInputElement).value = this.m_DeviceId;
+        (window.document.getElementById("create-device-name") as HTMLInputElement).value = this.m_DeviceName;
+        (window.document.getElementById("create-manufacturer") as HTMLInputElement).value = this.m_Manufacturer;
+        (window.document.getElementById("create-model-number") as HTMLInputElement).value = this.m_ModelNumber;
+
         this.MenuHighlight("menu-create");
     }
 
