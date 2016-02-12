@@ -17,9 +17,7 @@ This repository is under heavy development right now, and  not all the features 
 
 In a meanwhile you can preview our sample AJ.TS HTML Application here:
 
-http://htmlpreview.github.io/?https://github.com/AllJoynPortable/AllJoynTypescript/master/projects/TypeScriptHtmlApp/index.html
-
-Allow a few seconds before entire page loads, as it's pulled directly from our git repo.
+http://alljoynportable.github.io/AllJoynTypescript/projects/TypeScriptHtmlApp/index.html
 
 Alternatively you can just clone our repository and open following solution in Visual Studio 2015:
 
