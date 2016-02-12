@@ -74,6 +74,7 @@
     <TypeScriptCompile Include="app.ts" />
     <Content Include="template.ts.txt" />
     <Content Include="template-websocket.ts.txt" />
+    <TypeScriptCompile Include="TypeScriptConversion.ts" />
   </ItemGroup>
   <ItemGroup>
     <None Include="web.Debug.config">
