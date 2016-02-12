@@ -80,10 +80,6 @@ var AllJoynTsApp = (function () {
         }
     };
     AllJoynTsApp.prototype.onGenerate = function () {
-        // XXX - just trying something here...
-        var w = window;
-        var out = ConvertTsToJs("class abc {};");
-        console.log(out);
         var xml = window.editor.getValue();
         //(window.document.getElementById("introspectionXml") as HTMLTextAreaElement).textContent;
         var p = new Generator.IntrospectionXmlParser();
@@ -107,6 +103,12 @@ var AllJoynTsApp = (function () {
         out = out.replace("/*CONNECTOR-CODE-HERE*/", this.templateWebSocketTS);
         window.editorScript.setValue(out);
         //(window.document.getElementById("generatedCode") as HTMLTextAreaElement).textContent = out;
+    };
+    AllJoynTsApp.prototype.onGenerateJs = function () {
+        var ts = window.editorScript.getValue();
+        console.log(ts);
+        var out = ConvertTsToJs(ts);
+        window.editorScript.setValue(out);
     };
     AllJoynTsApp.prototype.onTest = function () {
         var xml = window.editor.getValue();

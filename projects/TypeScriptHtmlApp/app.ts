@@ -103,13 +103,6 @@ class AllJoynTsApp {
     }
 
     public onGenerate() {
-        // XXX - just trying something here...
-        var w = window as any;
-
-        var out: string = ConvertTsToJs("class abc {};");
-
-        console.log(out);
-
         var xml: string = (window as any).editor.getValue();
             //(window.document.getElementById("introspectionXml") as HTMLTextAreaElement).textContent;
 
@@ -143,6 +136,13 @@ class AllJoynTsApp {
 
     }
 
+    public onGenerateJs() {
+        var ts: string = (window as any).editorScript.getValue();
+
+        console.log(ts);
+        var out: string = ConvertTsToJs(ts);
+        (window as any).editorScript.setValue(out);
+    }
 
     public onTest() {
         var xml: string = (window as any).editor.getValue();
