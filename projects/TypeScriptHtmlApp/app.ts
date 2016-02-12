@@ -34,7 +34,10 @@ class AllJoynTsApp {
     connectionAzureParam: string = "<azure connection string>";
     connectionWebsocketParam: string = "ws://127.0.0.1:8088";
 
+    // create
     introspectionXml: string = "";
+    codeTs: string = "";
+    codeJs: string = "";
 
     constructor() {
         this.AppendLog("The time is: ");
@@ -102,83 +105,62 @@ class AllJoynTsApp {
         }
     }
 
-    public onGenerate() {
+    private updateTs() {
         var xml: string = (window as any).editor.getValue();
-            //(window.document.getElementById("introspectionXml") as HTMLTextAreaElement).textContent;
+        //(window.document.getElementById("introspectionXml") as HTMLTextAreaElement).textContent;
 
-        var p: Generator.IntrospectionXmlParser = new Generator.IntrospectionXmlParser();
+        if (this.codeTs == "") {
 
-        // first, parse introspection xml
-        try {
-            p.ParseXml(xml);
+            var p: Generator.IntrospectionXmlParser = new Generator.IntrospectionXmlParser();
 
-        } catch (e) {
-            this.AppendLog("<br/>" + e);
+            // first, parse introspection xml
+            try {
+                p.ParseXml(xml);
+
+            } catch (e) {
+                this.AppendLog("<br/>" + e);
+            }
+
+            this.AppendLog("<br/>PARSER FINISHED: " + p.m_ObjectPath + " " + p.m_Interface);
+
+            // create code generator
+            var gen: Generator.CodeGeneratorTS = new Generator.CodeGeneratorTS(p.m_Methods);
+
+            gen.SetIntrospectionXml(xml);
+            gen.SetIconData(Generator.DEFAULT_DEVICE_ICON_MIME_TYPE, Generator.DEFAULT_DEVICE_ICON_URL, Generator.DEFAULT_DEVICE_ICON);
+            gen.SetDeviceData(Generator.DEFAULT_APP_ID, Generator.DEFAULT_APP_NAME, Generator.DEFAULT_DEVICE_ID, Generator.DEFAULT_DEVICE_NAME, Generator.DEFAULT_MANUFACTURER, Generator.DEFAULT_MODEL_NUMBER);
+            this.codeTs = this.templateTS;
+
+            this.codeTs = this.codeTs.replace("/*WRITER-CODE-HERE*/", gen.GenerateWriters());
+            this.codeTs = this.codeTs.replace("/*READER-CODE-HERE*/", gen.GenerateReaders());
+            this.codeTs = this.codeTs.replace("/*APPLICATION-CODE-HERE*/", gen.GenerateApplicationCode());
+            this.codeTs = this.codeTs.replace("/*CONNECTOR-CODE-HERE*/", this.templateWebSocketTS);
+            this.codeJs = "";
         }
-
-        this.AppendLog("<br/>PARSER FINISHED: " + p.m_ObjectPath + " " + p.m_Interface);
-
-        // create code generator
-        var gen: Generator.CodeGeneratorTS = new Generator.CodeGeneratorTS(p.m_Methods);
-
-        gen.SetIntrospectionXml(xml);
-        gen.SetIconData(Generator.DEFAULT_DEVICE_ICON_MIME_TYPE, Generator.DEFAULT_DEVICE_ICON_URL, Generator.DEFAULT_DEVICE_ICON);
-        gen.SetDeviceData(Generator.DEFAULT_APP_ID, Generator.DEFAULT_APP_NAME, Generator.DEFAULT_DEVICE_ID, Generator.DEFAULT_DEVICE_NAME, Generator.DEFAULT_MANUFACTURER, Generator.DEFAULT_MODEL_NUMBER);
-        var out: string = this.templateTS;
-
-        out = out.replace("/*WRITER-CODE-HERE*/", gen.GenerateWriters());
-        out = out.replace("/*READER-CODE-HERE*/", gen.GenerateReaders());
-        out = out.replace("/*APPLICATION-CODE-HERE*/", gen.GenerateApplicationCode());
-        out = out.replace("/*CONNECTOR-CODE-HERE*/", this.templateWebSocketTS);
-
-        (window as any).editorScript.setValue(out);
-        //(window.document.getElementById("generatedCode") as HTMLTextAreaElement).textContent = out;
-
     }
 
-    public onGenerateJs() {
-        var ts: string = (window as any).editorScript.getValue();
+    private updateJs() {
+        if (this.codeJs == "") {
+            this.updateTs();
+            this.codeJs = ConvertTsToJs(this.codeTs);
+        }
+    }
 
-        console.log(ts);
-        var out: string = ConvertTsToJs(ts);
-        (window as any).editorScript.setValue(out);
+    public onShowTs() {
+        this.updateTs();
+        (window as any).editorScript.setValue(this.codeTs);
+    }
+
+    public onShowJs() {
+        this.updateJs();
+        (window as any).editorScript.setValue(this.codeJs);
     }
 
     public onTest() {
-        var xml: string = (window as any).editor.getValue();
-        var p: Generator.IntrospectionXmlParser = new Generator.IntrospectionXmlParser();
+        this.updateJs();
 
-        // first, parse introspection xml
-        try {
-            p.ParseXml(xml);
-
-        } catch (e) {
-            this.AppendLog("<br/>" + e);
-        }
-
-        this.AppendLog("<br/>PARSER FINISHED: " + p.m_ObjectPath + " " + p.m_Interface);
-
-        // create code generator
-        var gen: Generator.CodeGeneratorTS = new Generator.CodeGeneratorTS(p.m_Methods);
-
-        gen.EnableJsOnly();
-        gen.SetIntrospectionXml(xml);
-        gen.SetIconData(Generator.DEFAULT_DEVICE_ICON_MIME_TYPE, Generator.DEFAULT_DEVICE_ICON_URL, Generator.DEFAULT_DEVICE_ICON);
-        gen.SetDeviceData(Generator.DEFAULT_APP_ID, Generator.DEFAULT_APP_NAME, Generator.DEFAULT_DEVICE_ID, Generator.DEFAULT_DEVICE_NAME, Generator.DEFAULT_MANUFACTURER, Generator.DEFAULT_MODEL_NUMBER);
-        var out: string = this.templateJS;
-
-        out = out.replace("/*WRITER-CODE-HERE*/", gen.GenerateWriters());
-        out = out.replace("/*READER-CODE-HERE*/", gen.GenerateReaders());
-        out = out.replace("/*APPLICATION-CODE-HERE*/", gen.GenerateApplicationCode());
-        out = out.replace("/*CONNECTOR-CODE-HERE*/", this.templateWebSocketJS);
-
-        (window as any).editorScript.setValue(out);
-
-        //(window.document.getElementById("generatedCode") as HTMLTextAreaElement).textContent = out;
-
-        // this should reload script
         var geval = eval;
-        geval(out);
+        geval(this.codeJs);
 
         // try to restart with new service
         this.start();
