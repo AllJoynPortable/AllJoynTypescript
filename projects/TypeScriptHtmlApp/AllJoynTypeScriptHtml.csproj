@@ -10,7 +10,7 @@
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
-    <TypeScriptToolsVersion>1.7</TypeScriptToolsVersion>
+    <TypeScriptToolsVersion>1.8</TypeScriptToolsVersion>
     <UseIISExpress>true</UseIISExpress>
     <IISExpressSSLPort />
     <IISExpressAnonymousAuthentication />
@@ -60,6 +60,7 @@
     <Content Include="styles\zenburn.css" />
     <Content Include="template.js.txt" />
     <Content Include="template-websocket.js.txt" />
+    <Content Include="typescript.js" />
     <Content Include="web.config" />
     <Content Include="xml.js" />
   </ItemGroup>
@@ -73,6 +74,7 @@
     <TypeScriptCompile Include="app.ts" />
     <Content Include="template.ts.txt" />
     <Content Include="template-websocket.ts.txt" />
+    <TypeScriptCompile Include="TypeScriptConversion.ts" />
   </ItemGroup>
   <ItemGroup>
     <None Include="web.Debug.config">

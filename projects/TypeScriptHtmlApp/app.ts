@@ -34,7 +34,18 @@ class AllJoynTsApp {
     connectionAzureParam: string = "<azure connection string>";
     connectionWebsocketParam: string = "ws://127.0.0.1:8088";
 
+    // create
     introspectionXml: string = "";
+    editingTs = false;
+    codeTs: string = "";
+    codeJs: string = "";
+
+    m_ApplicationId: string = Generator.DEFAULT_APP_ID.toString();
+    m_ApplicationName: string = Generator.DEFAULT_APP_NAME;
+    m_DeviceId: string = Generator.DEFAULT_DEVICE_ID;
+    m_DeviceName: string = Generator.DEFAULT_DEVICE_NAME;
+    m_Manufacturer: string = Generator.DEFAULT_MANUFACTURER;
+    m_ModelNumber: string = Generator.DEFAULT_MODEL_NUMBER;
 
     constructor() {
         this.AppendLog("The time is: ");
@@ -102,76 +113,67 @@ class AllJoynTsApp {
         }
     }
 
-    public onGenerate() {
-        var xml: string = (window as any).editor.getValue();
-            //(window.document.getElementById("introspectionXml") as HTMLTextAreaElement).textContent;
-
-        var p: Generator.IntrospectionXmlParser = new Generator.IntrospectionXmlParser();
-
-        // first, parse introspection xml
-        try {
-            p.ParseXml(xml);
-
-        } catch (e) {
-            this.AppendLog("<br/>" + e);
-        }
-
-        this.AppendLog("<br/>PARSER FINISHED: " + p.m_ObjectPath + " " + p.m_Interface);
-
-        // create code generator
-        var gen: Generator.CodeGeneratorTS = new Generator.CodeGeneratorTS(p.m_Methods);
-
-        gen.SetIntrospectionXml(xml);
-        gen.SetIconData(Generator.DEFAULT_DEVICE_ICON_MIME_TYPE, Generator.DEFAULT_DEVICE_ICON_URL, Generator.DEFAULT_DEVICE_ICON);
-        gen.SetDeviceData(Generator.DEFAULT_APP_ID, Generator.DEFAULT_APP_NAME, Generator.DEFAULT_DEVICE_ID, Generator.DEFAULT_DEVICE_NAME, Generator.DEFAULT_MANUFACTURER, Generator.DEFAULT_MODEL_NUMBER);
-        var out: string = this.templateTS;
-
-        out = out.replace("/*WRITER-CODE-HERE*/", gen.GenerateWriters());
-        out = out.replace("/*READER-CODE-HERE*/", gen.GenerateReaders());
-        out = out.replace("/*APPLICATION-CODE-HERE*/", gen.GenerateApplicationCode());
-        out = out.replace("/*CONNECTOR-CODE-HERE*/", this.templateWebSocketTS);
-
-        (window as any).editorScript.setValue(out);
-        //(window.document.getElementById("generatedCode") as HTMLTextAreaElement).textContent = out;
-
+    private updateXml() {
     }
 
+    private updateTs() {
+        var xml: string = (window as any).editor.getValue();
+        //(window.document.getElementById("introspectionXml") as HTMLTextAreaElement).textContent;
+
+        if (this.codeTs == "") {
+
+            var p: Generator.IntrospectionXmlParser = new Generator.IntrospectionXmlParser();
+
+            // first, parse introspection xml
+            try {
+                p.ParseXml(xml);
+
+            } catch (e) {
+                this.AppendLog("<br/>" + e);
+            }
+
+            this.AppendLog("<br/>PARSER FINISHED: " + p.m_ObjectPath + " " + p.m_Interface);
+
+            // create code generator
+            var gen: Generator.CodeGeneratorTS = new Generator.CodeGeneratorTS(p.m_Methods);
+
+            gen.SetIntrospectionXml(xml);
+            gen.SetIconData(Generator.DEFAULT_DEVICE_ICON_MIME_TYPE, Generator.DEFAULT_DEVICE_ICON_URL, Generator.DEFAULT_DEVICE_ICON);
+            gen.SetDeviceData(Generator.DEFAULT_APP_ID, Generator.DEFAULT_APP_NAME, Generator.DEFAULT_DEVICE_ID, Generator.DEFAULT_DEVICE_NAME, Generator.DEFAULT_MANUFACTURER, Generator.DEFAULT_MODEL_NUMBER);
+            this.codeTs = this.templateTS;
+
+            this.codeTs = this.codeTs.replace("/*WRITER-CODE-HERE*/", gen.GenerateWriters());
+            this.codeTs = this.codeTs.replace("/*READER-CODE-HERE*/", gen.GenerateReaders());
+            this.codeTs = this.codeTs.replace("/*APPLICATION-CODE-HERE*/", gen.GenerateApplicationCode());
+            this.codeTs = this.codeTs.replace("/*CONNECTOR-CODE-HERE*/", this.templateWebSocketTS);
+            this.codeJs = "";
+        }
+    }
+
+    private updateJs() {
+        if (this.codeJs == "") {
+            this.updateTs();
+            this.codeJs = ConvertTsToJs(this.codeTs);
+        }
+    }
+
+    public onShowTs() {
+        this.updateTs();
+        (window as any).editorScript.setValue(this.codeTs);
+        this.editingTs = true;
+    }
+
+    public onShowJs() {
+        this.editingTs = false;
+        this.updateJs();
+        (window as any).editorScript.setValue(this.codeJs);
+    }
 
     public onTest() {
-        var xml: string = (window as any).editor.getValue();
-        var p: Generator.IntrospectionXmlParser = new Generator.IntrospectionXmlParser();
+        this.updateJs();
 
-        // first, parse introspection xml
-        try {
-            p.ParseXml(xml);
-
-        } catch (e) {
-            this.AppendLog("<br/>" + e);
-        }
-
-        this.AppendLog("<br/>PARSER FINISHED: " + p.m_ObjectPath + " " + p.m_Interface);
-
-        // create code generator
-        var gen: Generator.CodeGeneratorTS = new Generator.CodeGeneratorTS(p.m_Methods);
-
-        gen.EnableJsOnly();
-        gen.SetIntrospectionXml(xml);
-        gen.SetIconData(Generator.DEFAULT_DEVICE_ICON_MIME_TYPE, Generator.DEFAULT_DEVICE_ICON_URL, Generator.DEFAULT_DEVICE_ICON);
-        gen.SetDeviceData(Generator.DEFAULT_APP_ID, Generator.DEFAULT_APP_NAME, Generator.DEFAULT_DEVICE_ID, Generator.DEFAULT_DEVICE_NAME, Generator.DEFAULT_MANUFACTURER, Generator.DEFAULT_MODEL_NUMBER);
-        var out: string = this.templateJS;
-
-        out = out.replace("/*WRITER-CODE-HERE*/", gen.GenerateWriters());
-        out = out.replace("/*READER-CODE-HERE*/", gen.GenerateReaders());
-        out = out.replace("/*APPLICATION-CODE-HERE*/", gen.GenerateApplicationCode());
-        out = out.replace("/*CONNECTOR-CODE-HERE*/", this.templateWebSocketJS);
-
-        (window as any).editorScript.setValue(out);
-
-        //(window.document.getElementById("generatedCode") as HTMLTextAreaElement).textContent = out;
-
-        // this should reload script
         var geval = eval;
-        geval(out);
+        geval(this.codeJs);
 
         // try to restart with new service
         this.start();
@@ -196,11 +198,37 @@ class AllJoynTsApp {
         (window as any).editor = (window as any).CodeMirror.fromTextArea(window.document.getElementById("introspectionXml"), {
             lineNumbers: true, mode: "text/xml", theme: "ttcn"
         });
+
+        var __this__ = this;
+        (window as any).editor.on("change", function (instance, changeObj) {
+            console.log("INTROSPECTION XML CHANGED");
+            __this__.codeJs = "";
+            __this__.codeTs = "";
+        });
+
         (window as any).editorScript = (window as any).CodeMirror.fromTextArea(window.document.getElementById("generatedCode"), {
             lineNumbers: true, mode: "text/typescript", theme: "ttcn"
         });
 
+        var __this__ = this;
+        (window as any).editorScript.on("change", function (instance, changeObj) {
+
+            if (__this__.editingTs) {
+                console.log("TS SCRIPT CHANGED");
+                __this__.codeJs = "";
+                __this__.codeTs = (window as any).editorScript.getValue();
+            }
+        });
+
         (window as any).editor.setValue(this.introspectionXml);
+
+        (window.document.getElementById("create-application-id") as HTMLInputElement).value = this.m_ApplicationId;
+        (window.document.getElementById("create-application-name") as HTMLInputElement).value = this.m_ApplicationName;
+        (window.document.getElementById("create-device-id") as HTMLInputElement).value = this.m_DeviceId;
+        (window.document.getElementById("create-device-name") as HTMLInputElement).value = this.m_DeviceName;
+        (window.document.getElementById("create-manufacturer") as HTMLInputElement).value = this.m_Manufacturer;
+        (window.document.getElementById("create-model-number") as HTMLInputElement).value = this.m_ModelNumber;
+
         this.MenuHighlight("menu-create");
     }
 

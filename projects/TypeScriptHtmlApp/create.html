@@ -4,27 +4,27 @@
     <table style="padding:10px;">
         <tr>
             <td>Device Id</td>
-            <td><input id="device-id" type="text" onclick="app.OnDeviceIdChanged();"></td>
+            <td><input id="create-device-id" type="text" onclick="app.OnDeviceIdChanged();"></td>
         </tr>
         <tr>
             <td>Device Name</td>
-            <td><input id="device-name" type="text" onclick="app.OnDeviceIdChanged();"></td>
+            <td><input id="create-device-name" type="text" onclick="app.OnDeviceIdChanged();"></td>
         </tr>
         <tr>
             <td>Manufacturer</td>
-            <td><input id="device-name" type="text" onclick="app.OnDeviceIdChanged();"></td>
+            <td><input id="create-manufacturer" type="text" onclick="app.OnDeviceIdChanged();"></td>
         </tr>
         <tr>
             <td>Model Number</td>
-            <td><input id="device-name" type="text" onclick="app.OnDeviceIdChanged();"></td>
+            <td><input id="create-model-number" type="text" onclick="app.OnDeviceIdChanged();"></td>
         </tr>
         <tr>
             <td>Application Name</td>
-            <td><input id="device-name" type="text" onclick="app.OnDeviceIdChanged();"></td>
+            <td><input id="create-application-name" type="text" onclick="app.OnDeviceIdChanged();"></td>
         </tr>
         <tr>
             <td>Application Id</td>
-            <td><input id="device-name" type="text" onclick="app.OnDeviceIdChanged();"></td>
+            <td><input id="create-application-id" type="text" onclick="app.OnDeviceIdChanged();"></td>
         </tr>
     </table>
 
@@ -36,8 +36,8 @@
     </div>
 
     <div style="padding:10px">
-        <button class="button" onclick="app.onGenerate();">Generate TS</button>
-        <button class="button" onclick="app.onGenerate();">Generate JS</button>
+        <button class="button" onclick="app.onShowTs();">TS</button>
+        <button class="button" onclick="app.onShowJs();">JS</button>
         <button class="button" onclick="app.onTest();">Test</button>
     </div>
 </div>
