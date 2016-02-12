@@ -36,6 +36,7 @@ class AllJoynTsApp {
 
     // create
     introspectionXml: string = "";
+    editingTs = false;
     codeTs: string = "";
     codeJs: string = "";
 
@@ -105,6 +106,9 @@ class AllJoynTsApp {
         }
     }
 
+    private updateXml() {
+    }
+
     private updateTs() {
         var xml: string = (window as any).editor.getValue();
         //(window.document.getElementById("introspectionXml") as HTMLTextAreaElement).textContent;
@@ -149,9 +153,11 @@ class AllJoynTsApp {
     public onShowTs() {
         this.updateTs();
         (window as any).editorScript.setValue(this.codeTs);
+        this.editingTs = true;
     }
 
     public onShowJs() {
+        this.editingTs = false;
         this.updateJs();
         (window as any).editorScript.setValue(this.codeJs);
     }
@@ -185,8 +191,26 @@ class AllJoynTsApp {
         (window as any).editor = (window as any).CodeMirror.fromTextArea(window.document.getElementById("introspectionXml"), {
             lineNumbers: true, mode: "text/xml", theme: "ttcn"
         });
+
+        var __this__ = this;
+        (window as any).editor.on("change", function (instance, changeObj) {
+            console.log("INTROSPECTION XML CHANGED");
+            __this__.codeJs = "";
+            __this__.codeTs = "";
+        });
+
         (window as any).editorScript = (window as any).CodeMirror.fromTextArea(window.document.getElementById("generatedCode"), {
             lineNumbers: true, mode: "text/typescript", theme: "ttcn"
+        });
+
+        var __this__ = this;
+        (window as any).editorScript.on("change", function (instance, changeObj) {
+
+            if (__this__.editingTs) {
+                console.log("TS SCRIPT CHANGED");
+                __this__.codeJs = "";
+                __this__.codeTs = (window as any).editorScript.getValue();
+            }
         });
 
         (window as any).editor.setValue(this.introspectionXml);

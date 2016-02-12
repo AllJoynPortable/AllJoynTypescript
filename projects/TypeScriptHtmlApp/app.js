@@ -27,6 +27,7 @@ var AllJoynTsApp = (function () {
         this.connectionWebsocketParam = "ws://127.0.0.1:8088";
         // create
         this.introspectionXml = "";
+        this.editingTs = false;
         this.codeTs = "";
         this.codeJs = "";
         this.AppendLog("The time is: ");
@@ -82,6 +83,8 @@ var AllJoynTsApp = (function () {
             this.AppendLog("<br/>Message Received: " + d.hdr_GetMsgType() + " " + d.hdr_GetMember());
         }
     };
+    AllJoynTsApp.prototype.updateXml = function () {
+    };
     AllJoynTsApp.prototype.updateTs = function () {
         var xml = window.editor.getValue();
         //(window.document.getElementById("introspectionXml") as HTMLTextAreaElement).textContent;
@@ -117,8 +120,10 @@ var AllJoynTsApp = (function () {
     AllJoynTsApp.prototype.onShowTs = function () {
         this.updateTs();
         window.editorScript.setValue(this.codeTs);
+        this.editingTs = true;
     };
     AllJoynTsApp.prototype.onShowJs = function () {
+        this.editingTs = false;
         this.updateJs();
         window.editorScript.setValue(this.codeJs);
     };
@@ -145,8 +150,22 @@ var AllJoynTsApp = (function () {
         window.editor = window.CodeMirror.fromTextArea(window.document.getElementById("introspectionXml"), {
             lineNumbers: true, mode: "text/xml", theme: "ttcn"
         });
+        var __this__ = this;
+        window.editor.on("change", function (instance, changeObj) {
+            console.log("INTROSPECTION XML CHANGED");
+            __this__.codeJs = "";
+            __this__.codeTs = "";
+        });
         window.editorScript = window.CodeMirror.fromTextArea(window.document.getElementById("generatedCode"), {
             lineNumbers: true, mode: "text/typescript", theme: "ttcn"
+        });
+        var __this__ = this;
+        window.editorScript.on("change", function (instance, changeObj) {
+            if (__this__.editingTs) {
+                console.log("TS SCRIPT CHANGED");
+                __this__.codeJs = "";
+                __this__.codeTs = window.editorScript.getValue();
+            }
         });
         window.editor.setValue(this.introspectionXml);
         this.MenuHighlight("menu-create");
