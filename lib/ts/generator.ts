@@ -533,11 +533,6 @@
             this.m_Definition = def;
         }
 
-        public EnableJsOnly()
-        {
-            this.m_JsOnly = true;
-        }
-
         public GenerateApplicationCode(): string
         {
             var o: string = "";
@@ -548,53 +543,27 @@
                 var buffer_idx: number = 0;
 
                 o += "\r\n";
-
-                if (!this.m_JsOnly) {
-                    o += "var APP_ID:           Uint8Array = new Uint8Array([" + this.Generate_HexNumbers(this.m_AppId) + "]);\r\n";
-                    o += "var APP_NAME:         string = \"" + this.m_AppName + "\";\r\n";
-                    o += "var APP_DESCRIPTION:  string = \"Application Description\";\r\n"; // XXX - should come from ui
-                    o += "var DEVICE_ID:        string = \"" + this.m_Deviceid + "\";\r\n";
-                    o += "var DEVICE_NAME:      string = \"" + this.m_DeviceName + "\";\r\n";
-                    o += "var MANUFACTURER:     string = \"" + this.m_Manufacturer + "\";\r\n";
-                    o += "var MODEL_NUMBER:     string = \"" + this.m_ModelNumber + "\";\r\n";
-                }
-                else {
-                    o += "var APP_ID             = new Uint8Array([" + this.Generate_HexNumbers(this.m_AppId) + "]);\r\n";
-                    o += "var APP_NAME           = \"" + this.m_AppName + "\";\r\n";
-                    o += "var APP_DESCRIPTION    = \"Application Description\";\r\n"; // XXX - should come from ui
-                    o += "var DEVICE_ID          = \"" + this.m_Deviceid + "\";\r\n";
-                    o += "var DEVICE_NAME        = \"" + this.m_DeviceName + "\";\r\n";
-                    o += "var MANUFACTURER       = \"" + this.m_Manufacturer + "\";\r\n";
-                    o += "var MODEL_NUMBER       = \"" + this.m_ModelNumber + "\";\r\n";
-                }
-
+                o += "var APP_ID:           Uint8Array = new Uint8Array([" + this.Generate_HexNumbers(this.m_AppId) + "]);\r\n";
+                o += "var APP_NAME:         string = \"" + this.m_AppName + "\";\r\n";
+                o += "var APP_DESCRIPTION:  string = \"Application Description\";\r\n"; // XXX - should come from ui
+                o += "var DEVICE_ID:        string = \"" + this.m_Deviceid + "\";\r\n";
+                o += "var DEVICE_NAME:      string = \"" + this.m_DeviceName + "\";\r\n";
+                o += "var MANUFACTURER:     string = \"" + this.m_Manufacturer + "\";\r\n";
+                o += "var MODEL_NUMBER:     string = \"" + this.m_ModelNumber + "\";\r\n";
                 o += "\r\n";
 
                 var xml: string = this.m_IntrospectionXml.replace(/\"/g, "\\\"");
                 xml = xml.replace(/</g, "\"<");
                 xml = xml.replace(/>/g, ">\" + ");
 
-                if (!this.m_JsOnly) {
-                    o += "var APP_INTROSPECTION_XML: string = \r\n";
-                }
-                else {
-                    o += "var APP_INTROSPECTION_XML     = \r\n";
-                }
+                o += "var APP_INTROSPECTION_XML: string = \r\n";
                 o += xml + " \"\";\r\n";
                 o += "\r\n";
 
-                if (!this.m_JsOnly) {
-                    o += "var DEVICE_ICON_VERSION: number = 1;\r\n";
-                    o += "var DEVICE_ICON_MIME_TYPE: string = \"" + this.m_IconMimeType + "\";\r\n";
-                    o += "var DEVICE_ICON_URL: string = \"" + this.m_IconUrl + "\";\r\n";
-                    o += "var DEVICE_ICON: Uint8Array = new Uint8Array([" + this.Generate_HexNumbers(this.m_IconData) + "]);\r\n";
-                }
-                else {
-                    o += "var DEVICE_ICON_VERSION = 1;\r\n";
-                    o += "var DEVICE_ICON_MIME_TYPE = \"" + this.m_IconMimeType + "\";\r\n";
-                    o += "var DEVICE_ICON_URL = \"" + this.m_IconUrl + "\";\r\n";
-                    o += "var DEVICE_ICON = new Uint8Array([" + this.Generate_HexNumbers(this.m_IconData) + "]);\r\n";
-                }
+                o += "var DEVICE_ICON_VERSION: number = 1;\r\n";
+                o += "var DEVICE_ICON_MIME_TYPE: string = \"" + this.m_IconMimeType + "\";\r\n";
+                o += "var DEVICE_ICON_URL: string = \"" + this.m_IconUrl + "\";\r\n";
+                o += "var DEVICE_ICON: Uint8Array = new Uint8Array([" + this.Generate_HexNumbers(this.m_IconData) + "]);\r\n";
             }
 
             o += "\r\n";
@@ -633,12 +602,7 @@
         private Generate_Data(name: string, data: Uint8Array): string
         {
             var o: string = "";
-            if (!this.m_JsOnly) {
-                o = "var " + name + ": Uint8Array = new Uint8Array([";
-            }
-            else {
-                o = "var " + name + " = new Uint8Array([";
-            }
+            o = "var " + name + ": Uint8Array = new Uint8Array([";
 
             if (null != data) {
                 o += this.Generate_HexNumbers(data);
@@ -660,12 +624,7 @@
             var default_value: string;
             var generic_type_name: string;
 
-            if (!this.m_JsOnly) {
-                o += "function " + this.CreateProcessFunctionName(m) + "(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean\r\n";
-            }
-            else {
-                o += "function " + this.CreateProcessFunctionName(m) + "(connection, msg)\r\n";
-            }
+            o += "function " + this.CreateProcessFunctionName(m) + "(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean\r\n";
 
             o += "{\r\n";
 
@@ -684,12 +643,7 @@
                 }
 
 
-                if (!this.m_JsOnly) {
-                    o += "    var " + p.m_Name + ": " + tstype + " = msg." + this.CreateReadFunctionName(p.m_DataType) + "(" + parameters + ");\r\n";
-                }
-                else {
-                    o += "    var " + p.m_Name + " = msg." + this.CreateReadFunctionName(p.m_DataType) + "(" + parameters + ");\r\n";
-                }
+                o += "    var " + p.m_Name + ": " + tstype + " = msg." + this.CreateReadFunctionName(p.m_DataType) + "(" + parameters + ");\r\n";
 
                 this.AddReader(p.m_DataType, "");
             }
@@ -700,12 +654,7 @@
 
             if ("void" != tstype) {
 
-                if (!this.m_JsOnly) {
-                    o += "    var ret: " + tstype + " = " + this.CreateHandlerFunctionName(m) + "(connection";
-                }
-                else {
-                    o += "    var ret = " + this.CreateHandlerFunctionName(m) + "(connection";
-                }
+                o += "    var ret: " + tstype + " = " + this.CreateHandlerFunctionName(m) + "(connection";
             }
             else {
                 o += "    " + this.CreateHandlerFunctionName(m) + "(connection";
@@ -749,14 +698,8 @@
         {
             var o: string = "";
 
-            if (!this.m_JsOnly) {
-                o += "function _ProcessMsg(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {\r\n";
-                o += "    var member: string = msg.hdr_GetMember();\r\n\r\n";
-            }
-            else {
-                o += "function _ProcessMsg(connection, msg) {\r\n";
-                o += "    var member = msg.hdr_GetMember();\r\n\r\n";
-            }
+            o += "function _ProcessMsg(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {\r\n";
+            o += "    var member: string = msg.hdr_GetMember();\r\n\r\n";
 
             var first: boolean = true;
             for (var m of this.m_Definition)
@@ -865,12 +808,7 @@
                         parameters = "\"" + p.m_DataType + "\"";
                     }
 
-                    if (!this.m_JsOnly) {
-                        o += "            var " + p.m_Name + ": " + tstype + " = msg.body_Read" + generic_type_name + "(" + parameters + ");\r\n";
-                    }
-                    else {
-                        o += "            var " + p.m_Name + " = msg.body_Read" + generic_type_name + "(" + parameters + ");\r\n";
-                    }
+                    o += "            var " + p.m_Name + ": " + tstype + " = msg.body_Read" + generic_type_name + "(" + parameters + ");\r\n";
                 }
 
                 // XXX - read return parameters here
@@ -913,12 +851,10 @@
             o += ")";
 
 
-            if (!this.m_JsOnly) {
-                // return type
-                var ctype_ret: string = (m.m_ParametersReply.length > 0) ? this.TypeToTsType(m.m_ParametersReply[0].m_DataType) : "void";
+            // return type
+            var ctype_ret: string = (m.m_ParametersReply.length > 0) ? this.TypeToTsType(m.m_ParametersReply[0].m_DataType) : "void";
 
-                o += ": " + ctype_ret;
-            }
+            o += ": " + ctype_ret;
 
             return o;
         }
@@ -944,9 +880,7 @@
 
             o += ")";
 
-            if (!this.m_JsOnly) {
-                o += ": void";
-            }
+            o += ": void";
 
             return o;
         }
@@ -955,7 +889,7 @@
         {
             var p: string = name;
 
-            if (!this.m_JsOnly) p += ": " + this.TypeToTsType(type);
+            p += ": " + this.TypeToTsType(type);
 
             return p;
         }
@@ -965,31 +899,17 @@
             var o: string = "";
             var sp: string = "        ";
 
-            if (this.m_JsOnly) {
-                o += sp + "MsgGeneric.prototype." + this.CreateReadFunctionName(signature) + " = function() {\r\n";
-            }
-            else {
-                o += sp + "public " + this.CreateReadFunctionName(signature) + "(): Array<any> {\r\n";
-            }
+            o += sp + "public " + this.CreateReadFunctionName(signature) + "(): Array<any> {\r\n";
 
             if (signature[0] == 'a') {
                 var ss = this.SignatureHelper_GetSubSignature(signature, 1);
-                if (!this.m_JsOnly) {
-                    o += sp + "    var length: number = this.body_Read_I();\r\n";
-                } else {
-                    o += sp + "    var length = this.body_Read_I();\r\n";
-                }
+                o += sp + "    var length: number = this.body_Read_I();\r\n";
 
                 if (((ss[0] == '(') || (ss[0] == '{')))
                     o += sp + "    this.Align(8);\r\n";
 
-                if (!this.m_JsOnly) {
-                    o += sp + "    var end: number = this.m_position + length;\r\n";
-                    o += sp + "    var ret: Array <any> = new Array<any>();\r\n";
-                } else {
-                    o += sp + "    var end = this.m_position + length;\r\n";
-                    o += sp + "    var ret = new Array();\r\n";
-                }
+                o += sp + "    var end: number = this.m_position + length;\r\n";
+                o += sp + "    var ret: Array <any> = new Array<any>();\r\n";
                 o += sp + "    while (this.m_position < end)\r\n";
                 o += sp + "        ret.push(this." + this.CreateReadFunctionName(ss) + "());\r\n";
                 o += sp + "    return ret;\r\n";
@@ -1039,22 +959,12 @@
             var o: string = "";
             var sp: string = "        ";
 
-            if (this.m_JsOnly) {
-                o += sp + "MsgGeneric.prototype." + this.CreateWriteFunctionName(signature) + " = function (v) {\r\n";
-            }
-            else {
-                o += sp + "public " + this.CreateWriteFunctionName(signature) + "(v: Array<any>) {\r\n";
-            }
+            o += sp + "public " + this.CreateWriteFunctionName(signature) + "(v: Array<any>) {\r\n";
 
             if (signature[0] == 'a') {
                 var ss: string = this.SignatureHelper_GetSubSignature(signature, 1);
                 o += sp + "    this.body_Write_A_Start();\r\n";
-                if (!this.m_JsOnly) {
-                    o += sp + "    for (var k of v) this." + this.CreateWriteFunctionName(ss) + "(k);\r\n";
-                }
-                else {
-                    o += sp + "    for (var i = 0; i < v.length; i++) this." + this.CreateWriteFunctionName(ss) + "(v[i]);\r\n";
-                }
+                o += sp + "    for (var k of v) this." + this.CreateWriteFunctionName(ss) + "(k);\r\n";
                 o += sp + "    this.body_Write_A_End(" + (((ss[0] == '(') || (ss[0] == '{')) ? "true" : "false") + ");\r\n";
 
                 this.AddWriter(ss, "");
@@ -1131,8 +1041,6 @@
             else if ("b" == type) return "true";
             return "0";
         }
-
-        private m_JsOnly: boolean = false;
     }
 
     export var DEFAULT_APP_ID: Uint8Array = new Uint8Array([ 0x12, 0x34]);
