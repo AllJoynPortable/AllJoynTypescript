@@ -29,8 +29,6 @@
         Signature = 8
     }
 
-    var g_NextSerialNumber: number = Math.floor(Math.random() * 32000);
-
     export class MsgGeneric {
 
         /* ------------------------------------------------------------------------------------------------------- */
@@ -48,7 +46,7 @@
                 this.hdr_SetMajorVersion(0x00);
                 this.hdr_SetBodyLength(0);
                 this.hdr_SetHeaderLength(0);
-                this.hdr_SetSerialNumber(g_NextSerialNumber++);
+                this.hdr_SetSerialNumber(MsgGeneric.m_NextSerialNumber++);
             }
             else {
                 this.m_Data = null;
@@ -1140,6 +1138,8 @@
         private m_Data: Uint8Array = null;
         public m_Reply: MsgGeneric = null;
         public m_ReplyCb: any = null;
+        private static m_NextSerialNumber: number = Math.floor(Math.random() * 32000);
+
     }
 
     enum ConnectorState {
@@ -1274,11 +1274,11 @@
                         if (iface == "org.freedesktop.DBus.Peer") _org_freedesktop_dbus_peer__ProcessMsg(this, msg);
                         else if (iface == "org.freedesktop.DBus.Introspectable") _org_freedesktop_dbus_introspectable__ProcessMsg(this, msg);
                         else if (iface == "org.allseen.Introspectable") _org_allseen_introspectable__ProcessMsg(this, msg);
-                        else if (iface == "org.alljoyn.About") _org_alljoyn_about__ProcessMsg(this, msg);
-                        else if (iface == "org.alljoyn.Icon") _org_alljoyn_icon__ProcessMsg(this, msg);
+                        else if (iface == "org.alljoyn.About") org_alljoyn_about._ProcessMsg(this, msg);
+                        else if (iface == "org.alljoyn.Icon") org_alljoyn_icon._ProcessMsg(this, msg);
                         else if (iface == "org.freedesktop.DBus") _org_freedesktop_dbus__ProcessMsg(this, msg);
                         else if (iface == "org.alljoyn.Bus") _org_alljoyn_bus__ProcessMsg(this, msg);
-                        else if (iface == "org.freedesktop.DBus.Properties") _org_freedesktop_dbus_properties__ProcessMsg(this, msg);
+                        else if (iface == "org.freedesktop.DBus.Properties") org_freedesktop_dbus_properties._ProcessMsg(this, msg);
                         else if (iface == "org.alljoyn.Daemon") _org_alljoyn_daemon_ProcessMsg(this, msg);
                         else if (iface == "org.alljoyn.Bus.Peer.Session") _org_alljoyn_bus_peer_session_ProcessMsg(this, msg);
                         else if (iface == "org.alljoyn.Bus.Peer.Authentication") _org_alljoyn_bus_peer_authentication_ProcessMsg(this, msg);
@@ -1351,7 +1351,7 @@
             var __this__ = this;
             method__org_alljoyn_Bus__BindSessionPort(this, 2, 0,
                 function (connection: ConnectorBase, disposition: any, portOut: number) {
-                    signal__org_alljoyn_About__Announce(connection, 1, 2, null, null);
+                    org_alljoyn_about.signal__Announce(connection, 1, 2, null, null);
                 }
             );
         }
@@ -1421,283 +1421,288 @@
     //==============================================================================================================
     // org.alljoyn.About - producer
     //==============================================================================================================
-    function _org_alljoyn_about__ProcessMsg(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {
-        var member: string = msg.hdr_GetMember();
+    class org_alljoyn_about {
+        public static _ProcessMsg(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {
+            var member: string = msg.hdr_GetMember();
 
-        if (member == "GetAboutData") {
-            return __process__org_alljoyn_About__GetAboutData(connection, msg);
+            if (member == "GetAboutData") {
+                return this.__process__GetAboutData(connection, msg);
+            }
+            else if (member == "GetObjectDescription") {
+                return this.__process__GetObjectDescription(connection, msg);
+            }
+            else if (member == "Announce") {
+                return this.__process__Announce(connection, msg);
+            }
+
+            return false;
         }
-        else if (member == "GetObjectDescription") {
-            return __process__org_alljoyn_About__GetObjectDescription(connection, msg);
+
+        private static __process__GetAboutData(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {
+            msg.body_StartReading();
+            var s1: string = msg.body_Read_S();
+            var ret: any = this.handle__GetAboutData(connection, s1);
+
+            msg.CreateReply();
+            msg.m_Reply.hdr_SetSignature("a{sv}");
+            msg.m_Reply.body_StartWriting();
+            //msg.m_Reply.body_WriteObject(ret); // XXX - fix this
+
+            return true;
         }
-        else if (member == "Announce") {
-            return __process__org_alljoyn_About__Announce(connection, msg);
+
+        private static __process__GetObjectDescription(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {
+            msg.body_StartReading();
+            var ret: any = this.handle__GetObjectDescription(connection);
+
+            msg.CreateReply();
+            msg.m_Reply.hdr_SetSignature("a(oas)");
+            msg.m_Reply.body_StartWriting();
+            //msg.m_Reply.body_WriteObject(ret); // XXX - fix this
+
+            return true;
         }
 
-        return false;
-    }
+        private static __process__Announce(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {
+            msg.body_StartReading();
+            var q1: number = msg.body_Read_Q();
+            var q2: number = msg.body_Read_Q();
+            var o1: any = msg.body_ReadObject("a(oas)");
+            var o2: any = msg.body_ReadObject("a{sv}");
+            this.handle__Announce(connection, q1, q2, o1, o2);
 
-    function __process__org_alljoyn_About__GetAboutData(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {
-        msg.body_StartReading();
-        var s1: string = msg.body_Read_S();
-        var ret: any = handle__org_alljoyn_About__GetAboutData(connection, s1);
+            return true;
+        }
 
-        msg.CreateReply();
-        msg.m_Reply.hdr_SetSignature("a{sv}");
-        msg.m_Reply.body_StartWriting();
-        //msg.m_Reply.body_WriteObject(ret); // XXX - fix this
+        public static signal__Announce(connection, q1: number, q2: number, o1: any, o2: any): void {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
+            msg.hdr_SetSessionless(true);
+            msg.hdr_SetObjectPath("/About");
+            msg.hdr_SetInterface("org.alljoyn.About");
+            msg.hdr_SetMember("Announce");
+            msg.hdr_SetSignature("qqa(oas)a{sv}");
+            if (null != connection.GetLocalNodeId()) msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_Q(q1);
+            msg.body_Write_Q(q2);
 
-        return true;
-    }
 
-    function __process__org_alljoyn_About__GetObjectDescription(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {
-        msg.body_StartReading();
-        var ret: any = handle__org_alljoyn_About__GetObjectDescription(connection);
+            // at this time we will write array elements manually
+            //msg.body_WriteObject("a(oas)", [
+            msg.body_Write_AROAS([
+                ["/About", ["org.alljoyn.About"]],
+                ["/About/DeviceIcon", ["org.alljoyn.Icon"]],
+                ["/TestInterface", ["org.allmake.TestInterface"]]]);
 
-        msg.CreateReply();
-        msg.m_Reply.hdr_SetSignature("a(oas)");
-        msg.m_Reply.body_StartWriting();
-        //msg.m_Reply.body_WriteObject(ret); // XXX - fix this
+            //msg.body_WriteArrayStart();
 
-        return true;
-    }
+            //msg.body_WriteStructStart();
+            //msg.body_WriteString("/About");
+            //msg.body_WriteStringArray(new Array<string>("org.alljoyn.About"));
 
-    function __process__org_alljoyn_About__Announce(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {
-        msg.body_StartReading();
-        var q1: number = msg.body_Read_Q();
-        var q2: number = msg.body_Read_Q();
-        var o1: any = msg.body_ReadObject("a(oas)");
-        var o2: any = msg.body_ReadObject("a{sv}");
-        handle__org_alljoyn_About__Announce(connection, q1, q2, o1, o2);
+            //msg.body_WriteStructStart();
+            //msg.body_WriteString("/About/DeviceIcon");
+            //msg.body_WriteStringArray(new Array<string>("org.alljoyn.Icon"));
 
-        return true;
-    }
+            //msg.body_WriteStructStart();
+            //msg.body_WriteString("/TestInterface");
+            //msg.body_WriteStringArray(new Array<string>("org.allmake.TestInterface"));
 
-    function signal__org_alljoyn_About__Announce(connection, q1: number, q2: number, o1: any, o2: any): void {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
-        msg.hdr_SetSessionless(true);
-        msg.hdr_SetObjectPath("/About");
-        msg.hdr_SetInterface("org.alljoyn.About");
-        msg.hdr_SetMember("Announce");
-        msg.hdr_SetSignature("qqa(oas)a{sv}");
-        if (null != connection.GetLocalNodeId()) msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_Q(q1);
-        msg.body_Write_Q(q2);
-        
-        
-        // at this time we will write array elements manually
-        //msg.body_WriteObject("a(oas)", [
-        msg.body_Write_AROAS([
-            ["/About", ["org.alljoyn.About"]],
-            ["/About/DeviceIcon", ["org.alljoyn.Icon"]],
-            ["/TestInterface", ["org.allmake.TestInterface"]]]);
+            //msg.body_WriteArray_End(true);
 
-        //msg.body_WriteArrayStart();
+            // at this time we will write array elements manually
+            //msg.body_WriteObject(o2, "a{sv}");
+            msg.body_Write_A_Start();
 
-        //msg.body_WriteStructStart();
-        //msg.body_WriteString("/About");
-        //msg.body_WriteStringArray(new Array<string>("org.alljoyn.About"));
+            msg.body_Write_R_Start();
+            msg.body_Write_S("AppId");
+            msg.body_Write_V(APP_ID, "ay");
 
-        //msg.body_WriteStructStart();
-        //msg.body_WriteString("/About/DeviceIcon");
-        //msg.body_WriteStringArray(new Array<string>("org.alljoyn.Icon"));
+            msg.body_Write_R_Start();
+            msg.body_Write_S("AppName");
+            msg.body_Write_V(APP_NAME, "s");
 
-        //msg.body_WriteStructStart();
-        //msg.body_WriteString("/TestInterface");
-        //msg.body_WriteStringArray(new Array<string>("org.allmake.TestInterface"));
+            msg.body_Write_R_Start();
+            msg.body_Write_S("DeviceId");
+            msg.body_Write_V(DEVICE_ID, "s");
 
-        //msg.body_WriteArray_End(true);
+            msg.body_Write_R_Start();
+            msg.body_Write_S("DeviceName");
+            msg.body_Write_V(DEVICE_NAME, "s");
 
-        // at this time we will write array elements manually
-        //msg.body_WriteObject(o2, "a{sv}");
-        msg.body_Write_A_Start();
+            msg.body_Write_R_Start();
+            msg.body_Write_S("Manufacturer");
+            msg.body_Write_V(MANUFACTURER, "s");
 
-        msg.body_Write_R_Start();
-        msg.body_Write_S("AppId");
-        msg.body_Write_V(APP_ID, "ay");
+            msg.body_Write_R_Start();
+            msg.body_Write_S("ModelNumber");
+            msg.body_Write_V(MODEL_NUMBER, "s");
 
-        msg.body_Write_R_Start();
-        msg.body_Write_S("AppName");
-        msg.body_Write_V(APP_NAME, "s");
+            msg.body_Write_R_Start();
+            msg.body_Write_S("SupportedLanguages");
+            msg.body_Write_V(new Array<string>("en"), "as");
 
-        msg.body_Write_R_Start();
-        msg.body_Write_S("DeviceId");
-        msg.body_Write_V(DEVICE_ID, "s");
+            msg.body_Write_R_Start();
+            msg.body_Write_S("Description");
+            msg.body_Write_V(APP_DESCRIPTION, "s");
 
-        msg.body_Write_R_Start();
-        msg.body_Write_S("DeviceName");
-        msg.body_Write_V(DEVICE_NAME, "s");
+            msg.body_Write_R_Start();
+            msg.body_Write_S("DefaultLanguage");
+            msg.body_Write_V("en", "s");
 
-        msg.body_Write_R_Start();
-        msg.body_Write_S("Manufacturer");
-        msg.body_Write_V(MANUFACTURER, "s");
+            msg.body_Write_A_End(true);
 
-        msg.body_Write_R_Start();
-        msg.body_Write_S("ModelNumber");
-        msg.body_Write_V(MODEL_NUMBER, "s");
+            connection.SendMsg(msg);
+        }
 
-        msg.body_Write_R_Start();
-        msg.body_Write_S("SupportedLanguages");
-        msg.body_Write_V(new Array<string>("en"), "as");
+        private static handle__GetAboutData(connection, s1: string): any {
+            return 0;
+        }
 
-        msg.body_Write_R_Start();
-        msg.body_Write_S("Description");
-        msg.body_Write_V(APP_DESCRIPTION, "s");
+        private static handle__GetObjectDescription(connection): any {
+            return 0;
+        }
 
-        msg.body_Write_R_Start();
-        msg.body_Write_S("DefaultLanguage");
-        msg.body_Write_V("en", "s");
-
-        msg.body_Write_A_End(true);
-
-        connection.SendMsg(msg);
-    }
-
-    function handle__org_alljoyn_About__GetAboutData(connection, s1: string): any {
-        return 0;
-    }
-
-    function handle__org_alljoyn_About__GetObjectDescription(connection): any {
-        return 0;
-    }
-
-    function handle__org_alljoyn_About__Announce(connection, q1: number, q2: number, o1: any, o2: any): void {
+        private static handle__Announce(connection, q1: number, q2: number, o1: any, o2: any): void {
+        }
     }
 
     //==============================================================================================================
     // org.alljoyn.Icon - producer
     //==============================================================================================================
 
-    function _org_alljoyn_icon__ProcessMsg(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {
-        var member: string = msg.hdr_GetMember();
+    class org_alljoyn_icon {
+        public static _ProcessMsg(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {
+            var member: string = msg.hdr_GetMember();
 
-        if (member == "GetUrl") {
-            return __process__org_alljoyn_Icon__GetUrl(connection, msg);
+            if (member == "GetUrl") {
+                return this.__process__GetUrl(connection, msg);
+            }
+            else if (member == "GetContent") {
+                return this.__process__GetContent(connection, msg);
+            }
+
+            return false;
         }
-        else if (member == "GetContent") {
-            return __process__org_alljoyn_Icon__GetContent(connection, msg);
+
+        public static __process__GetUrl(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {
+            msg.body_StartReading();
+            var ret: string = this.handle__GetUrl(connection);
+
+            msg.CreateReply();
+            msg.m_Reply.hdr_SetSignature("s");
+            msg.m_Reply.body_StartWriting();
+            msg.m_Reply.body_Write_S(ret);
+
+            return true;
         }
 
-        return false;
+        public static __process__GetContent(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {
+            msg.body_StartReading();
+            var ret: Uint8Array = this.handle__GetContent(connection);
+
+            msg.CreateReply();
+            msg.m_Reply.hdr_SetSignature("ay");
+            msg.m_Reply.body_StartWriting();
+            msg.m_Reply.body_Write_AY(ret);
+
+            return true;
+        }
+
+        public static handle__GetUrl(connection): string {
+            return "";
+        }
+
+        public static handle__GetContent(connection): Uint8Array {
+            return DEVICE_ICON;
+        }
     }
-
-    function __process__org_alljoyn_Icon__GetUrl(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {
-        msg.body_StartReading();
-        var ret: string = handle__org_alljoyn_Icon__GetUrl(connection);
-
-        msg.CreateReply();
-        msg.m_Reply.hdr_SetSignature("s");
-        msg.m_Reply.body_StartWriting();
-        msg.m_Reply.body_Write_S(ret);
-
-        return true;
-    }
-
-    function __process__org_alljoyn_Icon__GetContent(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {
-        msg.body_StartReading();
-        var ret: Uint8Array = handle__org_alljoyn_Icon__GetContent(connection);
-
-        msg.CreateReply();
-        msg.m_Reply.hdr_SetSignature("ay");
-        msg.m_Reply.body_StartWriting();
-        msg.m_Reply.body_Write_AY(ret);
-
-        return true;
-    }
-
-    function handle__org_alljoyn_Icon__GetUrl(connection): string {
-        return "";
-    }
-
-    function handle__org_alljoyn_Icon__GetContent(connection): Uint8Array {
-        return DEVICE_ICON;
-    }
-
 
     //==============================================================================================================
     // org.freedesktop.DBus.Properties - producer
     //==============================================================================================================
-    function _org_freedesktop_dbus_properties__ProcessMsg(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {
-        var member: string = msg.hdr_GetMember();
+    class org_freedesktop_dbus_properties {
+        public static _ProcessMsg(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {
+            var member: string = msg.hdr_GetMember();
 
-        if (member == "Get") {
-            return __process__org_freedesktop_DBus_Properties__Get(connection, msg);
-        }
-        else if (member == "Set") {
-            return __process__org_freedesktop_DBus_Properties__Set(connection, msg);
-        }
-        else if (member == "GetAll") {
-            return __process__org_freedesktop_DBus_Properties__GetAll(connection, msg);
-        }
-
-        return false;
-    }
-
-    function __process__org_freedesktop_DBus_Properties__Get(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {
-        msg.body_StartReading();
-        var s1: string = msg.body_Read_S();
-        var s2: string = msg.body_Read_S();
-        var ret: any = handle__org_freedesktop_DBus_Properties__Get(connection, s1, s2);
-
-        msg.CreateReply();
-        msg.m_Reply.hdr_SetSignature("v");
-        msg.m_Reply.body_StartWriting();
-
-        if (typeof (ret) == "string") {
-            msg.m_Reply.body_Write_V(ret, "s");
-        } else if (typeof (ret) == "number") {
-            // XXX - why q??
-            msg.m_Reply.body_Write_V(ret, "q");
-        }
-        return true;
-    }
-
-    function __process__org_freedesktop_DBus_Properties__Set(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {
-        msg.body_StartReading();
-        var s1: string = msg.body_Read_S();
-        var s2: string = msg.body_Read_S();
-        var v1: any = null; //msg.body_ReadVariant(); // XXX - fix this
-        handle__org_freedesktop_DBus_Properties__Set(connection, s1, s2, v1);
-
-        msg.CreateReply();
-        msg.m_Reply.body_StartWriting();
-
-        return true;
-    }
-
-    function __process__org_freedesktop_DBus_Properties__GetAll(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {
-        msg.body_StartReading();
-        var s1: string = msg.body_Read_S();
-        var ret: any = handle__org_freedesktop_DBus_Properties__GetAll(connection, s1);
-
-        msg.CreateReply();
-        msg.m_Reply.hdr_SetSignature("a{sv}");
-        msg.m_Reply.body_StartWriting();
-        //msg.m_Reply.body_WriteObject(ret); // XXX - fix this
-
-        return true;
-    }
-
-    function handle__org_freedesktop_DBus_Properties__Get(connection, s1: string, s2: string): any {
-
-        if (s1 == "org.alljoyn.Icon") {
-            if (s2 == "Version") {
-                return DEVICE_ICON_VERSION;
+            if (member == "Get") {
+                return this.__process__Get(connection, msg);
             }
-            else if (s2 == "MimeType") {
-                return DEVICE_ICON_MIME_TYPE;
+            else if (member == "Set") {
+                return this.__process__Set(connection, msg);
             }
+            else if (member == "GetAll") {
+                return this.__process__GetAll(connection, msg);
+            }
+
+            return false;
         }
 
-        return 0;
-    }
+        private static __process__Get(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {
+            msg.body_StartReading();
+            var s1: string = msg.body_Read_S();
+            var s2: string = msg.body_Read_S();
+            var ret: any = this.handle__Get(connection, s1, s2);
 
-    function handle__org_freedesktop_DBus_Properties__Set(connection, s1: string, s2: string, v1: any): void {
-    }
+            msg.CreateReply();
+            msg.m_Reply.hdr_SetSignature("v");
+            msg.m_Reply.body_StartWriting();
 
-    function handle__org_freedesktop_DBus_Properties__GetAll(connection, s1: string): any {
-        return 0;
+            if (typeof (ret) == "string") {
+                msg.m_Reply.body_Write_V(ret, "s");
+            } else if (typeof (ret) == "number") {
+                // XXX - why q??
+                msg.m_Reply.body_Write_V(ret, "q");
+            }
+            return true;
+        }
+
+        private static __process__Set(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {
+            msg.body_StartReading();
+            var s1: string = msg.body_Read_S();
+            var s2: string = msg.body_Read_S();
+            var v1: any = null; //msg.body_ReadVariant(); // XXX - fix this
+            this.handle__Set(connection, s1, s2, v1);
+
+            msg.CreateReply();
+            msg.m_Reply.body_StartWriting();
+
+            return true;
+        }
+
+        private static __process__GetAll(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {
+            msg.body_StartReading();
+            var s1: string = msg.body_Read_S();
+            var ret: any = this.handle__GetAll(connection, s1);
+
+            msg.CreateReply();
+            msg.m_Reply.hdr_SetSignature("a{sv}");
+            msg.m_Reply.body_StartWriting();
+            //msg.m_Reply.body_WriteObject(ret); // XXX - fix this
+
+            return true;
+        }
+
+        private static handle__Get(connection, s1: string, s2: string): any {
+
+            if (s1 == "org.alljoyn.Icon") {
+                if (s2 == "Version") {
+                    return DEVICE_ICON_VERSION;
+                }
+                else if (s2 == "MimeType") {
+                    return DEVICE_ICON_MIME_TYPE;
+                }
+            }
+
+            return 0;
+        }
+
+        private static handle__Set(connection, s1: string, s2: string, v1: any): void {
+        }
+
+        private static handle__GetAll(connection, s1: string): any {
+            return 0;
+        }
     }
 
     //==============================================================================================================
