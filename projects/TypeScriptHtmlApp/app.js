@@ -12,8 +12,6 @@ var AllJoynTsApp = (function () {
     function AllJoynTsApp() {
         this.templateTS = "";
         this.templateWebSocketTS = "";
-        this.templateJS = "";
-        this.templateWebSocketJS = "";
         // HTML fragments
         this.htmlFront = "";
         this.htmlBootstrap = "";
@@ -43,8 +41,6 @@ var AllJoynTsApp = (function () {
         //(window as any).editor.setValue(this.introspectionXml);
         this.RetrieveTemplate("template.ts.txt", "templateTS");
         this.RetrieveTemplate("template-websocket.ts.txt", "templateWebSocketTS");
-        this.RetrieveTemplate("template.js.txt", "templateJS");
-        this.RetrieveTemplate("template-websocket.js.txt", "templateWebSocketJS");
         this.RetrieveTemplate("front.html", "htmlFront");
         this.RetrieveTemplate("bootstrap.html", "htmlBootstrap");
         this.RetrieveTemplate("create.html", "htmlCreate");
