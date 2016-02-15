@@ -18,8 +18,6 @@ class AllJoynTsApp {
     connector: AJ.ConnectorWebSocket;
     templateTS: string = "";
     templateWebSocketTS: string = "";
-    templateJS: string = "";
-    templateWebSocketJS: string = "";
 
     // HTML fragments
     htmlFront: string = "";
@@ -57,8 +55,6 @@ class AllJoynTsApp {
 
         this.RetrieveTemplate("template.ts.txt", "templateTS");
         this.RetrieveTemplate("template-websocket.ts.txt", "templateWebSocketTS");
-        this.RetrieveTemplate("template.js.txt", "templateJS");
-        this.RetrieveTemplate("template-websocket.js.txt", "templateWebSocketJS");
         this.RetrieveTemplate("front.html", "htmlFront");
         this.RetrieveTemplate("bootstrap.html", "htmlBootstrap");
         this.RetrieveTemplate("create.html", "htmlCreate");
@@ -69,20 +65,6 @@ class AllJoynTsApp {
     }
 
     start() {
-        if (null != this.connector) {
-            this.connector.Disconnect();
-        }
-
-        this.connector = null;
-
-        this.connector = new AJ.ConnectorWebSocket();
-        var self = this;
-
-        this.connector.SetConnectorEvent(
-            function (e: AJ.ConnectorEventType, d: any) {
-                self.onConnectorEvent(e, d);
-            });
-        this.connector.ConnectAndAuthenticate();
     }
 
     stop() {
@@ -170,13 +152,26 @@ class AllJoynTsApp {
     }
 
     public onTest() {
-        this.updateJs();
+        this.onShowJs();
 
         var geval = eval;
         geval(this.codeJs);
 
         // try to restart with new service
-        this.start();
+        if (null != this.connector) {
+            this.connector.Disconnect();
+        }
+
+        this.connector = null;
+
+        this.connector = new AJ.ConnectorWebSocket();
+        var self = this;
+
+        this.connector.SetConnectorEvent(
+            function (e: AJ.ConnectorEventType, d: any) {
+                self.onConnectorEvent(e, d);
+            });
+        this.connector.ConnectAndAuthenticate();
     }
 
     GoToFrontPage() {

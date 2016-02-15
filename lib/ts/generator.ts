@@ -367,7 +367,7 @@
 
         private CreateItemName(m: InterfaceItemDescription): string
         {
-            var name: string = "__" + m.m_Interface + "__" + m.m_Name;
+            var name: string = "__" + /*m.m_Interface + "__" +*/ m.m_Name;
             return name.replace(/\./g, '_');
         }
 
@@ -567,6 +567,9 @@
             }
 
             o += "\r\n";
+
+            o += "    class Application {\r\n";
+
             o += this.GenerateInterfaceHandler();
 
             // these methods 
@@ -594,6 +597,7 @@
                 }
             }
 
+            o += "    };\r\n";
             o += "\r\n";
 
             return o;
@@ -624,11 +628,11 @@
             var default_value: string;
             var generic_type_name: string;
 
-            o += "function " + this.CreateProcessFunctionName(m) + "(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean\r\n";
+            o += "        private static " + this.CreateProcessFunctionName(m) + "(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean\r\n";
 
-            o += "{\r\n";
+            o += "        {\r\n";
 
-            o += "    msg.body_StartReading();\r\n";
+            o += "            msg.body_StartReading();\r\n";
 
             // read parameters
             for (var p of m.m_ParametersIn)
@@ -643,7 +647,7 @@
                 }
 
 
-                o += "    var " + p.m_Name + ": " + tstype + " = msg." + this.CreateReadFunctionName(p.m_DataType) + "(" + parameters + ");\r\n";
+                o += "            var " + p.m_Name + ": " + tstype + " = msg." + this.CreateReadFunctionName(p.m_DataType) + "(" + parameters + ");\r\n";
 
                 this.AddReader(p.m_DataType, "");
             }
@@ -654,10 +658,10 @@
 
             if ("void" != tstype) {
 
-                o += "    var ret: " + tstype + " = " + this.CreateHandlerFunctionName(m) + "(connection";
+                o += "            var ret: " + tstype + " = " + this.CreateHandlerFunctionName(m) + "(connection";
             }
             else {
-                o += "    " + this.CreateHandlerFunctionName(m) + "(connection";
+                o += "            " + this.CreateHandlerFunctionName(m) + "(connection";
             }
 
             for (var p of m.m_ParametersIn)
@@ -671,25 +675,25 @@
             if (m.m_InterfaceItemType == InterfaceItemType.Method) {
                 o += "\r\n";
 
-                o += "    msg.CreateReply();\r\n";
+                o += "            msg.CreateReply();\r\n";
 
                 if (m.m_ParametersReply.length > 0) {
-                    o += "    msg.m_Reply.hdr_SetSignature(\"" + m.m_ParametersReply[0].m_DataType + "\");\r\n"; // XXX - fix this
+                    o += "            msg.m_Reply.hdr_SetSignature(\"" + m.m_ParametersReply[0].m_DataType + "\");\r\n"; // XXX - fix this
                 }
 
-                o += "    msg.m_Reply.body_StartWriting();\r\n";
+                o += "            msg.m_Reply.body_StartWriting();\r\n";
 
                 if (m.m_ParametersReply.length > 0) {
-                    o += "    msg.m_Reply." + this.CreateWriteFunctionName(m.m_ParametersReply[0].m_DataType) + "(ret);\r\n"; // XXX - fix this
+                    o += "            msg.m_Reply." + this.CreateWriteFunctionName(m.m_ParametersReply[0].m_DataType) + "(ret);\r\n"; // XXX - fix this
 
                     this.AddWriter(m.m_ParametersReply[0].m_DataType, "");
                 }
             }
 
             o += "\r\n";
-            o += "    return true;\r\n"; // XXX - fix this
+            o += "            return true;\r\n"; // XXX - fix this
 
-            o += "}\r\n";
+            o += "        }\r\n";
 
             return o;
         }
@@ -698,25 +702,25 @@
         {
             var o: string = "";
 
-            o += "function _ProcessMsg(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {\r\n";
-            o += "    var member: string = msg.hdr_GetMember();\r\n\r\n";
+            o += "        public static _ProcessMsg(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {\r\n";
+            o += "            var member: string = msg.hdr_GetMember();\r\n\r\n";
 
             var first: boolean = true;
             for (var m of this.m_Definition)
             {
                 if ((m.m_InterfaceItemType == InterfaceItemType.Signal) || ((m.m_InterfaceItemType == InterfaceItemType.Method) && !this.m_IsConsumer)) {
-                    o += "    ";
+                    o += "            ";
                     if (!first) { o += "else "; } else { first = false; }
 
                     o += "if (member == \"" + m.m_Name + "\") {\r\n";
-                    o += "        return " + this.CreateProcessFunctionName(m) + "(connection, msg);\r\n";
-                    o += "    }\r\n";
+                    o += "                return this." + this.CreateProcessFunctionName(m) + "(connection, msg);\r\n";
+                    o += "            }\r\n";
                 }
             }
 
             o += "\r\n";
-            o += "    return false;\r\n";
-            o += "}\r\n";
+            o += "            return false;\r\n";
+            o += "        }\r\n";
 
             return o;
         }
@@ -726,17 +730,17 @@
             var o: string = "";
 
             // return type
-            o += this.Generate_StubMethodPrototype(m) + "\r\n";
+            o += "        " + this.Generate_StubMethodPrototype(m) + "\r\n";
 
-            o += "{\r\n";
+            o += "        {\r\n";
 
             if (m.m_ParametersReply.length > 0) {
                 var default_value: string = this.TypeToDefaultTsValue(m.m_ParametersReply[0].m_DataType);
 
-                if (null != default_value) { o += "    return " + default_value + ";\r\n"; }
+                if (null != default_value) { o += "            return " + default_value + ";\r\n"; }
             }
 
-            o += "}\r\n";
+            o += "        }\r\n";
             return o;
         }
 
@@ -745,34 +749,34 @@
             var o: string = "";
 
             // return type
-            o += this.Generate_SignalMethodWrapperPrototype(m) + "\r\n";
+            o += "        " + this.Generate_SignalMethodWrapperPrototype(m) + "\r\n";
 
-            o += "{\r\n";
+            o += "        {\r\n";
 
             if (m.m_InterfaceItemType == InterfaceItemType.Method) {
-                o += "    var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);\r\n";
+                o += "            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);\r\n";
             }
             else {
-                o += "    var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);\r\n";
+                o += "            var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);\r\n";
             }
-            o += "    msg.hdr_SetInterface(\"" + m.m_Interface + "\");\r\n";
+            o += "            msg.hdr_SetInterface(\"" + m.m_Interface + "\");\r\n";
 
             if (m.m_ObjectPath != "") {
-                o += "    msg.hdr_SetObjectPath(\"" + m.m_ObjectPath + "\");\r\n";
+                o += "            msg.hdr_SetObjectPath(\"" + m.m_ObjectPath + "\");\r\n";
             }
             else {
-                o += "    msg.hdr_SetObjectPath(\"/" + m.m_Interface.replace(/./g, '/') + "\");\r\n";
-                o += "    msg.hdr_SetDestination(\"" + m.m_Interface + "\");\r\n";
+                o += "            msg.hdr_SetObjectPath(\"/" + m.m_Interface.replace(/./g, '/') + "\");\r\n";
+                o += "            msg.hdr_SetDestination(\"" + m.m_Interface + "\");\r\n";
             }
-            o += "    msg.hdr_SetMember(\"" + m.m_Name + "\");\r\n";
+            o += "            msg.hdr_SetMember(\"" + m.m_Name + "\");\r\n";
 
             if (m.m_SignatureIn != "") {
-                o += "    msg.hdr_SetSignature(\"" + m.m_SignatureIn + "\");\r\n";
+                o += "            msg.hdr_SetSignature(\"" + m.m_SignatureIn + "\");\r\n";
             }
 
-            o += "    if (null != connection.GetLocalNodeId()) msg.hdr_SetSender(connection.GetLocalNodeId());\r\n";
+            o += "            if (null != connection.GetLocalNodeId()) msg.hdr_SetSender(connection.GetLocalNodeId());\r\n";
 
-            o += "    msg.body_StartWriting();\r\n";
+            o += "            msg.body_StartWriting();\r\n";
 
             for (var p of m.m_ParametersIn)
             {
@@ -783,20 +787,20 @@
                 }
 
 
-                o += "    msg." + this.CreateWriteFunctionName(p.m_DataType) + "(" + p.m_Name + parameters + ");\r\n";
+                o += "            msg." + this.CreateWriteFunctionName(p.m_DataType) + "(" + p.m_Name + parameters + ");\r\n";
 
                 this.AddWriter(p.m_DataType, "");
             }
 
             if (m.m_InterfaceItemType == InterfaceItemType.Signal) {
-                o += "    connection.SendMsg(msg);\r\n";
+                o += "            connection.SendMsg(msg);\r\n";
             }
             else {
                 // for method we have to create callback
-                o += "    connection.SendMsgWithCallback(msg,\r\n";
-                o += "        function() {\r\n";
-                o += "            msg = msg.m_Reply;\r\n";
-                o += "            msg.body_StartReading();\r\n";
+                o += "            connection.SendMsgWithCallback(msg,\r\n";
+                o += "                function() {\r\n";
+                o += "                    msg = msg.m_Reply;\r\n";
+                o += "                    msg.body_StartReading();\r\n";
 
                 for (var p of m.m_ParametersReply)
                 {
@@ -808,11 +812,11 @@
                         parameters = "\"" + p.m_DataType + "\"";
                     }
 
-                    o += "            var " + p.m_Name + ": " + tstype + " = msg.body_Read" + generic_type_name + "(" + parameters + ");\r\n";
+                    o += "                    var " + p.m_Name + ": " + tstype + " = msg.body_Read" + generic_type_name + "(" + parameters + ");\r\n";
                 }
 
                 // XXX - read return parameters here
-                o += "            if (null != cb) cb(connection";
+                o += "                    if (null != cb) cb(connection";
 
                 for (var pp in m.m_ParametersReply)
                 {
@@ -824,12 +828,12 @@
 
                 // XXX - here also need to list params
 
-                o += "        }\r\n";
-                o += "    );\r\n";
+                o += "                }\r\n";
+                o += "            );\r\n";
 
             }
 
-            o += "}\r\n";
+            o += "        }\r\n";
 
             return o;
         }
@@ -838,7 +842,7 @@
         {
             var o: string = "";
 
-            o += "function ";
+            o += "private static ";
 
             // function name
 
@@ -864,7 +868,7 @@
             var o: string = "";
             var wrapper_name: string = this.CreateCallWrapperName(m);
 
-            o += "function ";
+            o += "public static ";
 
             // function name
 
