@@ -721,7 +721,6 @@
             o += "\r\n";
             o += "            return false;\r\n";
             o += "        }\r\n";
-            o += "    }\r\n";
 
             return o;
         }

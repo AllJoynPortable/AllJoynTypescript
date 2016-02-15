@@ -54,16 +54,6 @@ var AllJoynTsApp = (function () {
         this.RetrieveTemplate("help.html", "htmlHelp");
     }
     AllJoynTsApp.prototype.start = function () {
-        if (null != this.connector) {
-            this.connector.Disconnect();
-        }
-        this.connector = null;
-        this.connector = new AJ.ConnectorWebSocket();
-        var self = this;
-        this.connector.SetConnectorEvent(function (e, d) {
-            self.onConnectorEvent(e, d);
-        });
-        this.connector.ConnectAndAuthenticate();
     };
     AllJoynTsApp.prototype.stop = function () {
         clearTimeout(this.timerToken);
@@ -134,11 +124,20 @@ var AllJoynTsApp = (function () {
         window.editorScript.setValue(this.codeJs);
     };
     AllJoynTsApp.prototype.onTest = function () {
-        this.updateJs();
+        this.onShowJs();
         var geval = eval;
         geval(this.codeJs);
         // try to restart with new service
-        this.start();
+        if (null != this.connector) {
+            this.connector.Disconnect();
+        }
+        this.connector = null;
+        this.connector = new AJ.ConnectorWebSocket();
+        var self = this;
+        this.connector.SetConnectorEvent(function (e, d) {
+            self.onConnectorEvent(e, d);
+        });
+        this.connector.ConnectAndAuthenticate();
     };
     AllJoynTsApp.prototype.GoToFrontPage = function () {
         var el = window.document.getElementById("main");

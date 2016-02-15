@@ -454,15 +454,15 @@ var AJ;
                 this.body_Write_A_Start();
                 if (sig[1] == '{') {
                     var d = v;
-                    for (var _i = 0; _i < d.length; _i++) {
-                        var k = d[_i];
+                    for (var _i = 0, d_1 = d; _i < d_1.length; _i++) {
+                        var k = d_1[_i];
                         this.body_WriteObject(this.GetSubSignature(sig, 1), k);
                     }
                 }
                 else {
                     var l = v;
-                    for (var _a = 0; _a < l.length; _a++) {
-                        var o = l[_a];
+                    for (var _a = 0, l_1 = l; _a < l_1.length; _a++) {
+                        var o = l_1[_a];
                         this.body_WriteObject(this.GetSubSignature(sig, 1), o);
                     }
                 }
@@ -503,8 +503,8 @@ var AJ;
         };
         MsgGeneric.prototype.body_Write_AS = function (v) {
             this.body_Write_A_Start();
-            for (var _i = 0; _i < v.length; _i++) {
-                var k = v[_i];
+            for (var _i = 0, v_1 = v; _i < v_1.length; _i++) {
+                var k = v_1[_i];
                 this.body_Write_S(k);
             }
             this.body_Write_A_End(false);
@@ -518,8 +518,8 @@ var AJ;
         ;
         MsgGeneric.prototype.body_Write_AROAS = function (v) {
             this.body_Write_A_Start();
-            for (var _i = 0; _i < v.length; _i++) {
-                var k = v[_i];
+            for (var _i = 0, v_2 = v; _i < v_2.length; _i++) {
+                var k = v_2[_i];
                 this.body_Write_ROAS(k);
             }
             this.body_Write_A_End(true);
@@ -984,7 +984,7 @@ var AJ;
             }
         };
         return MsgGeneric;
-    })();
+    }());
     AJ.MsgGeneric = MsgGeneric;
     var ConnectorState;
     (function (ConnectorState) {
@@ -1023,9 +1023,6 @@ var AJ;
         ConnectorBase.prototype.ConnectAndAuthenticate = function () {
             this.m_State = ConnectorState.StateTransportConnecting;
             this.ConnectTransport();
-        };
-        ConnectorBase.prototype.Disconnect = function () {
-            this.DisconnectTransport();
         };
         ConnectorBase.prototype.GetLocalNodeId = function () {
             return this.m_LocalNodeId;
@@ -1216,7 +1213,7 @@ var AJ;
             }
         };
         return ConnectorBase;
-    })();
+    }());
     AJ.ConnectorBase = ConnectorBase;
     ;
     //==============================================================================================================
@@ -2811,12 +2808,6 @@ var AJ;
                 _this_.OnTransportConnected(false);
             };
         };
-        ConnectorWebSocket.prototype.DisconnectTransport = function () {
-            if (this.m_socket != null) {
-                this.m_socket.close();
-                this.m_socket = null;
-            }
-        };
         ConnectorWebSocket.prototype.WriteData = function (data) {
             this.m_socket.send(data);
         };
@@ -2830,7 +2821,7 @@ var AJ;
             // nothing to do in this implementation
         };
         return ConnectorWebSocket;
-    })(ConnectorBase);
+    }(ConnectorBase));
     AJ.ConnectorWebSocket = ConnectorWebSocket;
     //==============================================================================================================
     // GENERATED CODE BELOW
@@ -2989,77 +2980,90 @@ var AJ;
         0x82, 0xF1, 0x8C, 0xFF, 0x09, 0xE0, 0x63, 0x9E, 0x08, 0x20, 0xBC, 0x0E, 0x5B, 0x86, 0xB9, 0x00,
         0xC0, 0x7F, 0x1D, 0x0D, 0x74, 0x0F, 0x36, 0x02, 0x82, 0x34, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45,
         0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82]);
-    function _ProcessMsg(connection, msg) {
-        var member = msg.hdr_GetMember();
-        if (member == "TestMethod") {
-            return __process__org_allmake_TestInterface__TestMethod(connection, msg);
+    var Application = (function () {
+        function Application() {
         }
-        else if (member == "FirstSignal") {
-            return __process__org_allmake_TestInterface__FirstSignal(connection, msg);
-        }
-        else if (member == "SecondSignal") {
-            return __process__org_allmake_TestInterface__SecondSignal(connection, msg);
-        }
-        return false;
-    }
-    function __process__org_allmake_TestInterface__TestMethod(connection, msg) {
+        Application._ProcessMsg = function (connection, msg) {
+            var member = msg.hdr_GetMember();
+            if (member == "TestMethod") {
+                return this.__process__TestMethod(connection, msg);
+            }
+            else if (member == "FirstSignal") {
+                return this.__process__FirstSignal(connection, msg);
+            }
+            else if (member == "SecondSignal") {
+                return this.__process__SecondSignal(connection, msg);
+            }
+            return false;
+        };
+        return Application;
+    }());
+    __process__TestMethod(connection, AJ.ConnectorBase, msg, AJ.MsgGeneric);
+    boolean;
+    {
         msg.body_StartReading();
         var s1 = msg.body_Read_S();
-        var ret = handle__org_allmake_TestInterface__TestMethod(connection, s1);
+        var ret = handle__TestMethod(connection, s1);
         msg.CreateReply();
         msg.m_Reply.hdr_SetSignature("s");
         msg.m_Reply.body_StartWriting();
         msg.m_Reply.body_Write_S(ret);
         return true;
     }
-    function __process__org_allmake_TestInterface__FirstSignal(connection, msg) {
+    __process__FirstSignal(connection, AJ.ConnectorBase, msg, AJ.MsgGeneric);
+    boolean;
+    {
         msg.body_StartReading();
         var s1 = msg.body_Read_S();
         var s2 = msg.body_Read_S();
-        handle__org_allmake_TestInterface__FirstSignal(connection, s1, s2);
+        handle__FirstSignal(connection, s1, s2);
         return true;
     }
-    function __process__org_allmake_TestInterface__SecondSignal(connection, msg) {
+    __process__SecondSignal(connection, AJ.ConnectorBase, msg, AJ.MsgGeneric);
+    boolean;
+    {
         msg.body_StartReading();
         var s1 = msg.body_Read_S();
         var s2 = msg.body_Read_S();
         var s3 = msg.body_Read_S();
-        handle__org_allmake_TestInterface__SecondSignal(connection, s1, s2, s3);
+        handle__SecondSignal(connection, s1, s2, s3);
         return true;
     }
-    function signal__org_allmake_TestInterface__FirstSignal(connection, s1, s2) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
-        msg.hdr_SetInterface("org.allmake.TestInterface");
-        msg.hdr_SetObjectPath("/TestInterface");
-        msg.hdr_SetMember("FirstSignal");
-        msg.hdr_SetSignature("ss");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_S(s1);
-        msg.body_Write_S(s2);
-        connection.SendMsg(msg);
-    }
-    function signal__org_allmake_TestInterface__SecondSignal(connection, s1, s2, s3) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
-        msg.hdr_SetInterface("org.allmake.TestInterface");
-        msg.hdr_SetObjectPath("/TestInterface");
-        msg.hdr_SetMember("SecondSignal");
-        msg.hdr_SetSignature("sss");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_S(s1);
-        msg.body_Write_S(s2);
-        msg.body_Write_S(s3);
-        connection.SendMsg(msg);
-    }
-    function handle__org_allmake_TestInterface__TestMethod(connection, s1) {
+    signal__FirstSignal(connection, s1, string, s2, string);
+    void {
+        var: msg = new AJ.MsgGeneric(AJ.MsgType.Signal),
+        msg: .hdr_SetInterface("org.allmake.TestInterface"),
+        msg: .hdr_SetObjectPath("/TestInterface"),
+        msg: .hdr_SetMember("FirstSignal"),
+        msg: .hdr_SetSignature("ss"),
+        if: function () { }, null:  != connection.GetLocalNodeId(), msg: .hdr_SetSender(connection.GetLocalNodeId()),
+        msg: .body_StartWriting(),
+        msg: .body_Write_S(s1),
+        msg: .body_Write_S(s2),
+        connection: .SendMsg(msg)
+    };
+    signal__SecondSignal(connection, s1, string, s2, string, s3, string);
+    void {
+        var: msg = new AJ.MsgGeneric(AJ.MsgType.Signal),
+        msg: .hdr_SetInterface("org.allmake.TestInterface"),
+        msg: .hdr_SetObjectPath("/TestInterface"),
+        msg: .hdr_SetMember("SecondSignal"),
+        msg: .hdr_SetSignature("sss"),
+        if: function () { }, null:  != connection.GetLocalNodeId(), msg: .hdr_SetSender(connection.GetLocalNodeId()),
+        msg: .body_StartWriting(),
+        msg: .body_Write_S(s1),
+        msg: .body_Write_S(s2),
+        msg: .body_Write_S(s3),
+        connection: .SendMsg(msg)
+    };
+    handle__TestMethod(connection, s1, string);
+    string;
+    {
         return "default-string";
     }
-    function handle__org_allmake_TestInterface__FirstSignal(connection, s1, s2) {
-    }
-    function handle__org_allmake_TestInterface__SecondSignal(connection, s1, s2, s3) {
-    }
+    handle__FirstSignal(connection, s1, string, s2, string);
+    void {};
+    handle__SecondSignal(connection, s1, string, s2, string, s3, string);
+    void {};
 })(AJ || (AJ = {}));
-//# sourceMappingURL=generated.js.map
+;

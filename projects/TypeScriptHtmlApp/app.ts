@@ -69,20 +69,6 @@ class AllJoynTsApp {
     }
 
     start() {
-        if (null != this.connector) {
-            this.connector.Disconnect();
-        }
-
-        this.connector = null;
-
-        this.connector = new AJ.ConnectorWebSocket();
-        var self = this;
-
-        this.connector.SetConnectorEvent(
-            function (e: AJ.ConnectorEventType, d: any) {
-                self.onConnectorEvent(e, d);
-            });
-        this.connector.ConnectAndAuthenticate();
     }
 
     stop() {
@@ -170,13 +156,26 @@ class AllJoynTsApp {
     }
 
     public onTest() {
-        this.updateJs();
+        this.onShowJs();
 
         var geval = eval;
         geval(this.codeJs);
 
         // try to restart with new service
-        this.start();
+        if (null != this.connector) {
+            this.connector.Disconnect();
+        }
+
+        this.connector = null;
+
+        this.connector = new AJ.ConnectorWebSocket();
+        var self = this;
+
+        this.connector.SetConnectorEvent(
+            function (e: AJ.ConnectorEventType, d: any) {
+                self.onConnectorEvent(e, d);
+            });
+        this.connector.ConnectAndAuthenticate();
     }
 
     GoToFrontPage() {
