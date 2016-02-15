@@ -58,7 +58,6 @@
     <Content Include="styles\menu.css" />
     <Content Include="styles\ttcn.css" />
     <Content Include="styles\zenburn.css" />
-    <Content Include="template.js.txt" />
     <Content Include="template-websocket.js.txt" />
     <Content Include="typescript.js" />
     <Content Include="web.config" />
@@ -113,6 +112,7 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
     <TypeScriptRemoveComments>false</TypeScriptRemoveComments>
     <TypeScriptSourceMap>true</TypeScriptSourceMap>
+    <FilesToIncludeForPublish>OnlyFilesToRunTheApp</FilesToIncludeForPublish>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <TypeScriptRemoveComments>true</TypeScriptRemoveComments>

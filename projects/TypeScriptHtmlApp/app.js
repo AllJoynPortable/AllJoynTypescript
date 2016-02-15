@@ -12,8 +12,6 @@ var AllJoynTsApp = (function () {
     function AllJoynTsApp() {
         this.templateTS = "";
         this.templateWebSocketTS = "";
-        this.templateJS = "";
-        this.templateWebSocketJS = "";
         // HTML fragments
         this.htmlFront = "";
         this.htmlBootstrap = "";
@@ -43,8 +41,6 @@ var AllJoynTsApp = (function () {
         //(window as any).editor.setValue(this.introspectionXml);
         this.RetrieveTemplate("template.ts.txt", "templateTS");
         this.RetrieveTemplate("template-websocket.ts.txt", "templateWebSocketTS");
-        this.RetrieveTemplate("template.js.txt", "templateJS");
-        this.RetrieveTemplate("template-websocket.js.txt", "templateWebSocketJS");
         this.RetrieveTemplate("front.html", "htmlFront");
         this.RetrieveTemplate("bootstrap.html", "htmlBootstrap");
         this.RetrieveTemplate("create.html", "htmlCreate");
@@ -54,16 +50,6 @@ var AllJoynTsApp = (function () {
         this.RetrieveTemplate("help.html", "htmlHelp");
     }
     AllJoynTsApp.prototype.start = function () {
-        if (null != this.connector) {
-            this.connector.Disconnect();
-        }
-        this.connector = null;
-        this.connector = new AJ.ConnectorWebSocket();
-        var self = this;
-        this.connector.SetConnectorEvent(function (e, d) {
-            self.onConnectorEvent(e, d);
-        });
-        this.connector.ConnectAndAuthenticate();
     };
     AllJoynTsApp.prototype.stop = function () {
         clearTimeout(this.timerToken);
@@ -134,11 +120,20 @@ var AllJoynTsApp = (function () {
         window.editorScript.setValue(this.codeJs);
     };
     AllJoynTsApp.prototype.onTest = function () {
-        this.updateJs();
+        this.onShowJs();
         var geval = eval;
         geval(this.codeJs);
         // try to restart with new service
-        this.start();
+        if (null != this.connector) {
+            this.connector.Disconnect();
+        }
+        this.connector = null;
+        this.connector = new AJ.ConnectorWebSocket();
+        var self = this;
+        this.connector.SetConnectorEvent(function (e, d) {
+            self.onConnectorEvent(e, d);
+        });
+        this.connector.ConnectAndAuthenticate();
     };
     AllJoynTsApp.prototype.GoToFrontPage = function () {
         var el = window.document.getElementById("main");
