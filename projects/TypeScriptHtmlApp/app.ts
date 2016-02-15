@@ -17,15 +17,15 @@ class AllJoynTsApp {
         this.m_CreateIntrospectionXml = Generator.DEFAULT_APP_INTROSPECTION_XML.replace(/></g, ">\r\n<");
         //(window as any).editor.setValue(this.introspectionXml);
 
-        this.RetrieveTemplate("template.ts.txt", "templateTS");
-        this.RetrieveTemplate("template-websocket.ts.txt", "templateWebSocketTS");
-        this.RetrieveTemplate("front.html", "htmlFront");
-        this.RetrieveTemplate("bootstrap.html", "htmlBootstrap");
-        this.RetrieveTemplate("create.html", "htmlCreate");
-        this.RetrieveTemplate("explore.html", "htmlExplore");
-        this.RetrieveTemplate("samples.html", "htmlSamples");
-        this.RetrieveTemplate("setup.html", "htmlSetup");
-        this.RetrieveTemplate("help.html", "htmlHelp");
+        this.RetrieveTemplate("template.ts.txt", "m_CreateTemplateTS");
+        this.RetrieveTemplate("template-websocket.ts.txt", "m_CreateTemplateWebSocketTS");
+        this.RetrieveTemplate("front.html", "m_HtmlFront");
+        this.RetrieveTemplate("bootstrap.html", "m_HtmlBootstrap");
+        this.RetrieveTemplate("create.html", "m_HtmlCreate");
+        this.RetrieveTemplate("explore.html", "m_HtmlExplore");
+        this.RetrieveTemplate("samples.html", "m_HtmlSamples");
+        this.RetrieveTemplate("setup.html", "m_HtmlSetup");
+        this.RetrieveTemplate("help.html", "m_HtmlHelp");
     }
 
     start() {
@@ -34,124 +34,9 @@ class AllJoynTsApp {
     stop() {
     }
 
-    onConnectorEvent(e: AJ.ConnectorEventType, d: any) {
-        var el = window.document.getElementById("content");
-
-        if (e == AJ.ConnectorEventType.ConnectorEventConnected) {
-            this.AppendLog("<br/>ALLJOYN CONNECTED");
-            //(window.document.getElementById("RouterIcon") as HTMLImageElement).src = "network-green-24.png";
-        }
-        else if (e == AJ.ConnectorEventType.ConnectorEventConnectionFailed) {
-            this.AppendLog("<br/>ALLJOYN CONNECTION FAILED");
-        }
-        else if (e == AJ.ConnectorEventType.ConnectorEventTextSent) {
-            this.AppendLog("<br/>AUTH >> " + d);
-        }
-        else if (e == AJ.ConnectorEventType.ConnectorEventTextReceived) {
-            this.AppendLog("<br/>AUTH << " + d);
-        }
-        else if (e == AJ.ConnectorEventType.ConnectorEventMsgSent) {
-            this.AppendLog("<br/>Message Sent: " + d.hdr_GetMsgType() + " " + d.hdr_GetMember());
-        }
-        else if (e == AJ.ConnectorEventType.ConnectorEventMsgReceived) {
-            this.AppendLog("<br/>Message Received: " + d.hdr_GetMsgType() + " " + d.hdr_GetMember());
-        }
-    }
-
-    private updateXml() {
-    }
-
-    private updateTs() {
-        var xml: string = (window as any).editor.getValue();
-        //(window.document.getElementById("introspectionXml") as HTMLTextAreaElement).textContent;
-
-        if (this.m_CreateCodeTs == "") {
-
-            var p: Generator.IntrospectionXmlParser = new Generator.IntrospectionXmlParser();
-
-            // first, parse introspection xml
-            try {
-                p.ParseXml(xml);
-
-            } catch (e) {
-                this.AppendLog("<br/>" + e);
-            }
-
-            this.AppendLog("<br/>PARSER FINISHED: " + p.m_ObjectPath + " " + p.m_Interface);
-
-            // create code generator
-            var gen: Generator.CodeGeneratorTS = new Generator.CodeGeneratorTS(p.m_Methods);
-
-            gen.SetIntrospectionXml(xml);
-            gen.SetIconData(Generator.DEFAULT_DEVICE_ICON_MIME_TYPE, Generator.DEFAULT_DEVICE_ICON_URL, Generator.DEFAULT_DEVICE_ICON);
-            gen.SetDeviceData(this.m_CreateApplicationId, this.m_CreateApplicationName, this.m_CreateDeviceId, this.m_CreateDeviceName, this.m_CreateManufacturer, this.m_CreateModelNumber);
-            this.m_CreateCodeTs = this.m_CreateTemplateTS;
-
-            this.m_CreateCodeTs = this.m_CreateCodeTs.replace("/*WRITER-CODE-HERE*/", gen.GenerateWriters());
-            this.m_CreateCodeTs = this.m_CreateCodeTs.replace("/*READER-CODE-HERE*/", gen.GenerateReaders());
-            this.m_CreateCodeTs = this.m_CreateCodeTs.replace("/*APPLICATION-CODE-HERE*/", gen.GenerateApplicationCode());
-            this.m_CreateCodeTs = this.m_CreateCodeTs.replace("/*CONNECTOR-CODE-HERE*/", this.m_CreateTemplateWebSocketTS);
-            this.m_CreateCodeJs = "";
-        }
-    }
-
-    private updateJs() {
-        if (this.m_CreateCodeJs == "") {
-            this.updateTs();
-            this.m_CreateCodeJs = ConvertTsToJs(this.m_CreateCodeTs);
-        }
-    }
-
-    public onShowTs() {
-        this.updateTs();
-        (window as any).editorScript.setValue(this.m_CreateCodeTs);
-        this.m_CreateEditingTs = true;
-    }
-
-    public onShowJs() {
-        this.m_CreateEditingTs = false;
-        this.updateJs();
-        (window as any).editorScript.setValue(this.m_CreateCodeJs);
-    }
-
-    public onTest() {
-        this.onShowJs();
-
-        var geval = eval;
-        geval(this.m_CreateCodeJs);
-
-        // try to restart with new service
-        if (null != this.m_CreateConnector) {
-            this.m_CreateConnector.Disconnect();
-        }
-
-        this.m_CreateConnector = null;
-
-        this.m_CreateConnector = new AJ.ConnectorWebSocket();
-        var self = this;
-
-        this.m_CreateConnector.SetConnectorEvent(
-            function (e: AJ.ConnectorEventType, d: any) {
-                self.onConnectorEvent(e, d);
-            });
-        this.m_CreateConnector.ConnectAndAuthenticate();
-    }
-
-    public onDeviceInfoChanged() {
-        this.m_CreateCodeJs = "";
-        this.m_CreateCodeTs = "";
-
-        if (!this.m_CreateLocked) {
-            // XXX - fix this
-            //this.m_ApplicationId = (window.document.getElementById("create-application-id") as HTMLInputElement).value;
-            this.m_CreateApplicationName = (window.document.getElementById("create-application-name") as HTMLInputElement).value;
-            this.m_CreateDeviceId = (window.document.getElementById("create-device-id") as HTMLInputElement).value;
-            this.m_CreateDeviceName = (window.document.getElementById("create-device-name") as HTMLInputElement).value;
-            this.m_CreateManufacturer = (window.document.getElementById("create-manufacturer") as HTMLInputElement).value;
-            this.m_CreateModelNumber = (window.document.getElementById("create-model-number") as HTMLInputElement).value;
-        }
-    }
-
+    //----------------------------------------------------------------------------------------------------------
+    // MAIN MENU HANDLING
+    //----------------------------------------------------------------------------------------------------------
     GoToFrontPage() {
         var el = window.document.getElementById("main");
         (el as HTMLElement).innerHTML = this.m_HtmlFront;
@@ -260,6 +145,175 @@ class AllJoynTsApp {
         }
     }
 
+    //----------------------------------------------------------------------------------------------------------
+    // CREATE VIEW
+    //----------------------------------------------------------------------------------------------------------
+    onConnectorEvent(e: AJ.ConnectorEventType, d: any) {
+        var el = window.document.getElementById("content");
+
+        if (e == AJ.ConnectorEventType.ConnectorEventConnected) {
+            this.AppendLog("log-create", "<br/>ALLJOYN CONNECTED");
+            //(window.document.getElementById("RouterIcon") as HTMLImageElement).src = "network-green-24.png";
+        }
+        else if (e == AJ.ConnectorEventType.ConnectorEventConnectionFailed) {
+            this.AppendLog("log-create", "<br/>ALLJOYN CONNECTION FAILED");
+        }
+        else if (e == AJ.ConnectorEventType.ConnectorEventTextSent) {
+            this.AppendLog("log-create", "<br/>AUTH >> " + d);
+        }
+        else if (e == AJ.ConnectorEventType.ConnectorEventTextReceived) {
+            this.AppendLog("log-create", "<br/>AUTH << " + d);
+        }
+        else if (e == AJ.ConnectorEventType.ConnectorEventMsgSent) {
+            this.AppendLog("log-create", "<br/>Message Sent: " + d.hdr_GetMsgType() + " " + d.hdr_GetMember());
+        }
+        else if (e == AJ.ConnectorEventType.ConnectorEventMsgReceived) {
+            this.AppendLog("log-create", "<br/>Message Received: " + d.hdr_GetMsgType() + " " + d.hdr_GetMember());
+        }
+    }
+
+    private updateXml() {
+    }
+
+    private updateTs() {
+        var xml: string = (window as any).editor.getValue();
+        //(window.document.getElementById("introspectionXml") as HTMLTextAreaElement).textContent;
+
+        if (this.m_CreateCodeTs == "") {
+
+            var p: Generator.IntrospectionXmlParser = new Generator.IntrospectionXmlParser();
+
+            // first, parse introspection xml
+            try {
+                p.ParseXml(xml);
+
+            } catch (e) {
+                this.AppendLog("log-create", "<br/>" + e);
+            }
+
+            this.AppendLog("log-create", "<br/>PARSER FINISHED: " + p.m_ObjectPath + " " + p.m_Interface);
+
+            // create code generator
+            var gen: Generator.CodeGeneratorTS = new Generator.CodeGeneratorTS(p.m_Methods);
+
+            gen.SetIntrospectionXml(xml);
+            gen.SetIconData(Generator.DEFAULT_DEVICE_ICON_MIME_TYPE, Generator.DEFAULT_DEVICE_ICON_URL, Generator.DEFAULT_DEVICE_ICON);
+            gen.SetDeviceData(this.m_CreateApplicationId, this.m_CreateApplicationName, this.m_CreateDeviceId, this.m_CreateDeviceName, this.m_CreateManufacturer, this.m_CreateModelNumber);
+            this.m_CreateCodeTs = this.m_CreateTemplateTS;
+
+            this.m_CreateCodeTs = this.m_CreateCodeTs.replace("/*WRITER-CODE-HERE*/", gen.GenerateWriters());
+            this.m_CreateCodeTs = this.m_CreateCodeTs.replace("/*READER-CODE-HERE*/", gen.GenerateReaders());
+            this.m_CreateCodeTs = this.m_CreateCodeTs.replace("/*APPLICATION-CODE-HERE*/", gen.GenerateApplicationCode());
+            this.m_CreateCodeTs = this.m_CreateCodeTs.replace("/*CONNECTOR-CODE-HERE*/", this.m_CreateTemplateWebSocketTS);
+            this.m_CreateCodeJs = "";
+        }
+    }
+
+    private updateJs() {
+        if (this.m_CreateCodeJs == "") {
+            this.updateTs();
+            this.m_CreateCodeJs = ConvertTsToJs(this.m_CreateCodeTs);
+        }
+    }
+
+    public onShowTs() {
+        this.updateTs();
+        (window as any).editorScript.setValue(this.m_CreateCodeTs);
+        this.m_CreateEditingTs = true;
+    }
+
+    public onShowJs() {
+        this.m_CreateEditingTs = false;
+        this.updateJs();
+        (window as any).editorScript.setValue(this.m_CreateCodeJs);
+    }
+
+    public onTest() {
+        this.onShowJs();
+
+        var geval = eval;
+        geval(this.m_CreateCodeJs);
+
+        // try to restart with new service
+        if (null != this.m_CreateConnector) {
+            this.m_CreateConnector.Disconnect();
+        }
+
+        this.m_CreateConnector = null;
+
+        this.m_CreateConnector = new AJ.ConnectorWebSocket();
+        var self = this;
+
+        this.m_CreateConnector.SetConnectorEvent(
+            function (e: AJ.ConnectorEventType, d: any) {
+                self.onConnectorEvent(e, d);
+            });
+        this.m_CreateConnector.ConnectAndAuthenticate();
+    }
+
+    public onDeviceInfoChanged() {
+        this.m_CreateCodeJs = "";
+        this.m_CreateCodeTs = "";
+
+        if (!this.m_CreateLocked) {
+            // XXX - fix this
+            //this.m_ApplicationId = (window.document.getElementById("create-application-id") as HTMLInputElement).value;
+            this.m_CreateApplicationName = (window.document.getElementById("create-application-name") as HTMLInputElement).value;
+            this.m_CreateDeviceId = (window.document.getElementById("create-device-id") as HTMLInputElement).value;
+            this.m_CreateDeviceName = (window.document.getElementById("create-device-name") as HTMLInputElement).value;
+            this.m_CreateManufacturer = (window.document.getElementById("create-manufacturer") as HTMLInputElement).value;
+            this.m_CreateModelNumber = (window.document.getElementById("create-model-number") as HTMLInputElement).value;
+        }
+    }
+
+    //----------------------------------------------------------------------------------------------------------
+    // EXPLORE VIEW
+    //----------------------------------------------------------------------------------------------------------
+    public onExploreConnect() {
+
+        this.AppendLog("log-explore", "<br/>CONNECTING....");
+
+        // try to restart with new service
+        if (null != this.m_ExploreConnector) {
+            this.m_ExploreConnector.Disconnect();
+        }
+
+        this.m_ExploreConnector = new AJ.ConnectorWebSocket();
+        var self = this;
+
+        this.m_ExploreConnector.SetConnectorEvent(
+            function (e: AJ.ConnectorEventType, d: any) {
+                self.onExploreConnectorEvent(e, d);
+            });
+        this.m_ExploreConnector.ConnectAndAuthenticate();
+    }
+
+    private onExploreConnectorEvent(e: AJ.ConnectorEventType, d: any) {
+        if (e == AJ.ConnectorEventType.ConnectorEventConnected) {
+            this.AppendLog("log-explore", "<br/>ALLJOYN CONNECTED");
+            //(window.document.getElementById("RouterIcon") as HTMLImageElement).src = "network-green-24.png";
+        }
+        else if (e == AJ.ConnectorEventType.ConnectorEventConnectionFailed) {
+            this.AppendLog("log-explore", "<br/>ALLJOYN CONNECTION FAILED");
+        }
+        else if (e == AJ.ConnectorEventType.ConnectorEventTextSent) {
+            this.AppendLog("log-explore", "<br/>AUTH >> " + d);
+        }
+        else if (e == AJ.ConnectorEventType.ConnectorEventTextReceived) {
+            this.AppendLog("log-explore", "<br/>AUTH << " + d);
+        }
+        else if (e == AJ.ConnectorEventType.ConnectorEventMsgSent) {
+            this.AppendLog("log-explore", "<br/>Message Sent: " + d.hdr_GetMsgType() + " " + d.hdr_GetMember());
+        }
+        else if (e == AJ.ConnectorEventType.ConnectorEventMsgReceived) {
+            this.AppendLog("log-explore", "<br/>Message Received: " + d.hdr_GetMsgType() + " " + d.hdr_GetMember());
+        }
+    }
+
+    //----------------------------------------------------------------------------------------------------------
+    // SETUP VIEW
+    //----------------------------------------------------------------------------------------------------------
+
     OnLoopbackSelected() {
         this.m_ConnectionType = ConnectionType.CONNECTION_LOOPBACK;
     }
@@ -283,6 +337,10 @@ class AllJoynTsApp {
     OnAzureChanged() {
         this.m_ConnectionAzureParam = (window.document.getElementById("connection-azure-text") as HTMLInputElement).value;
     }
+
+    //----------------------------------------------------------------------------------------------------------
+    // OTHER
+    //----------------------------------------------------------------------------------------------------------
 
     private RetrieveTemplate(filename: string, field: string) {
         var __this__ = this;
@@ -311,14 +369,18 @@ class AllJoynTsApp {
         client["dataField"] = field;
     }
 
-    private AppendLog(v: string) {
-        var el = window.document.getElementById("content");
+    private AppendLog(target: string, v: string) {
+        var el = window.document.getElementById(target);
 
         if (null != el) {
             el.innerHTML += v;
             el.scrollTop += 100;
         }
     }
+
+    //----------------------------------------------------------------------------------------------------------
+    // MEMBERS
+    //----------------------------------------------------------------------------------------------------------
 
     // HTML fragments
     private m_HtmlFront: string = "";
@@ -346,6 +408,9 @@ class AllJoynTsApp {
 
     private m_CreateTemplateTS: string = "";
     private m_CreateTemplateWebSocketTS: string = "";
+
+    // explore variables
+    private m_ExploreConnector: AJ.ConnectorWebSocket = null;
 
     // setup variables
     private m_ConnectionType: ConnectionType = ConnectionType.CONNECTION_WEBSOCKET;
