@@ -3192,11 +3192,10 @@
     export class ConnectorWebSocket extends ConnectorBase {
 
         m_socket: any;
-        m_ConnectionId: number;
 
         protected ConnectTransport() {
             var _this_ = this;
-            this.m_socket = new WebSocket("ws://localhost:8088", "binary");
+            this.m_socket = new WebSocket("ws://localhost:8088/", "binary");
             this.m_socket.binaryType = "arraybuffer";
 
             this.m_socket.onopen = function (event: any) {

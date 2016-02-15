@@ -33,7 +33,6 @@ var AJ;
         FieldType[FieldType["Sender"] = 7] = "Sender";
         FieldType[FieldType["Signature"] = 8] = "Signature";
     })(FieldType || (FieldType = {}));
-    var g_NextSerialNumber = Math.floor(Math.random() * 32000);
     var MsgGeneric = (function () {
         /* ------------------------------------------------------------------------------------------------------- */
         /*  CONSTRUCTORS                                                                                           */
@@ -53,7 +52,7 @@ var AJ;
                 this.hdr_SetMajorVersion(0x00);
                 this.hdr_SetBodyLength(0);
                 this.hdr_SetHeaderLength(0);
-                this.hdr_SetSerialNumber(g_NextSerialNumber++);
+                this.hdr_SetSerialNumber(MsgGeneric.m_NextSerialNumber++);
             }
             else {
                 this.m_Data = null;
@@ -61,12 +60,17 @@ var AJ;
         }
         MsgGeneric.prototype.FromBuffer = function (bytes) {
             if (bytes.length >= 16) {
+                console.log(bytes);
                 this.m_Data = bytes;
                 var length = 16 + this.RoundedHeaderLength() + this.hdr_GetBodyLength();
+                console.log("length : " + length);
                 if ((bytes.length >= length) && (length < 1024)) {
-                    if (bytes.length > length) {
-                        this.m_Data = new Uint8Array(length);
+                    this.m_Data = new Uint8Array(length);
+                    if (bytes.length == length) {
                         this.m_Data.set(bytes);
+                    }
+                    else {
+                        this.m_Data.set(bytes.subarray(0, length));
                     }
                     return length;
                 }
@@ -983,6 +987,7 @@ var AJ;
                     return -1;
             }
         };
+        MsgGeneric.m_NextSerialNumber = Math.floor(Math.random() * 32000);
         return MsgGeneric;
     }());
     AJ.MsgGeneric = MsgGeneric;
@@ -1023,6 +1028,9 @@ var AJ;
         ConnectorBase.prototype.ConnectAndAuthenticate = function () {
             this.m_State = ConnectorState.StateTransportConnecting;
             this.ConnectTransport();
+        };
+        ConnectorBase.prototype.Disconnect = function () {
+            this.DisconnectTransport();
         };
         ConnectorBase.prototype.GetLocalNodeId = function () {
             return this.m_LocalNodeId;
@@ -1092,29 +1100,29 @@ var AJ;
                     if ((MsgType.Signal == t) || (MsgType.MethodCall == t)) {
                         var iface = msg.hdr_GetInterface();
                         if (iface == "org.freedesktop.DBus.Peer")
-                            _org_freedesktop_dbus_peer__ProcessMsg(this, msg);
+                            org_freedesktop_dbus_peer._ProcessMsg(this, msg);
                         else if (iface == "org.freedesktop.DBus.Introspectable")
-                            _org_freedesktop_dbus_introspectable__ProcessMsg(this, msg);
+                            org_freedesktop_dbus_introspectable._ProcessMsg(this, msg);
                         else if (iface == "org.allseen.Introspectable")
-                            _org_allseen_introspectable__ProcessMsg(this, msg);
+                            org_allseen_introspectable._ProcessMsg(this, msg);
                         else if (iface == "org.alljoyn.About")
-                            _org_alljoyn_about__ProcessMsg(this, msg);
+                            org_alljoyn_about._ProcessMsg(this, msg);
                         else if (iface == "org.alljoyn.Icon")
-                            _org_alljoyn_icon__ProcessMsg(this, msg);
+                            org_alljoyn_icon._ProcessMsg(this, msg);
                         else if (iface == "org.freedesktop.DBus")
-                            _org_freedesktop_dbus__ProcessMsg(this, msg);
+                            org_freedesktop_dbus._ProcessMsg(this, msg);
                         else if (iface == "org.alljoyn.Bus")
-                            _org_alljoyn_bus__ProcessMsg(this, msg);
+                            org_alljoyn_bus._ProcessMsg(this, msg);
                         else if (iface == "org.freedesktop.DBus.Properties")
-                            _org_freedesktop_dbus_properties__ProcessMsg(this, msg);
+                            org_freedesktop_dbus_properties._ProcessMsg(this, msg);
                         else if (iface == "org.alljoyn.Daemon")
-                            _org_alljoyn_daemon_ProcessMsg(this, msg);
+                            org_alljoyn_daemon._ProcessMsg(this, msg);
                         else if (iface == "org.alljoyn.Bus.Peer.Session")
-                            _org_alljoyn_bus_peer_session_ProcessMsg(this, msg);
+                            org_alljoyn_bus_peer_session._ProcessMsg(this, msg);
                         else if (iface == "org.alljoyn.Bus.Peer.Authentication")
-                            _org_alljoyn_bus_peer_authentication_ProcessMsg(this, msg);
+                            org_alljoyn_bus_peer_authentication._ProcessMsg(this, msg);
                         else
-                            _ProcessMsg(this, msg);
+                            Application._ProcessMsg(this, msg);
                         if (msg.m_Reply != null)
                             this.SendMsg(msg.m_Reply);
                     }
@@ -1155,7 +1163,7 @@ var AJ;
         };
         ConnectorBase.prototype.SendHello = function () {
             var __this__ = this;
-            method__org_freedesktop_DBus__Hello(this, function (connection, bus) {
+            org_freedesktop_dbus.method__Hello(this, function (connection, bus) {
                 __this__.m_LocalNodeId = bus;
                 __this__.QueueConnectorEvent(ConnectorEventType.ConnectorEventConnected, null);
                 __this__.m_State = ConnectorState.StateConnected;
@@ -1169,8 +1177,8 @@ var AJ;
         };
         ConnectorBase.prototype.BindSessionPort = function () {
             var __this__ = this;
-            method__org_alljoyn_Bus__BindSessionPort(this, 2, 0, function (connection, disposition, portOut) {
-                signal__org_alljoyn_About__Announce(connection, 1, 2, null, null);
+            org_alljoyn_bus.method__BindSessionPort(this, 2, 0, function (connection, disposition, portOut) {
+                org_alljoyn_about.signal__Announce(connection, 1, 2, null, null);
             });
         };
         ConnectorBase.prototype.AttachSession = function () {
@@ -1219,1573 +1227,1632 @@ var AJ;
     //==============================================================================================================
     // org.alljoyn.About - producer
     //==============================================================================================================
-    function _org_alljoyn_about__ProcessMsg(connection, msg) {
-        var member = msg.hdr_GetMember();
-        if (member == "GetAboutData") {
-            return __process__org_alljoyn_About__GetAboutData(connection, msg);
+    var org_alljoyn_about = (function () {
+        function org_alljoyn_about() {
         }
-        else if (member == "GetObjectDescription") {
-            return __process__org_alljoyn_About__GetObjectDescription(connection, msg);
-        }
-        else if (member == "Announce") {
-            return __process__org_alljoyn_About__Announce(connection, msg);
-        }
-        return false;
-    }
-    function __process__org_alljoyn_About__GetAboutData(connection, msg) {
-        msg.body_StartReading();
-        var s1 = msg.body_Read_S();
-        var ret = handle__org_alljoyn_About__GetAboutData(connection, s1);
-        msg.CreateReply();
-        msg.m_Reply.hdr_SetSignature("a{sv}");
-        msg.m_Reply.body_StartWriting();
-        //msg.m_Reply.body_WriteObject(ret); // XXX - fix this
-        return true;
-    }
-    function __process__org_alljoyn_About__GetObjectDescription(connection, msg) {
-        msg.body_StartReading();
-        var ret = handle__org_alljoyn_About__GetObjectDescription(connection);
-        msg.CreateReply();
-        msg.m_Reply.hdr_SetSignature("a(oas)");
-        msg.m_Reply.body_StartWriting();
-        //msg.m_Reply.body_WriteObject(ret); // XXX - fix this
-        return true;
-    }
-    function __process__org_alljoyn_About__Announce(connection, msg) {
-        msg.body_StartReading();
-        var q1 = msg.body_Read_Q();
-        var q2 = msg.body_Read_Q();
-        var o1 = msg.body_ReadObject("a(oas)");
-        var o2 = msg.body_ReadObject("a{sv}");
-        handle__org_alljoyn_About__Announce(connection, q1, q2, o1, o2);
-        return true;
-    }
-    function signal__org_alljoyn_About__Announce(connection, q1, q2, o1, o2) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
-        msg.hdr_SetSessionless(true);
-        msg.hdr_SetObjectPath("/About");
-        msg.hdr_SetInterface("org.alljoyn.About");
-        msg.hdr_SetMember("Announce");
-        msg.hdr_SetSignature("qqa(oas)a{sv}");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_Q(q1);
-        msg.body_Write_Q(q2);
-        // at this time we will write array elements manually
-        //msg.body_WriteObject("a(oas)", [
-        msg.body_Write_AROAS([
-            ["/About", ["org.alljoyn.About"]],
-            ["/About/DeviceIcon", ["org.alljoyn.Icon"]],
-            ["/TestInterface", ["org.allmake.TestInterface"]]]);
-        //msg.body_WriteArrayStart();
-        //msg.body_WriteStructStart();
-        //msg.body_WriteString("/About");
-        //msg.body_WriteStringArray(new Array<string>("org.alljoyn.About"));
-        //msg.body_WriteStructStart();
-        //msg.body_WriteString("/About/DeviceIcon");
-        //msg.body_WriteStringArray(new Array<string>("org.alljoyn.Icon"));
-        //msg.body_WriteStructStart();
-        //msg.body_WriteString("/TestInterface");
-        //msg.body_WriteStringArray(new Array<string>("org.allmake.TestInterface"));
-        //msg.body_WriteArray_End(true);
-        // at this time we will write array elements manually
-        //msg.body_WriteObject(o2, "a{sv}");
-        msg.body_Write_A_Start();
-        msg.body_Write_R_Start();
-        msg.body_Write_S("AppId");
-        msg.body_Write_V(APP_ID, "ay");
-        msg.body_Write_R_Start();
-        msg.body_Write_S("AppName");
-        msg.body_Write_V(APP_NAME, "s");
-        msg.body_Write_R_Start();
-        msg.body_Write_S("DeviceId");
-        msg.body_Write_V(DEVICE_ID, "s");
-        msg.body_Write_R_Start();
-        msg.body_Write_S("DeviceName");
-        msg.body_Write_V(DEVICE_NAME, "s");
-        msg.body_Write_R_Start();
-        msg.body_Write_S("Manufacturer");
-        msg.body_Write_V(MANUFACTURER, "s");
-        msg.body_Write_R_Start();
-        msg.body_Write_S("ModelNumber");
-        msg.body_Write_V(MODEL_NUMBER, "s");
-        msg.body_Write_R_Start();
-        msg.body_Write_S("SupportedLanguages");
-        msg.body_Write_V(new Array("en"), "as");
-        msg.body_Write_R_Start();
-        msg.body_Write_S("Description");
-        msg.body_Write_V(APP_DESCRIPTION, "s");
-        msg.body_Write_R_Start();
-        msg.body_Write_S("DefaultLanguage");
-        msg.body_Write_V("en", "s");
-        msg.body_Write_A_End(true);
-        connection.SendMsg(msg);
-    }
-    function handle__org_alljoyn_About__GetAboutData(connection, s1) {
-        return 0;
-    }
-    function handle__org_alljoyn_About__GetObjectDescription(connection) {
-        return 0;
-    }
-    function handle__org_alljoyn_About__Announce(connection, q1, q2, o1, o2) {
-    }
+        org_alljoyn_about._ProcessMsg = function (connection, msg) {
+            var member = msg.hdr_GetMember();
+            if (member == "GetAboutData") {
+                return this.__process__GetAboutData(connection, msg);
+            }
+            else if (member == "GetObjectDescription") {
+                return this.__process__GetObjectDescription(connection, msg);
+            }
+            else if (member == "Announce") {
+                return this.__process__Announce(connection, msg);
+            }
+            return false;
+        };
+        org_alljoyn_about.__process__GetAboutData = function (connection, msg) {
+            msg.body_StartReading();
+            var s1 = msg.body_Read_S();
+            var ret = this.handle__GetAboutData(connection, s1);
+            msg.CreateReply();
+            msg.m_Reply.hdr_SetSignature("a{sv}");
+            msg.m_Reply.body_StartWriting();
+            //msg.m_Reply.body_WriteObject(ret); // XXX - fix this
+            return true;
+        };
+        org_alljoyn_about.__process__GetObjectDescription = function (connection, msg) {
+            msg.body_StartReading();
+            var ret = this.handle__GetObjectDescription(connection);
+            msg.CreateReply();
+            msg.m_Reply.hdr_SetSignature("a(oas)");
+            msg.m_Reply.body_StartWriting();
+            //msg.m_Reply.body_WriteObject(ret); // XXX - fix this
+            return true;
+        };
+        org_alljoyn_about.__process__Announce = function (connection, msg) {
+            msg.body_StartReading();
+            var q1 = msg.body_Read_Q();
+            var q2 = msg.body_Read_Q();
+            var o1 = msg.body_ReadObject("a(oas)");
+            var o2 = msg.body_ReadObject("a{sv}");
+            this.handle__Announce(connection, q1, q2, o1, o2);
+            return true;
+        };
+        org_alljoyn_about.signal__Announce = function (connection, q1, q2, o1, o2) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
+            msg.hdr_SetSessionless(true);
+            msg.hdr_SetObjectPath("/About");
+            msg.hdr_SetInterface("org.alljoyn.About");
+            msg.hdr_SetMember("Announce");
+            msg.hdr_SetSignature("qqa(oas)a{sv}");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_Q(q1);
+            msg.body_Write_Q(q2);
+            // at this time we will write array elements manually
+            //msg.body_WriteObject("a(oas)", [
+            msg.body_Write_AROAS([
+                ["/About", ["org.alljoyn.About"]],
+                ["/About/DeviceIcon", ["org.alljoyn.Icon"]],
+                ["/TestInterface", ["org.allmake.TestInterface"]]]);
+            //msg.body_WriteArrayStart();
+            //msg.body_WriteStructStart();
+            //msg.body_WriteString("/About");
+            //msg.body_WriteStringArray(new Array<string>("org.alljoyn.About"));
+            //msg.body_WriteStructStart();
+            //msg.body_WriteString("/About/DeviceIcon");
+            //msg.body_WriteStringArray(new Array<string>("org.alljoyn.Icon"));
+            //msg.body_WriteStructStart();
+            //msg.body_WriteString("/TestInterface");
+            //msg.body_WriteStringArray(new Array<string>("org.allmake.TestInterface"));
+            //msg.body_WriteArray_End(true);
+            // at this time we will write array elements manually
+            //msg.body_WriteObject(o2, "a{sv}");
+            msg.body_Write_A_Start();
+            msg.body_Write_R_Start();
+            msg.body_Write_S("AppId");
+            msg.body_Write_V(APP_ID, "ay");
+            msg.body_Write_R_Start();
+            msg.body_Write_S("AppName");
+            msg.body_Write_V(APP_NAME, "s");
+            msg.body_Write_R_Start();
+            msg.body_Write_S("DeviceId");
+            msg.body_Write_V(DEVICE_ID, "s");
+            msg.body_Write_R_Start();
+            msg.body_Write_S("DeviceName");
+            msg.body_Write_V(DEVICE_NAME, "s");
+            msg.body_Write_R_Start();
+            msg.body_Write_S("Manufacturer");
+            msg.body_Write_V(MANUFACTURER, "s");
+            msg.body_Write_R_Start();
+            msg.body_Write_S("ModelNumber");
+            msg.body_Write_V(MODEL_NUMBER, "s");
+            msg.body_Write_R_Start();
+            msg.body_Write_S("SupportedLanguages");
+            msg.body_Write_V(new Array("en"), "as");
+            msg.body_Write_R_Start();
+            msg.body_Write_S("Description");
+            msg.body_Write_V(APP_DESCRIPTION, "s");
+            msg.body_Write_R_Start();
+            msg.body_Write_S("DefaultLanguage");
+            msg.body_Write_V("en", "s");
+            msg.body_Write_A_End(true);
+            connection.SendMsg(msg);
+        };
+        org_alljoyn_about.handle__GetAboutData = function (connection, s1) {
+            return 0;
+        };
+        org_alljoyn_about.handle__GetObjectDescription = function (connection) {
+            return 0;
+        };
+        org_alljoyn_about.handle__Announce = function (connection, q1, q2, o1, o2) {
+        };
+        return org_alljoyn_about;
+    }());
     //==============================================================================================================
     // org.alljoyn.Icon - producer
     //==============================================================================================================
-    function _org_alljoyn_icon__ProcessMsg(connection, msg) {
-        var member = msg.hdr_GetMember();
-        if (member == "GetUrl") {
-            return __process__org_alljoyn_Icon__GetUrl(connection, msg);
+    var org_alljoyn_icon = (function () {
+        function org_alljoyn_icon() {
         }
-        else if (member == "GetContent") {
-            return __process__org_alljoyn_Icon__GetContent(connection, msg);
-        }
-        return false;
-    }
-    function __process__org_alljoyn_Icon__GetUrl(connection, msg) {
-        msg.body_StartReading();
-        var ret = handle__org_alljoyn_Icon__GetUrl(connection);
-        msg.CreateReply();
-        msg.m_Reply.hdr_SetSignature("s");
-        msg.m_Reply.body_StartWriting();
-        msg.m_Reply.body_Write_S(ret);
-        return true;
-    }
-    function __process__org_alljoyn_Icon__GetContent(connection, msg) {
-        msg.body_StartReading();
-        var ret = handle__org_alljoyn_Icon__GetContent(connection);
-        msg.CreateReply();
-        msg.m_Reply.hdr_SetSignature("ay");
-        msg.m_Reply.body_StartWriting();
-        msg.m_Reply.body_Write_AY(ret);
-        return true;
-    }
-    function handle__org_alljoyn_Icon__GetUrl(connection) {
-        return "";
-    }
-    function handle__org_alljoyn_Icon__GetContent(connection) {
-        return DEVICE_ICON;
-    }
+        org_alljoyn_icon._ProcessMsg = function (connection, msg) {
+            var member = msg.hdr_GetMember();
+            if (member == "GetUrl") {
+                return this.__process__GetUrl(connection, msg);
+            }
+            else if (member == "GetContent") {
+                return this.__process__GetContent(connection, msg);
+            }
+            return false;
+        };
+        org_alljoyn_icon.__process__GetUrl = function (connection, msg) {
+            msg.body_StartReading();
+            var ret = this.handle__GetUrl(connection);
+            msg.CreateReply();
+            msg.m_Reply.hdr_SetSignature("s");
+            msg.m_Reply.body_StartWriting();
+            msg.m_Reply.body_Write_S(ret);
+            return true;
+        };
+        org_alljoyn_icon.__process__GetContent = function (connection, msg) {
+            msg.body_StartReading();
+            var ret = this.handle__GetContent(connection);
+            msg.CreateReply();
+            msg.m_Reply.hdr_SetSignature("ay");
+            msg.m_Reply.body_StartWriting();
+            msg.m_Reply.body_Write_AY(ret);
+            return true;
+        };
+        org_alljoyn_icon.handle__GetUrl = function (connection) {
+            return "";
+        };
+        org_alljoyn_icon.handle__GetContent = function (connection) {
+            return DEVICE_ICON;
+        };
+        return org_alljoyn_icon;
+    }());
     //==============================================================================================================
     // org.freedesktop.DBus.Properties - producer
     //==============================================================================================================
-    function _org_freedesktop_dbus_properties__ProcessMsg(connection, msg) {
-        var member = msg.hdr_GetMember();
-        if (member == "Get") {
-            return __process__org_freedesktop_DBus_Properties__Get(connection, msg);
+    var org_freedesktop_dbus_properties = (function () {
+        function org_freedesktop_dbus_properties() {
         }
-        else if (member == "Set") {
-            return __process__org_freedesktop_DBus_Properties__Set(connection, msg);
-        }
-        else if (member == "GetAll") {
-            return __process__org_freedesktop_DBus_Properties__GetAll(connection, msg);
-        }
-        return false;
-    }
-    function __process__org_freedesktop_DBus_Properties__Get(connection, msg) {
-        msg.body_StartReading();
-        var s1 = msg.body_Read_S();
-        var s2 = msg.body_Read_S();
-        var ret = handle__org_freedesktop_DBus_Properties__Get(connection, s1, s2);
-        msg.CreateReply();
-        msg.m_Reply.hdr_SetSignature("v");
-        msg.m_Reply.body_StartWriting();
-        if (typeof (ret) == "string") {
-            msg.m_Reply.body_Write_V(ret, "s");
-        }
-        else if (typeof (ret) == "number") {
-            // XXX - why q??
-            msg.m_Reply.body_Write_V(ret, "q");
-        }
-        return true;
-    }
-    function __process__org_freedesktop_DBus_Properties__Set(connection, msg) {
-        msg.body_StartReading();
-        var s1 = msg.body_Read_S();
-        var s2 = msg.body_Read_S();
-        var v1 = null; //msg.body_ReadVariant(); // XXX - fix this
-        handle__org_freedesktop_DBus_Properties__Set(connection, s1, s2, v1);
-        msg.CreateReply();
-        msg.m_Reply.body_StartWriting();
-        return true;
-    }
-    function __process__org_freedesktop_DBus_Properties__GetAll(connection, msg) {
-        msg.body_StartReading();
-        var s1 = msg.body_Read_S();
-        var ret = handle__org_freedesktop_DBus_Properties__GetAll(connection, s1);
-        msg.CreateReply();
-        msg.m_Reply.hdr_SetSignature("a{sv}");
-        msg.m_Reply.body_StartWriting();
-        //msg.m_Reply.body_WriteObject(ret); // XXX - fix this
-        return true;
-    }
-    function handle__org_freedesktop_DBus_Properties__Get(connection, s1, s2) {
-        if (s1 == "org.alljoyn.Icon") {
-            if (s2 == "Version") {
-                return DEVICE_ICON_VERSION;
+        org_freedesktop_dbus_properties._ProcessMsg = function (connection, msg) {
+            var member = msg.hdr_GetMember();
+            if (member == "Get") {
+                return this.__process__Get(connection, msg);
             }
-            else if (s2 == "MimeType") {
-                return DEVICE_ICON_MIME_TYPE;
+            else if (member == "Set") {
+                return this.__process__Set(connection, msg);
             }
-        }
-        return 0;
-    }
-    function handle__org_freedesktop_DBus_Properties__Set(connection, s1, s2, v1) {
-    }
-    function handle__org_freedesktop_DBus_Properties__GetAll(connection, s1) {
-        return 0;
-    }
+            else if (member == "GetAll") {
+                return this.__process__GetAll(connection, msg);
+            }
+            return false;
+        };
+        org_freedesktop_dbus_properties.__process__Get = function (connection, msg) {
+            msg.body_StartReading();
+            var s1 = msg.body_Read_S();
+            var s2 = msg.body_Read_S();
+            var ret = this.handle__Get(connection, s1, s2);
+            msg.CreateReply();
+            msg.m_Reply.hdr_SetSignature("v");
+            msg.m_Reply.body_StartWriting();
+            if (typeof (ret) == "string") {
+                msg.m_Reply.body_Write_V(ret, "s");
+            }
+            else if (typeof (ret) == "number") {
+                // XXX - why q??
+                msg.m_Reply.body_Write_V(ret, "q");
+            }
+            return true;
+        };
+        org_freedesktop_dbus_properties.__process__Set = function (connection, msg) {
+            msg.body_StartReading();
+            var s1 = msg.body_Read_S();
+            var s2 = msg.body_Read_S();
+            var v1 = null; //msg.body_ReadVariant(); // XXX - fix this
+            this.handle__Set(connection, s1, s2, v1);
+            msg.CreateReply();
+            msg.m_Reply.body_StartWriting();
+            return true;
+        };
+        org_freedesktop_dbus_properties.__process__GetAll = function (connection, msg) {
+            msg.body_StartReading();
+            var s1 = msg.body_Read_S();
+            var ret = this.handle__GetAll(connection, s1);
+            msg.CreateReply();
+            msg.m_Reply.hdr_SetSignature("a{sv}");
+            msg.m_Reply.body_StartWriting();
+            //msg.m_Reply.body_WriteObject(ret); // XXX - fix this
+            return true;
+        };
+        org_freedesktop_dbus_properties.handle__Get = function (connection, s1, s2) {
+            if (s1 == "org.alljoyn.Icon") {
+                if (s2 == "Version") {
+                    return DEVICE_ICON_VERSION;
+                }
+                else if (s2 == "MimeType") {
+                    return DEVICE_ICON_MIME_TYPE;
+                }
+            }
+            return 0;
+        };
+        org_freedesktop_dbus_properties.handle__Set = function (connection, s1, s2, v1) {
+        };
+        org_freedesktop_dbus_properties.handle__GetAll = function (connection, s1) {
+            return 0;
+        };
+        return org_freedesktop_dbus_properties;
+    }());
     //==============================================================================================================
     // org.freedesktop.DBus.Introspectable - producer
     //==============================================================================================================
-    function _org_freedesktop_dbus_introspectable__ProcessMsg(connection, msg) {
-        var member = msg.hdr_GetMember();
-        if (member == "Introspect") {
-            return __process__org_freedesktop_DBus_Introspectable__Introspect(connection, msg);
+    var org_freedesktop_dbus_introspectable = (function () {
+        function org_freedesktop_dbus_introspectable() {
         }
-        return false;
-    }
-    function __process__org_freedesktop_DBus_Introspectable__Introspect(connection, msg) {
-        msg.body_StartReading();
-        var ret = handle__org_freedesktop_DBus_Introspectable__Introspect(connection, msg.hdr_GetObjectPath());
-        msg.CreateReply();
-        msg.m_Reply.hdr_SetSignature("s");
-        msg.m_Reply.body_StartWriting();
-        msg.m_Reply.body_Write_S(ret);
-        return true;
-    }
-    function handle__org_freedesktop_DBus_Introspectable__Introspect(connection, op) {
-        var ret = "";
-        if (op == "/About") {
-            ret =
-                "<node name=\"/About\">" +
-                    "<interface name=\"org.freedesktop.DBus.Properties\" >" +
-                    "<method name=\"Get\" >" +
-                    "<arg type=\"s\" direction= \"in\" />" +
-                    "<arg type=\"s\" direction= \"in\" />" +
-                    "<arg type=\"v\" direction= \"out\" />" +
-                    "</method>" +
-                    "<method name= \"Set\" >" +
-                    "<arg type=\"s\" direction= \"in\" />" +
-                    "<arg type=\"s\" direction= \"in\" />" +
-                    "<arg type=\"v\" direction= \"in\" />" +
-                    "</method>" +
-                    "<method name= \"GetAll\" >" +
-                    "<arg type=\"s\" direction= \"in\" />" +
-                    "<arg type=\"a{sv}\" direction= \"out\" />" +
-                    "</method>" +
-                    "</interface>" +
-                    "<interface name= \"org.alljoyn.About\" >" +
-                    "<property name=\"Version\" type= \"q\" access= \"read\" />" +
-                    "<method name=\"GetAboutData\" >" +
-                    "<arg type=\"s\" direction= \"in\" />" +
-                    "<arg type=\"a{sv}\" direction= \"out\" />" +
-                    "</method>" +
-                    "<method name= \"GetObjectDescription\" >" +
-                    "<arg type=\"a(oas)\" direction= \"out\" />" +
-                    "</method>" +
-                    "<signal name= \"Announce\" >" +
-                    "<arg type=\"q\" />" +
-                    "<arg type=\"q\" />" +
-                    "<arg type=\"a(oas)\" />" +
-                    "<arg type=\"a{sv}\" />" +
-                    "</signal>" +
-                    "</interface>" +
-                    "</node>";
-        }
-        else if (op == "/About/DeviceIcon") {
-            ret =
-                "<node name=\"/About/DeviceIcon\" >" +
-                    "<interface name=\"org.freedesktop.DBus.Properties\" >" +
-                    "<method name=\"Get\" >" +
-                    "<arg type=\"s\" direction= \"in\" />" +
-                    "<arg type=\"s\" direction= \"in\" />" +
-                    "<arg type=\"v\" direction= \"out\" />" +
-                    "</method>" +
-                    "<method name= \"Set\" >" +
-                    "<arg type=\"s\" direction= \"in\" />" +
-                    "<arg type=\"s\" direction= \"in\" />" +
-                    "<arg type=\"v\" direction= \"in\" />" +
-                    "</method>" +
-                    "<method name= \"GetAll\" >" +
-                    "<arg type=\"s\" direction= \"in\" />" +
-                    "<arg type=\"a{sv}\" direction= \"out\" />" +
-                    "</method>" +
-                    "</interface>" +
-                    "<interface name= \"org.alljoyn.Icon\" >" +
-                    "<property name=\"Version\" type= \"q\" access= \"read\" />" +
-                    "<property name=\"MimeType\" type= \"s\" access= \"read\" />" +
-                    "<property name=\"Size\" type= \"u\" access= \"read\" />" +
-                    "<method name=\"GetUrl\" >" +
-                    "<arg type=\"s\" direction= \"out\" />" +
-                    "</method>" +
-                    "<method name= \"GetContent\" >" +
-                    "<arg type=\"ay\" direction= \"out\" />" +
-                    "</method>" +
-                    "</interface>" +
-                    "</node>";
-        }
-        else {
-            ret = APP_INTROSPECTION_XML;
-        }
-        return ret;
-    }
+        org_freedesktop_dbus_introspectable._ProcessMsg = function (connection, msg) {
+            var member = msg.hdr_GetMember();
+            if (member == "Introspect") {
+                return this.__process__Introspect(connection, msg);
+            }
+            return false;
+        };
+        org_freedesktop_dbus_introspectable.__process__Introspect = function (connection, msg) {
+            msg.body_StartReading();
+            var ret = this.handle__Introspect(connection, msg.hdr_GetObjectPath());
+            msg.CreateReply();
+            msg.m_Reply.hdr_SetSignature("s");
+            msg.m_Reply.body_StartWriting();
+            msg.m_Reply.body_Write_S(ret);
+            return true;
+        };
+        org_freedesktop_dbus_introspectable.handle__Introspect = function (connection, op) {
+            var ret = "";
+            if (op == "/About") {
+                ret =
+                    "<node name=\"/About\">" +
+                        "<interface name=\"org.freedesktop.DBus.Properties\" >" +
+                        "<method name=\"Get\" >" +
+                        "<arg type=\"s\" direction= \"in\" />" +
+                        "<arg type=\"s\" direction= \"in\" />" +
+                        "<arg type=\"v\" direction= \"out\" />" +
+                        "</method>" +
+                        "<method name= \"Set\" >" +
+                        "<arg type=\"s\" direction= \"in\" />" +
+                        "<arg type=\"s\" direction= \"in\" />" +
+                        "<arg type=\"v\" direction= \"in\" />" +
+                        "</method>" +
+                        "<method name= \"GetAll\" >" +
+                        "<arg type=\"s\" direction= \"in\" />" +
+                        "<arg type=\"a{sv}\" direction= \"out\" />" +
+                        "</method>" +
+                        "</interface>" +
+                        "<interface name= \"org.alljoyn.About\" >" +
+                        "<property name=\"Version\" type= \"q\" access= \"read\" />" +
+                        "<method name=\"GetAboutData\" >" +
+                        "<arg type=\"s\" direction= \"in\" />" +
+                        "<arg type=\"a{sv}\" direction= \"out\" />" +
+                        "</method>" +
+                        "<method name= \"GetObjectDescription\" >" +
+                        "<arg type=\"a(oas)\" direction= \"out\" />" +
+                        "</method>" +
+                        "<signal name= \"Announce\" >" +
+                        "<arg type=\"q\" />" +
+                        "<arg type=\"q\" />" +
+                        "<arg type=\"a(oas)\" />" +
+                        "<arg type=\"a{sv}\" />" +
+                        "</signal>" +
+                        "</interface>" +
+                        "</node>";
+            }
+            else if (op == "/About/DeviceIcon") {
+                ret =
+                    "<node name=\"/About/DeviceIcon\" >" +
+                        "<interface name=\"org.freedesktop.DBus.Properties\" >" +
+                        "<method name=\"Get\" >" +
+                        "<arg type=\"s\" direction= \"in\" />" +
+                        "<arg type=\"s\" direction= \"in\" />" +
+                        "<arg type=\"v\" direction= \"out\" />" +
+                        "</method>" +
+                        "<method name= \"Set\" >" +
+                        "<arg type=\"s\" direction= \"in\" />" +
+                        "<arg type=\"s\" direction= \"in\" />" +
+                        "<arg type=\"v\" direction= \"in\" />" +
+                        "</method>" +
+                        "<method name= \"GetAll\" >" +
+                        "<arg type=\"s\" direction= \"in\" />" +
+                        "<arg type=\"a{sv}\" direction= \"out\" />" +
+                        "</method>" +
+                        "</interface>" +
+                        "<interface name= \"org.alljoyn.Icon\" >" +
+                        "<property name=\"Version\" type= \"q\" access= \"read\" />" +
+                        "<property name=\"MimeType\" type= \"s\" access= \"read\" />" +
+                        "<property name=\"Size\" type= \"u\" access= \"read\" />" +
+                        "<method name=\"GetUrl\" >" +
+                        "<arg type=\"s\" direction= \"out\" />" +
+                        "</method>" +
+                        "<method name= \"GetContent\" >" +
+                        "<arg type=\"ay\" direction= \"out\" />" +
+                        "</method>" +
+                        "</interface>" +
+                        "</node>";
+            }
+            else {
+                ret = APP_INTROSPECTION_XML;
+            }
+            return ret;
+        };
+        return org_freedesktop_dbus_introspectable;
+    }());
     //==============================================================================================================
     // org.allseen.Introspectable - producer
     //==============================================================================================================
-    function _org_allseen_introspectable__ProcessMsg(connection, msg) {
-        var member = msg.hdr_GetMember();
-        if (member == "GetDescriptionLanguages") {
-            return __process__org_allseen_Introspectable__GetDescriptionLanguages(connection, msg);
+    var org_allseen_introspectable = (function () {
+        function org_allseen_introspectable() {
         }
-        else if (member == "IntrospectWithDescription") {
-            return __process__org_allseen_Introspectable__IntrospectWithDescription(connection, msg);
-        }
-        return false;
-    }
-    function __process__org_allseen_Introspectable__GetDescriptionLanguages(connection, msg) {
-        msg.body_StartReading();
-        var ret = handle__org_allseen_Introspectable__GetDescriptionLanguages(connection);
-        msg.CreateReply();
-        msg.m_Reply.hdr_SetSignature("as");
-        msg.m_Reply.body_StartWriting();
-        msg.m_Reply.body_Write_AS(ret);
-        return true;
-    }
-    function __process__org_allseen_Introspectable__IntrospectWithDescription(connection, msg) {
-        msg.body_StartReading();
-        var languageTag = msg.body_ReadString();
-        var ret = handle__org_allseen_Introspectable__IntrospectWithDescription(connection, msg.hdr_GetObjectPath(), languageTag);
-        msg.CreateReply();
-        msg.m_Reply.hdr_SetSignature("s");
-        msg.m_Reply.body_StartWriting();
-        msg.m_Reply.body_Write_S(ret);
-        return true;
-    }
-    function handle__org_allseen_Introspectable__GetDescriptionLanguages(connection) {
-        return ["en"];
-    }
-    function handle__org_allseen_Introspectable__IntrospectWithDescription(connection, op, languageTag) {
-        // ignore language tag
-        return handle__org_freedesktop_DBus_Introspectable__Introspect(connection, op);
-    }
+        org_allseen_introspectable._ProcessMsg = function (connection, msg) {
+            var member = msg.hdr_GetMember();
+            if (member == "GetDescriptionLanguages") {
+                return this.__process__GetDescriptionLanguages(connection, msg);
+            }
+            else if (member == "IntrospectWithDescription") {
+                return this.__process__IntrospectWithDescription(connection, msg);
+            }
+            return false;
+        };
+        org_allseen_introspectable.__process__GetDescriptionLanguages = function (connection, msg) {
+            msg.body_StartReading();
+            var ret = this.handle__GetDescriptionLanguages(connection);
+            msg.CreateReply();
+            msg.m_Reply.hdr_SetSignature("as");
+            msg.m_Reply.body_StartWriting();
+            msg.m_Reply.body_Write_AS(ret);
+            return true;
+        };
+        org_allseen_introspectable.__process__IntrospectWithDescription = function (connection, msg) {
+            msg.body_StartReading();
+            var languageTag = msg.body_ReadString();
+            var ret = this.handle__IntrospectWithDescription(connection, msg.hdr_GetObjectPath(), languageTag);
+            msg.CreateReply();
+            msg.m_Reply.hdr_SetSignature("s");
+            msg.m_Reply.body_StartWriting();
+            msg.m_Reply.body_Write_S(ret);
+            return true;
+        };
+        org_allseen_introspectable.handle__GetDescriptionLanguages = function (connection) {
+            return ["en"];
+        };
+        org_allseen_introspectable.handle__IntrospectWithDescription = function (connection, op, languageTag) {
+            // ignore language tag
+            return org_freedesktop_dbus_introspectable.handle__Introspect(connection, op);
+        };
+        return org_allseen_introspectable;
+    }());
+    ;
     //==============================================================================================================
     // org.freedesktop.DBus.Peer - producer
     //==============================================================================================================
-    function _org_freedesktop_dbus_peer__ProcessMsg(connection, msg) {
-        var member = msg.hdr_GetMember();
-        if (member == "Ping") {
-            return __process__org_freedesktop_DBus_Peer__Ping(connection, msg);
+    var org_freedesktop_dbus_peer = (function () {
+        function org_freedesktop_dbus_peer() {
         }
-        else if (member == "GetMachineId") {
-            return __process__org_freedesktop_DBus_Peer__GetMachineId(connection, msg);
-        }
-        return false;
-    }
-    function __process__org_freedesktop_DBus_Peer__Ping(connection, msg) {
-        msg.body_StartReading();
-        handle__org_freedesktop_DBus_Peer__Ping(connection);
-        msg.CreateReply();
-        msg.m_Reply.body_StartWriting();
-        return true;
-    }
-    function __process__org_freedesktop_DBus_Peer__GetMachineId(connection, msg) {
-        msg.body_StartReading();
-        var ret = handle__org_freedesktop_DBus_Peer__GetMachineId(connection);
-        msg.CreateReply();
-        msg.m_Reply.hdr_SetSignature("s");
-        msg.m_Reply.body_StartWriting();
-        msg.m_Reply.body_Write_S(ret);
-        return true;
-    }
-    function handle__org_freedesktop_DBus_Peer__Ping(connection) {
-    }
-    function handle__org_freedesktop_DBus_Peer__GetMachineId(connection) {
-        return "default-string";
-    }
+        org_freedesktop_dbus_peer._ProcessMsg = function (connection, msg) {
+            var member = msg.hdr_GetMember();
+            if (member == "Ping") {
+                return this.__process__Ping(connection, msg);
+            }
+            else if (member == "GetMachineId") {
+                return this.__process__GetMachineId(connection, msg);
+            }
+            return false;
+        };
+        org_freedesktop_dbus_peer.__process__Ping = function (connection, msg) {
+            msg.body_StartReading();
+            this.handle__Ping(connection);
+            msg.CreateReply();
+            msg.m_Reply.body_StartWriting();
+            return true;
+        };
+        org_freedesktop_dbus_peer.__process__GetMachineId = function (connection, msg) {
+            msg.body_StartReading();
+            var ret = this.handle__GetMachineId(connection);
+            msg.CreateReply();
+            msg.m_Reply.hdr_SetSignature("s");
+            msg.m_Reply.body_StartWriting();
+            msg.m_Reply.body_Write_S(ret);
+            return true;
+        };
+        org_freedesktop_dbus_peer.handle__Ping = function (connection) {
+        };
+        org_freedesktop_dbus_peer.handle__GetMachineId = function (connection) {
+            return "default-string";
+        };
+        return org_freedesktop_dbus_peer;
+    }());
     //==============================================================================================================
     // org.freedesktop.DBus - consumer
     //==============================================================================================================
-    function _org_freedesktop_dbus__ProcessMsg(connection, msg) {
-        var member = msg.hdr_GetMember();
-        if (member == "NameOwnerChanged") {
-            return __process__org_freedesktop_DBus__NameOwnerChanged(connection, msg);
+    var org_freedesktop_dbus = (function () {
+        function org_freedesktop_dbus() {
         }
-        if (member == "NameLost") {
-            return __process__org_freedesktop_DBus__NameLost(connection, msg);
-        }
-        if (member == "NameAcquired") {
-            return __process__org_freedesktop_DBus__NameAcquired(connection, msg);
-        }
-        return false;
-    }
-    function __process__org_freedesktop_DBus__NameOwnerChanged(connection, msg) {
-        msg.body_StartReading();
-        var s1 = msg.body_Read_S();
-        var s2 = msg.body_Read_S();
-        var s3 = msg.body_Read_S();
-        handle__org_freedesktop_DBus__NameOwnerChanged(connection, s1, s2, s3);
-        return true;
-    }
-    function __process__org_freedesktop_DBus__NameLost(connection, msg) {
-        msg.body_StartReading();
-        var s1 = msg.body_Read_S();
-        handle__org_freedesktop_DBus__NameLost(connection, s1);
-        return true;
-    }
-    function __process__org_freedesktop_DBus__NameAcquired(connection, msg) {
-        msg.body_StartReading();
-        var s1 = msg.body_Read_S();
-        handle__org_freedesktop_DBus__NameAcquired(connection, s1);
-        return true;
-    }
-    function method__org_freedesktop_DBus__RequestName(connection, s1, u1, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.freedesktop.DBus");
-        msg.hdr_SetObjectPath("/org/freedesktop/DBus");
-        msg.hdr_SetDestination("org.freedesktop.DBus");
-        msg.hdr_SetMember("RequestName");
-        msg.hdr_SetSignature("su");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_S(s1);
-        msg.body_Write_U(u1);
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
-            msg.body_StartReading();
-            var u2 = msg.body_Read_U();
-            if (null != cb)
-                cb(connection, u2);
-        });
-    }
-    ;
-    function method__org_freedesktop_DBus__ReleaseName(connection, s1, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.freedesktop.DBus");
-        msg.hdr_SetObjectPath("/org/freedesktop/DBus");
-        msg.hdr_SetDestination("org.freedesktop.DBus");
-        msg.hdr_SetMember("ReleaseName");
-        msg.hdr_SetSignature("s");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_S(s1);
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
-            msg.body_StartReading();
-            var u1 = msg.body_Read_U();
-            if (null != cb)
-                cb(connection, u1);
-        });
-    }
-    ;
-    function method__org_freedesktop_DBus__Hello(connection, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.freedesktop.DBus");
-        msg.hdr_SetObjectPath("/org/freedesktop/DBus");
-        msg.hdr_SetDestination("org.freedesktop.DBus");
-        msg.hdr_SetMember("Hello");
-        msg.SetFlags(6);
-        msg.body_StartWriting();
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
+        org_freedesktop_dbus._ProcessMsg = function (connection, msg) {
+            var member = msg.hdr_GetMember();
+            if (member == "NameOwnerChanged") {
+                return this.__process__NameOwnerChanged(connection, msg);
+            }
+            if (member == "NameLost") {
+                return this.__process__NameLost(connection, msg);
+            }
+            if (member == "NameAcquired") {
+                return this.__process__NameAcquired(connection, msg);
+            }
+            return false;
+        };
+        org_freedesktop_dbus.__process__NameOwnerChanged = function (connection, msg) {
             msg.body_StartReading();
             var s1 = msg.body_Read_S();
-            if (null != cb)
-                cb(connection, s1);
-        });
-    }
-    ;
-    function method__org_freedesktop_DBus__NameHasOwner(connection, s1, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.freedesktop.DBus");
-        msg.hdr_SetObjectPath("/org/freedesktop/DBus");
-        msg.hdr_SetDestination("org.freedesktop.DBus");
-        msg.hdr_SetMember("NameHasOwner");
-        msg.hdr_SetSignature("s");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_S(s1);
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
+            var s2 = msg.body_Read_S();
+            var s3 = msg.body_Read_S();
+            this.handle__NameOwnerChanged(connection, s1, s2, s3);
+            return true;
+        };
+        org_freedesktop_dbus.__process__NameLost = function (connection, msg) {
             msg.body_StartReading();
-            var b1 = msg.body_Read_B();
-            if (null != cb)
-                cb(connection, b1);
-        });
-    }
-    ;
-    function method__org_freedesktop_DBus__AddMatch(connection, s1, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.freedesktop.DBus");
-        msg.hdr_SetObjectPath("/org/freedesktop/DBus");
-        msg.hdr_SetDestination("org.freedesktop.DBus");
-        msg.hdr_SetMember("AddMatch");
-        msg.hdr_SetSignature("s");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_S(s1);
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
+            var s1 = msg.body_Read_S();
+            this.handle__NameLost(connection, s1);
+            return true;
+        };
+        org_freedesktop_dbus.__process__NameAcquired = function (connection, msg) {
             msg.body_StartReading();
-            if (null != cb)
-                cb(connection);
-        });
-    }
-    ;
-    function method__org_freedesktop_DBus__RemoveMatch(connection, s1, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.freedesktop.DBus");
-        msg.hdr_SetObjectPath("/org/freedesktop/DBus");
-        msg.hdr_SetDestination("org.freedesktop.DBus");
-        msg.hdr_SetMember("RemoveMatch");
-        msg.hdr_SetSignature("s");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_S(s1);
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
-            msg.body_StartReading();
-            if (null != cb)
-                cb(connection);
-        });
-    }
-    ;
-    function signal__org_freedesktop_DBus__NameOwnerChanged(connection, s1, s2, s3) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
-        msg.hdr_SetInterface("org.freedesktop.DBus");
-        msg.hdr_SetObjectPath("/org/freedesktop/DBus");
-        msg.hdr_SetDestination("org.freedesktop.DBus");
-        msg.hdr_SetMember("NameOwnerChanged");
-        msg.hdr_SetSignature("sss");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_S(s1);
-        msg.body_Write_S(s2);
-        msg.body_Write_S(s3);
-        connection.SendMsg(msg);
-    }
-    ;
-    function signal__org_freedesktop_DBus__NameLost(connection, s1) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
-        msg.hdr_SetInterface("org.freedesktop.DBus");
-        msg.hdr_SetObjectPath("/org/freedesktop/DBus");
-        msg.hdr_SetDestination("org.freedesktop.DBus");
-        msg.hdr_SetMember("NameLost");
-        msg.hdr_SetSignature("s");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_S(s1);
-        connection.SendMsg(msg);
-    }
-    ;
-    function signal__org_freedesktop_DBus__NameAcquired(connection, s1) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
-        msg.hdr_SetInterface("org.freedesktop.DBus");
-        msg.hdr_SetObjectPath("/org/freedesktop/DBus");
-        msg.hdr_SetDestination("org.freedesktop.DBus");
-        msg.hdr_SetMember("NameAcquired");
-        msg.hdr_SetSignature("s");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_S(s1);
-        connection.SendMsg(msg);
-    }
-    ;
-    function handle__org_freedesktop_DBus__NameOwnerChanged(connection, s1, s2, s3) {
-    }
-    ;
-    function handle__org_freedesktop_DBus__NameLost(connection, s1) {
-    }
-    ;
-    function handle__org_freedesktop_DBus__NameAcquired(connection, s1) {
-    }
+            var s1 = msg.body_Read_S();
+            this.handle__NameAcquired(connection, s1);
+            return true;
+        };
+        org_freedesktop_dbus.method__RequestName = function (connection, s1, u1, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.freedesktop.DBus");
+            msg.hdr_SetObjectPath("/org/freedesktop/DBus");
+            msg.hdr_SetDestination("org.freedesktop.DBus");
+            msg.hdr_SetMember("RequestName");
+            msg.hdr_SetSignature("su");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_S(s1);
+            msg.body_Write_U(u1);
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var u2 = msg.body_Read_U();
+                if (null != cb)
+                    cb(connection, u2);
+            });
+        };
+        ;
+        org_freedesktop_dbus.method__ReleaseName = function (connection, s1, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.freedesktop.DBus");
+            msg.hdr_SetObjectPath("/org/freedesktop/DBus");
+            msg.hdr_SetDestination("org.freedesktop.DBus");
+            msg.hdr_SetMember("ReleaseName");
+            msg.hdr_SetSignature("s");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_S(s1);
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var u1 = msg.body_Read_U();
+                if (null != cb)
+                    cb(connection, u1);
+            });
+        };
+        ;
+        org_freedesktop_dbus.method__Hello = function (connection, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.freedesktop.DBus");
+            msg.hdr_SetObjectPath("/org/freedesktop/DBus");
+            msg.hdr_SetDestination("org.freedesktop.DBus");
+            msg.hdr_SetMember("Hello");
+            msg.SetFlags(6);
+            msg.body_StartWriting();
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var s1 = msg.body_Read_S();
+                if (null != cb)
+                    cb(connection, s1);
+            });
+        };
+        ;
+        org_freedesktop_dbus.method__NameHasOwner = function (connection, s1, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.freedesktop.DBus");
+            msg.hdr_SetObjectPath("/org/freedesktop/DBus");
+            msg.hdr_SetDestination("org.freedesktop.DBus");
+            msg.hdr_SetMember("NameHasOwner");
+            msg.hdr_SetSignature("s");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_S(s1);
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var b1 = msg.body_Read_B();
+                if (null != cb)
+                    cb(connection, b1);
+            });
+        };
+        ;
+        org_freedesktop_dbus.method__AddMatch = function (connection, s1, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.freedesktop.DBus");
+            msg.hdr_SetObjectPath("/org/freedesktop/DBus");
+            msg.hdr_SetDestination("org.freedesktop.DBus");
+            msg.hdr_SetMember("AddMatch");
+            msg.hdr_SetSignature("s");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_S(s1);
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                if (null != cb)
+                    cb(connection);
+            });
+        };
+        ;
+        org_freedesktop_dbus.method__RemoveMatch = function (connection, s1, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.freedesktop.DBus");
+            msg.hdr_SetObjectPath("/org/freedesktop/DBus");
+            msg.hdr_SetDestination("org.freedesktop.DBus");
+            msg.hdr_SetMember("RemoveMatch");
+            msg.hdr_SetSignature("s");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_S(s1);
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                if (null != cb)
+                    cb(connection);
+            });
+        };
+        ;
+        org_freedesktop_dbus.signal__NameOwnerChanged = function (connection, s1, s2, s3) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
+            msg.hdr_SetInterface("org.freedesktop.DBus");
+            msg.hdr_SetObjectPath("/org/freedesktop/DBus");
+            msg.hdr_SetDestination("org.freedesktop.DBus");
+            msg.hdr_SetMember("NameOwnerChanged");
+            msg.hdr_SetSignature("sss");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_S(s1);
+            msg.body_Write_S(s2);
+            msg.body_Write_S(s3);
+            connection.SendMsg(msg);
+        };
+        ;
+        org_freedesktop_dbus.signal__NameLost = function (connection, s1) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
+            msg.hdr_SetInterface("org.freedesktop.DBus");
+            msg.hdr_SetObjectPath("/org/freedesktop/DBus");
+            msg.hdr_SetDestination("org.freedesktop.DBus");
+            msg.hdr_SetMember("NameLost");
+            msg.hdr_SetSignature("s");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_S(s1);
+            connection.SendMsg(msg);
+        };
+        ;
+        org_freedesktop_dbus.signal__NameAcquired = function (connection, s1) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
+            msg.hdr_SetInterface("org.freedesktop.DBus");
+            msg.hdr_SetObjectPath("/org/freedesktop/DBus");
+            msg.hdr_SetDestination("org.freedesktop.DBus");
+            msg.hdr_SetMember("NameAcquired");
+            msg.hdr_SetSignature("s");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_S(s1);
+            connection.SendMsg(msg);
+        };
+        ;
+        org_freedesktop_dbus.handle__NameOwnerChanged = function (connection, s1, s2, s3) {
+        };
+        ;
+        org_freedesktop_dbus.handle__NameLost = function (connection, s1) {
+        };
+        ;
+        org_freedesktop_dbus.handle__NameAcquired = function (connection, s1) {
+        };
+        ;
+        return org_freedesktop_dbus;
+    }());
     ;
     //==============================================================================================================
     // org.alljoyn.Bus - consumer
     //==============================================================================================================
-    function _org_alljoyn_bus__ProcessMsg(connection, msg) {
-        var member = msg.hdr_GetMember();
-        if (member == "FoundAdvertisedName") {
-            return __process__org_alljoyn_Bus__FoundAdvertisedName(connection, msg);
+    var org_alljoyn_bus = (function () {
+        function org_alljoyn_bus() {
         }
-        else if (member == "LostAdvertisedName") {
-            return __process__org_alljoyn_Bus__LostAdvertisedName(connection, msg);
-        }
-        else if (member == "MPSessionChanged") {
-            return __process__org_alljoyn_Bus__MPSessionChanged(connection, msg);
-        }
-        else if (member == "MPSessionChangedWithReason") {
-            return __process__org_alljoyn_Bus__MPSessionChangedWithReason(connection, msg);
-        }
-        else if (member == "SessionLost") {
-            return __process__org_alljoyn_Bus__SessionLost(connection, msg);
-        }
-        else if (member == "SessionLostWithReason") {
-            return __process__org_alljoyn_Bus__SessionLostWithReason(connection, msg);
-        }
-        else if (member == "SessionLostWithReasonAndDisposition") {
-            return __process__org_alljoyn_Bus__SessionLostWithReasonAndDisposition(connection, msg);
-        }
-        return false;
-    }
-    function __process__org_alljoyn_Bus__FoundAdvertisedName(connection, msg) {
-        msg.body_StartReading();
-        var name = msg.body_Read_S();
-        var transport = msg.body_Read_Q();
-        var prefix = msg.body_Read_S();
-        handle__org_alljoyn_Bus__FoundAdvertisedName(connection, name, transport, prefix);
-        return true;
-    }
-    function __process__org_alljoyn_Bus__LostAdvertisedName(connection, msg) {
-        msg.body_StartReading();
-        var name = msg.body_Read_S();
-        var transport = msg.body_Read_Q();
-        var prefix = msg.body_Read_S();
-        handle__org_alljoyn_Bus__LostAdvertisedName(connection, name, transport, prefix);
-        return true;
-    }
-    function __process__org_alljoyn_Bus__MPSessionChanged(connection, msg) {
-        msg.body_StartReading();
-        var sessionId = msg.body_Read_U();
-        var name = msg.body_Read_S();
-        var isAdded = msg.body_Read_B();
-        handle__org_alljoyn_Bus__MPSessionChanged(connection, sessionId, name, isAdded);
-        return true;
-    }
-    function __process__org_alljoyn_Bus__MPSessionChangedWithReason(connection, msg) {
-        msg.body_StartReading();
-        var sessionId = msg.body_Read_U();
-        var name = msg.body_Read_S();
-        var isAdded = msg.body_Read_B();
-        var reason = msg.body_Read_U();
-        handle__org_alljoyn_Bus__MPSessionChangedWithReason(connection, sessionId, name, isAdded, reason);
-        return true;
-    }
-    function __process__org_alljoyn_Bus__SessionLost(connection, msg) {
-        msg.body_StartReading();
-        var sessionId = msg.body_Read_U();
-        handle__org_alljoyn_Bus__SessionLost(connection, sessionId);
-        return true;
-    }
-    function __process__org_alljoyn_Bus__SessionLostWithReason(connection, msg) {
-        msg.body_StartReading();
-        var sessionId = msg.body_Read_U();
-        var reason = msg.body_Read_U();
-        handle__org_alljoyn_Bus__SessionLostWithReason(connection, sessionId, reason);
-        return true;
-    }
-    function __process__org_alljoyn_Bus__SessionLostWithReasonAndDisposition(connection, msg) {
-        msg.body_StartReading();
-        var sessionId = msg.body_Read_U();
-        var reason = msg.body_Read_U();
-        var disposition = msg.body_Read_U();
-        handle__org_alljoyn_Bus__SessionLostWithReasonAndDisposition(connection, sessionId, reason, disposition);
-        return true;
-    }
-    function method__org_alljoyn_Bus__AdvertiseName(connection, name, transports, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("AdvertiseName");
-        msg.hdr_SetSignature("sq");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_S(name);
-        msg.body_Write_Q(transports);
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
+        org_alljoyn_bus._ProcessMsg = function (connection, msg) {
+            var member = msg.hdr_GetMember();
+            if (member == "FoundAdvertisedName") {
+                return this.__process__FoundAdvertisedName(connection, msg);
+            }
+            else if (member == "LostAdvertisedName") {
+                return this.__process__LostAdvertisedName(connection, msg);
+            }
+            else if (member == "MPSessionChanged") {
+                return this.__process__MPSessionChanged(connection, msg);
+            }
+            else if (member == "MPSessionChangedWithReason") {
+                return this.__process__MPSessionChangedWithReason(connection, msg);
+            }
+            else if (member == "SessionLost") {
+                return this.__process__SessionLost(connection, msg);
+            }
+            else if (member == "SessionLostWithReason") {
+                return this.__process__SessionLostWithReason(connection, msg);
+            }
+            else if (member == "SessionLostWithReasonAndDisposition") {
+                return this.__process__SessionLostWithReasonAndDisposition(connection, msg);
+            }
+            return false;
+        };
+        org_alljoyn_bus.__process__FoundAdvertisedName = function (connection, msg) {
             msg.body_StartReading();
-            var disposition = msg.body_Read_U();
-            if (null != cb)
-                cb(connection, disposition);
-        });
-    }
-    ;
-    function method__org_alljoyn_Bus__AliasUnixUser(connection, aliasUID, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("AliasUnixUser");
-        msg.hdr_SetSignature("u");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_U(aliasUID);
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
+            var name = msg.body_Read_S();
+            var transport = msg.body_Read_Q();
+            var prefix = msg.body_Read_S();
+            this.handle__FoundAdvertisedName(connection, name, transport, prefix);
+            return true;
+        };
+        org_alljoyn_bus.__process__LostAdvertisedName = function (connection, msg) {
             msg.body_StartReading();
-            var disposition = msg.body_Read_U();
-            if (null != cb)
-                cb(connection, disposition);
-        });
-    }
-    ;
-    function method__org_alljoyn_Bus__BindSessionPort(connection, portIn, opts, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("BindSessionPort");
-        msg.hdr_SetSignature("qa{sv}");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_Q(portIn);
-        // XXX - just fixed options at the moment
-        //msg.body_WriteObject(opts, "a{sv}");
-        var ooo = new Uint8Array([0x04, 0x00, 0x00, 0x00, 0x74, 0x72, 0x61, 0x66, 0x00, 0x01, 0x79, 0x00, 0x01, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x6D, 0x75, 0x6C, 0x74, 0x69, 0x00, 0x01, 0x62, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x70, 0x72, 0x6F, 0x78, 0x00, 0x01, 0x79, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x74, 0x72, 0x61, 0x6E, 0x73, 0x00, 0x01, 0x71, 0x00, 0x00, 0x05, 0x01]);
-        msg.body_Write_I(0x48);
-        msg.body_WriteRaw(ooo);
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
+            var name = msg.body_Read_S();
+            var transport = msg.body_Read_Q();
+            var prefix = msg.body_Read_S();
+            this.handle__LostAdvertisedName(connection, name, transport, prefix);
+            return true;
+        };
+        org_alljoyn_bus.__process__MPSessionChanged = function (connection, msg) {
             msg.body_StartReading();
-            var disposition = msg.body_Read_U();
-            var portOut = msg.body_Read_Q();
-            if (null != cb)
-                cb(connection, disposition, portOut);
-        });
-    }
-    ;
-    function method__org_alljoyn_Bus__BusHello(connection, GUIDC, protoVerC, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("BusHello");
-        msg.hdr_SetSignature("su");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_S(GUIDC);
-        msg.body_Write_U(protoVerC);
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
-            msg.body_StartReading();
-            var GUIDS = msg.body_Read_S();
-            var uniqueName = msg.body_Read_S();
-            var protoVerS = msg.body_Read_U();
-            if (null != cb)
-                cb(connection, GUIDS, uniqueName, protoVerS);
-        });
-    }
-    ;
-    function method__org_alljoyn_Bus__CancelAdvertiseName(connection, name, transports, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("CancelAdvertiseName");
-        msg.hdr_SetSignature("sq");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_S(name);
-        msg.body_Write_Q(transports);
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
-            msg.body_StartReading();
-            var disposition = msg.body_Read_U();
-            if (null != cb)
-                cb(connection, disposition);
-        });
-    }
-    ;
-    function method__org_alljoyn_Bus__CancelFindAdvertisedName(connection, name, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("CancelFindAdvertisedName");
-        msg.hdr_SetSignature("s");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_S(name);
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
-            msg.body_StartReading();
-            var disposition = msg.body_Read_U();
-            if (null != cb)
-                cb(connection, disposition);
-        });
-    }
-    ;
-    function method__org_alljoyn_Bus__CancelFindAdvertisedNameByTransport(connection, name, transports, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("CancelFindAdvertisedNameByTransport");
-        msg.hdr_SetSignature("sq");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_S(name);
-        msg.body_Write_Q(transports);
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
-            msg.body_StartReading();
-            var disposition = msg.body_Read_U();
-            if (null != cb)
-                cb(connection, disposition);
-        });
-    }
-    ;
-    function method__org_alljoyn_Bus__CancelFindAdvertisementByTransport(connection, matching, transports, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("CancelFindAdvertisementByTransport");
-        msg.hdr_SetSignature("sq");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_S(matching);
-        msg.body_Write_Q(transports);
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
-            msg.body_StartReading();
-            var disposition = msg.body_Read_U();
-            if (null != cb)
-                cb(connection, disposition);
-        });
-    }
-    ;
-    function method__org_alljoyn_Bus__CancelSessionlessMessage(connection, serialNum, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("CancelSessionlessMessage");
-        msg.hdr_SetSignature("u");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_U(serialNum);
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
-            msg.body_StartReading();
-            var disposition = msg.body_Read_U();
-            if (null != cb)
-                cb(connection, disposition);
-        });
-    }
-    ;
-    function method__org_alljoyn_Bus__FindAdvertisedName(connection, name, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("FindAdvertisedName");
-        msg.hdr_SetSignature("s");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_S(name);
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
-            msg.body_StartReading();
-            var disposition = msg.body_Read_U();
-            if (null != cb)
-                cb(connection, disposition);
-        });
-    }
-    ;
-    function method__org_alljoyn_Bus__FindAdvertisedNameByTransport(connection, name, transports, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("FindAdvertisedNameByTransport");
-        msg.hdr_SetSignature("sq");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_S(name);
-        msg.body_Write_Q(transports);
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
-            msg.body_StartReading();
-            var disposition = msg.body_Read_U();
-            if (null != cb)
-                cb(connection, disposition);
-        });
-    }
-    ;
-    function method__org_alljoyn_Bus__FindAdvertisementByTransport(connection, matching, transports, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("FindAdvertisementByTransport");
-        msg.hdr_SetSignature("sq");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_S(matching);
-        msg.body_Write_Q(transports);
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
-            msg.body_StartReading();
-            var disposition = msg.body_Read_U();
-            if (null != cb)
-                cb(connection, disposition);
-        });
-    }
-    ;
-    function signal__org_alljoyn_Bus__FoundAdvertisedName(connection, name, transport, prefix) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("FoundAdvertisedName");
-        msg.hdr_SetSignature("sqs");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_S(name);
-        msg.body_Write_Q(transport);
-        msg.body_Write_S(prefix);
-        connection.SendMsg(msg);
-    }
-    ;
-    function method__org_alljoyn_Bus__GetHostInfo(connection, sessionId, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("GetHostInfo");
-        msg.hdr_SetSignature("u");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_U(sessionId);
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
-            msg.body_StartReading();
-            var disposition = msg.body_Read_U();
-            var localipaddr = msg.body_Read_S();
-            var remoteipaddr = msg.body_Read_S();
-            if (null != cb)
-                cb(connection, disposition, localipaddr, remoteipaddr);
-        });
-    }
-    ;
-    function method__org_alljoyn_Bus__JoinSession(connection, sessionHost, port, opts, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("JoinSession");
-        msg.hdr_SetSignature("sqa{sv}");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_S(sessionHost);
-        msg.body_Write_Q(port);
-        msg.body_WriteObject("a{sv}", opts);
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
-            msg.body_StartReading();
-            var disp = msg.body_Read_U();
             var sessionId = msg.body_Read_U();
-            var opts = msg.body_ReadObject("a{sv}");
-            if (null != cb)
-                cb(connection, disp, sessionId, opts);
-        });
-    }
-    ;
-    function method__org_alljoyn_Bus__LeaveHostedSession(connection, sessionId, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("LeaveHostedSession");
-        msg.hdr_SetSignature("u");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_U(sessionId);
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
+            var name = msg.body_Read_S();
+            var isAdded = msg.body_Read_B();
+            this.handle__MPSessionChanged(connection, sessionId, name, isAdded);
+            return true;
+        };
+        org_alljoyn_bus.__process__MPSessionChangedWithReason = function (connection, msg) {
             msg.body_StartReading();
+            var sessionId = msg.body_Read_U();
+            var name = msg.body_Read_S();
+            var isAdded = msg.body_Read_B();
+            var reason = msg.body_Read_U();
+            this.handle__MPSessionChangedWithReason(connection, sessionId, name, isAdded, reason);
+            return true;
+        };
+        org_alljoyn_bus.__process__SessionLost = function (connection, msg) {
+            msg.body_StartReading();
+            var sessionId = msg.body_Read_U();
+            this.handle__SessionLost(connection, sessionId);
+            return true;
+        };
+        org_alljoyn_bus.__process__SessionLostWithReason = function (connection, msg) {
+            msg.body_StartReading();
+            var sessionId = msg.body_Read_U();
+            var reason = msg.body_Read_U();
+            this.handle__SessionLostWithReason(connection, sessionId, reason);
+            return true;
+        };
+        org_alljoyn_bus.__process__SessionLostWithReasonAndDisposition = function (connection, msg) {
+            msg.body_StartReading();
+            var sessionId = msg.body_Read_U();
+            var reason = msg.body_Read_U();
             var disposition = msg.body_Read_U();
-            if (null != cb)
-                cb(connection, disposition);
-        });
-    }
-    ;
-    function method__org_alljoyn_Bus__LeaveJoinedSession(connection, sessionId, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("LeaveJoinedSession");
-        msg.hdr_SetSignature("u");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_U(sessionId);
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
-            msg.body_StartReading();
-            var disposition = msg.body_Read_U();
-            if (null != cb)
-                cb(connection, disposition);
-        });
-    }
-    ;
-    function method__org_alljoyn_Bus__LeaveSession(connection, sessionId, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("LeaveSession");
-        msg.hdr_SetSignature("u");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_U(sessionId);
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
-            msg.body_StartReading();
-            var disposition = msg.body_Read_U();
-            if (null != cb)
-                cb(connection, disposition);
-        });
-    }
-    ;
-    function signal__org_alljoyn_Bus__LostAdvertisedName(connection, name, transport, prefix) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("LostAdvertisedName");
-        msg.hdr_SetSignature("sqs");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_S(name);
-        msg.body_Write_Q(transport);
-        msg.body_Write_S(prefix);
-        connection.SendMsg(msg);
-    }
-    ;
-    function signal__org_alljoyn_Bus__MPSessionChanged(connection, sessionId, name, isAdded) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("MPSessionChanged");
-        msg.hdr_SetSignature("usb");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_U(sessionId);
-        msg.body_Write_S(name);
-        msg.body_Write_B(isAdded);
-        connection.SendMsg(msg);
-    }
-    ;
-    function signal__org_alljoyn_Bus__MPSessionChangedWithReason(connection, sessionId, name, isAdded, reason) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("MPSessionChangedWithReason");
-        msg.hdr_SetSignature("usbu");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_U(sessionId);
-        msg.body_Write_S(name);
-        msg.body_Write_B(isAdded);
-        msg.body_Write_U(reason);
-        connection.SendMsg(msg);
-    }
-    ;
-    function method__org_alljoyn_Bus__OnAppResume(connection, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("OnAppResume");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
-            msg.body_StartReading();
-            var disposition = msg.body_Read_U();
-            if (null != cb)
-                cb(connection, disposition);
-        });
-    }
-    ;
-    function method__org_alljoyn_Bus__OnAppSuspend(connection, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("OnAppSuspend");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
-            msg.body_StartReading();
-            var disposition = msg.body_Read_U();
-            if (null != cb)
-                cb(connection, disposition);
-        });
-    }
-    ;
-    function method__org_alljoyn_Bus__Ping(connection, name, timeout, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("Ping");
-        msg.hdr_SetSignature("su");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_S(name);
-        msg.body_Write_U(timeout);
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
-            msg.body_StartReading();
-            var disposition = msg.body_Read_U();
-            if (null != cb)
-                cb(connection, disposition);
-        });
-    }
-    ;
-    function method__org_alljoyn_Bus__ReloadConfig(connection, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("ReloadConfig");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
-            msg.body_StartReading();
-            var loaded = msg.body_Read_B();
-            if (null != cb)
-                cb(connection, loaded);
-        });
-    }
-    ;
-    function method__org_alljoyn_Bus__RemoveSessionMember(connection, sessionId, name, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("RemoveSessionMember");
-        msg.hdr_SetSignature("us");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_U(sessionId);
-        msg.body_Write_S(name);
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
-            msg.body_StartReading();
-            var disposition = msg.body_Read_U();
-            if (null != cb)
-                cb(connection, disposition);
-        });
-    }
-    ;
-    function signal__org_alljoyn_Bus__SessionLost(connection, sessionId) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("SessionLost");
-        msg.hdr_SetSignature("u");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_U(sessionId);
-        connection.SendMsg(msg);
-    }
-    ;
-    function signal__org_alljoyn_Bus__SessionLostWithReason(connection, sessionId, reason) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("SessionLostWithReason");
-        msg.hdr_SetSignature("uu");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_U(sessionId);
-        msg.body_Write_U(reason);
-        connection.SendMsg(msg);
-    }
-    ;
-    function signal__org_alljoyn_Bus__SessionLostWithReasonAndDisposition(connection, sessionId, reason, disposition) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("SessionLostWithReasonAndDisposition");
-        msg.hdr_SetSignature("uuu");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_U(sessionId);
-        msg.body_Write_U(reason);
-        msg.body_Write_U(disposition);
-        connection.SendMsg(msg);
-    }
-    ;
-    function method__org_alljoyn_Bus__SetIdleTimeouts(connection, reqLinkTO, reqProbeTO, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("SetIdleTimeouts");
-        msg.hdr_SetSignature("uu");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_U(reqLinkTO);
-        msg.body_Write_U(reqProbeTO);
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
-            msg.body_StartReading();
-            var disposition = msg.body_Read_U();
-            var actLinkTO = msg.body_Read_U();
-            var actProbeTO = msg.body_Read_U();
-            if (null != cb)
-                cb(connection, disposition, actLinkTO, actProbeTO);
-        });
-    }
-    ;
-    function method__org_alljoyn_Bus__SetLinkTimeout(connection, sessionId, inLinkTO, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("SetLinkTimeout");
-        msg.hdr_SetSignature("uu");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_U(sessionId);
-        msg.body_Write_U(inLinkTO);
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
-            msg.body_StartReading();
-            var disposition = msg.body_Read_U();
-            var outLinkTO = msg.body_Read_U();
-            if (null != cb)
-                cb(connection, disposition, outLinkTO);
-        });
-    }
-    ;
-    function method__org_alljoyn_Bus__UnbindSessionPort(connection, port, cb) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
-        msg.hdr_SetInterface("org.alljoyn.Bus");
-        msg.hdr_SetObjectPath("/org/alljoyn/Bus");
-        msg.hdr_SetDestination("org.alljoyn.Bus");
-        msg.hdr_SetMember("UnbindSessionPort");
-        msg.hdr_SetSignature("q");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        msg.body_Write_Q(port);
-        connection.SendMsgWithCallback(msg, function () {
-            msg = msg.m_Reply;
-            msg.body_StartReading();
-            var disposition = msg.body_Read_U();
-            if (null != cb)
-                cb(connection, disposition);
-        });
-    }
-    ;
-    function handle__org_alljoyn_Bus__FoundAdvertisedName(connection, name, transport, prefix) {
-    }
-    ;
-    function handle__org_alljoyn_Bus__LostAdvertisedName(connection, name, transport, prefix) {
-    }
-    ;
-    function handle__org_alljoyn_Bus__MPSessionChanged(connection, sessionId, name, isAdded) {
-    }
-    ;
-    function handle__org_alljoyn_Bus__MPSessionChangedWithReason(connection, sessionId, name, isAdded, reason) {
-    }
-    ;
-    function handle__org_alljoyn_Bus__SessionLost(connection, sessionId) {
-    }
-    ;
-    function handle__org_alljoyn_Bus__SessionLostWithReason(connection, sessionId, reason) {
-    }
-    ;
-    function handle__org_alljoyn_Bus__SessionLostWithReasonAndDisposition(connection, sessionId, reason, disposition) {
-    }
+            this.handle__SessionLostWithReasonAndDisposition(connection, sessionId, reason, disposition);
+            return true;
+        };
+        org_alljoyn_bus.method__AdvertiseName = function (connection, name, transports, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("AdvertiseName");
+            msg.hdr_SetSignature("sq");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_S(name);
+            msg.body_Write_Q(transports);
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var disposition = msg.body_Read_U();
+                if (null != cb)
+                    cb(connection, disposition);
+            });
+        };
+        ;
+        org_alljoyn_bus.method__AliasUnixUser = function (connection, aliasUID, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("AliasUnixUser");
+            msg.hdr_SetSignature("u");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_U(aliasUID);
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var disposition = msg.body_Read_U();
+                if (null != cb)
+                    cb(connection, disposition);
+            });
+        };
+        ;
+        org_alljoyn_bus.method__BindSessionPort = function (connection, portIn, opts, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("BindSessionPort");
+            msg.hdr_SetSignature("qa{sv}");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_Q(portIn);
+            // XXX - just fixed options at the moment
+            //msg.body_WriteObject(opts, "a{sv}");
+            var ooo = new Uint8Array([0x04, 0x00, 0x00, 0x00, 0x74, 0x72, 0x61, 0x66, 0x00, 0x01, 0x79, 0x00, 0x01, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x6D, 0x75, 0x6C, 0x74, 0x69, 0x00, 0x01, 0x62, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x70, 0x72, 0x6F, 0x78, 0x00, 0x01, 0x79, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x74, 0x72, 0x61, 0x6E, 0x73, 0x00, 0x01, 0x71, 0x00, 0x00, 0x05, 0x01]);
+            msg.body_Write_I(0x48);
+            msg.body_WriteRaw(ooo);
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var disposition = msg.body_Read_U();
+                var portOut = msg.body_Read_Q();
+                if (null != cb)
+                    cb(connection, disposition, portOut);
+            });
+        };
+        ;
+        org_alljoyn_bus.method__BusHello = function (connection, GUIDC, protoVerC, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("BusHello");
+            msg.hdr_SetSignature("su");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_S(GUIDC);
+            msg.body_Write_U(protoVerC);
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var GUIDS = msg.body_Read_S();
+                var uniqueName = msg.body_Read_S();
+                var protoVerS = msg.body_Read_U();
+                if (null != cb)
+                    cb(connection, GUIDS, uniqueName, protoVerS);
+            });
+        };
+        ;
+        org_alljoyn_bus.method__CancelAdvertiseName = function (connection, name, transports, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("CancelAdvertiseName");
+            msg.hdr_SetSignature("sq");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_S(name);
+            msg.body_Write_Q(transports);
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var disposition = msg.body_Read_U();
+                if (null != cb)
+                    cb(connection, disposition);
+            });
+        };
+        ;
+        org_alljoyn_bus.method__CancelFindAdvertisedName = function (connection, name, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("CancelFindAdvertisedName");
+            msg.hdr_SetSignature("s");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_S(name);
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var disposition = msg.body_Read_U();
+                if (null != cb)
+                    cb(connection, disposition);
+            });
+        };
+        ;
+        org_alljoyn_bus.method__CancelFindAdvertisedNameByTransport = function (connection, name, transports, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("CancelFindAdvertisedNameByTransport");
+            msg.hdr_SetSignature("sq");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_S(name);
+            msg.body_Write_Q(transports);
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var disposition = msg.body_Read_U();
+                if (null != cb)
+                    cb(connection, disposition);
+            });
+        };
+        ;
+        org_alljoyn_bus.method__CancelFindAdvertisementByTransport = function (connection, matching, transports, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("CancelFindAdvertisementByTransport");
+            msg.hdr_SetSignature("sq");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_S(matching);
+            msg.body_Write_Q(transports);
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var disposition = msg.body_Read_U();
+                if (null != cb)
+                    cb(connection, disposition);
+            });
+        };
+        ;
+        org_alljoyn_bus.method__CancelSessionlessMessage = function (connection, serialNum, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("CancelSessionlessMessage");
+            msg.hdr_SetSignature("u");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_U(serialNum);
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var disposition = msg.body_Read_U();
+                if (null != cb)
+                    cb(connection, disposition);
+            });
+        };
+        ;
+        org_alljoyn_bus.method__FindAdvertisedName = function (connection, name, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("FindAdvertisedName");
+            msg.hdr_SetSignature("s");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_S(name);
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var disposition = msg.body_Read_U();
+                if (null != cb)
+                    cb(connection, disposition);
+            });
+        };
+        ;
+        org_alljoyn_bus.method__FindAdvertisedNameByTransport = function (connection, name, transports, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("FindAdvertisedNameByTransport");
+            msg.hdr_SetSignature("sq");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_S(name);
+            msg.body_Write_Q(transports);
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var disposition = msg.body_Read_U();
+                if (null != cb)
+                    cb(connection, disposition);
+            });
+        };
+        ;
+        org_alljoyn_bus.method__FindAdvertisementByTransport = function (connection, matching, transports, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("FindAdvertisementByTransport");
+            msg.hdr_SetSignature("sq");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_S(matching);
+            msg.body_Write_Q(transports);
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var disposition = msg.body_Read_U();
+                if (null != cb)
+                    cb(connection, disposition);
+            });
+        };
+        ;
+        org_alljoyn_bus.signal__FoundAdvertisedName = function (connection, name, transport, prefix) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("FoundAdvertisedName");
+            msg.hdr_SetSignature("sqs");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_S(name);
+            msg.body_Write_Q(transport);
+            msg.body_Write_S(prefix);
+            connection.SendMsg(msg);
+        };
+        ;
+        org_alljoyn_bus.method__GetHostInfo = function (connection, sessionId, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("GetHostInfo");
+            msg.hdr_SetSignature("u");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_U(sessionId);
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var disposition = msg.body_Read_U();
+                var localipaddr = msg.body_Read_S();
+                var remoteipaddr = msg.body_Read_S();
+                if (null != cb)
+                    cb(connection, disposition, localipaddr, remoteipaddr);
+            });
+        };
+        ;
+        org_alljoyn_bus.method__JoinSession = function (connection, sessionHost, port, opts, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("JoinSession");
+            msg.hdr_SetSignature("sqa{sv}");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_S(sessionHost);
+            msg.body_Write_Q(port);
+            msg.body_WriteObject("a{sv}", opts);
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var disp = msg.body_Read_U();
+                var sessionId = msg.body_Read_U();
+                var opts = msg.body_ReadObject("a{sv}");
+                if (null != cb)
+                    cb(connection, disp, sessionId, opts);
+            });
+        };
+        ;
+        org_alljoyn_bus.method__LeaveHostedSession = function (connection, sessionId, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("LeaveHostedSession");
+            msg.hdr_SetSignature("u");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_U(sessionId);
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var disposition = msg.body_Read_U();
+                if (null != cb)
+                    cb(connection, disposition);
+            });
+        };
+        ;
+        org_alljoyn_bus.method__LeaveJoinedSession = function (connection, sessionId, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("LeaveJoinedSession");
+            msg.hdr_SetSignature("u");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_U(sessionId);
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var disposition = msg.body_Read_U();
+                if (null != cb)
+                    cb(connection, disposition);
+            });
+        };
+        ;
+        org_alljoyn_bus.method__LeaveSession = function (connection, sessionId, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("LeaveSession");
+            msg.hdr_SetSignature("u");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_U(sessionId);
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var disposition = msg.body_Read_U();
+                if (null != cb)
+                    cb(connection, disposition);
+            });
+        };
+        ;
+        org_alljoyn_bus.signal__LostAdvertisedName = function (connection, name, transport, prefix) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("LostAdvertisedName");
+            msg.hdr_SetSignature("sqs");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_S(name);
+            msg.body_Write_Q(transport);
+            msg.body_Write_S(prefix);
+            connection.SendMsg(msg);
+        };
+        ;
+        org_alljoyn_bus.signal__MPSessionChanged = function (connection, sessionId, name, isAdded) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("MPSessionChanged");
+            msg.hdr_SetSignature("usb");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_U(sessionId);
+            msg.body_Write_S(name);
+            msg.body_Write_B(isAdded);
+            connection.SendMsg(msg);
+        };
+        ;
+        org_alljoyn_bus.signal__MPSessionChangedWithReason = function (connection, sessionId, name, isAdded, reason) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("MPSessionChangedWithReason");
+            msg.hdr_SetSignature("usbu");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_U(sessionId);
+            msg.body_Write_S(name);
+            msg.body_Write_B(isAdded);
+            msg.body_Write_U(reason);
+            connection.SendMsg(msg);
+        };
+        ;
+        org_alljoyn_bus.method__OnAppResume = function (connection, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("OnAppResume");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var disposition = msg.body_Read_U();
+                if (null != cb)
+                    cb(connection, disposition);
+            });
+        };
+        ;
+        org_alljoyn_bus.method__OnAppSuspend = function (connection, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("OnAppSuspend");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var disposition = msg.body_Read_U();
+                if (null != cb)
+                    cb(connection, disposition);
+            });
+        };
+        ;
+        org_alljoyn_bus.method__Ping = function (connection, name, timeout, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("Ping");
+            msg.hdr_SetSignature("su");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_S(name);
+            msg.body_Write_U(timeout);
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var disposition = msg.body_Read_U();
+                if (null != cb)
+                    cb(connection, disposition);
+            });
+        };
+        ;
+        org_alljoyn_bus.method__ReloadConfig = function (connection, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("ReloadConfig");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var loaded = msg.body_Read_B();
+                if (null != cb)
+                    cb(connection, loaded);
+            });
+        };
+        ;
+        org_alljoyn_bus.method__RemoveSessionMember = function (connection, sessionId, name, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("RemoveSessionMember");
+            msg.hdr_SetSignature("us");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_U(sessionId);
+            msg.body_Write_S(name);
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var disposition = msg.body_Read_U();
+                if (null != cb)
+                    cb(connection, disposition);
+            });
+        };
+        ;
+        org_alljoyn_bus.signal__SessionLost = function (connection, sessionId) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("SessionLost");
+            msg.hdr_SetSignature("u");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_U(sessionId);
+            connection.SendMsg(msg);
+        };
+        ;
+        org_alljoyn_bus.signal__SessionLostWithReason = function (connection, sessionId, reason) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("SessionLostWithReason");
+            msg.hdr_SetSignature("uu");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_U(sessionId);
+            msg.body_Write_U(reason);
+            connection.SendMsg(msg);
+        };
+        ;
+        org_alljoyn_bus.signal__SessionLostWithReasonAndDisposition = function (connection, sessionId, reason, disposition) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("SessionLostWithReasonAndDisposition");
+            msg.hdr_SetSignature("uuu");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_U(sessionId);
+            msg.body_Write_U(reason);
+            msg.body_Write_U(disposition);
+            connection.SendMsg(msg);
+        };
+        ;
+        org_alljoyn_bus.method__SetIdleTimeouts = function (connection, reqLinkTO, reqProbeTO, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("SetIdleTimeouts");
+            msg.hdr_SetSignature("uu");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_U(reqLinkTO);
+            msg.body_Write_U(reqProbeTO);
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var disposition = msg.body_Read_U();
+                var actLinkTO = msg.body_Read_U();
+                var actProbeTO = msg.body_Read_U();
+                if (null != cb)
+                    cb(connection, disposition, actLinkTO, actProbeTO);
+            });
+        };
+        ;
+        org_alljoyn_bus.method__SetLinkTimeout = function (connection, sessionId, inLinkTO, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("SetLinkTimeout");
+            msg.hdr_SetSignature("uu");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_U(sessionId);
+            msg.body_Write_U(inLinkTO);
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var disposition = msg.body_Read_U();
+                var outLinkTO = msg.body_Read_U();
+                if (null != cb)
+                    cb(connection, disposition, outLinkTO);
+            });
+        };
+        ;
+        org_alljoyn_bus.method__UnbindSessionPort = function (connection, port, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.alljoyn.Bus");
+            msg.hdr_SetObjectPath("/org/alljoyn/Bus");
+            msg.hdr_SetDestination("org.alljoyn.Bus");
+            msg.hdr_SetMember("UnbindSessionPort");
+            msg.hdr_SetSignature("q");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_Q(port);
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var disposition = msg.body_Read_U();
+                if (null != cb)
+                    cb(connection, disposition);
+            });
+        };
+        ;
+        org_alljoyn_bus.handle__FoundAdvertisedName = function (connection, name, transport, prefix) {
+        };
+        ;
+        org_alljoyn_bus.handle__LostAdvertisedName = function (connection, name, transport, prefix) {
+        };
+        ;
+        org_alljoyn_bus.handle__MPSessionChanged = function (connection, sessionId, name, isAdded) {
+        };
+        ;
+        org_alljoyn_bus.handle__MPSessionChangedWithReason = function (connection, sessionId, name, isAdded, reason) {
+        };
+        ;
+        org_alljoyn_bus.handle__SessionLost = function (connection, sessionId) {
+        };
+        ;
+        org_alljoyn_bus.handle__SessionLostWithReason = function (connection, sessionId, reason) {
+        };
+        ;
+        org_alljoyn_bus.handle__SessionLostWithReasonAndDisposition = function (connection, sessionId, reason, disposition) {
+        };
+        ;
+        return org_alljoyn_bus;
+    }());
     ;
     //==============================================================================================================
     // org.alljoyn.Bus.Peer.Session - producer
     //==============================================================================================================
-    function _org_alljoyn_bus_peer_session_ProcessMsg(connection, msg) {
-        var member = msg.hdr_GetMember();
-        if (member == "AcceptSession") {
-            return __process__org_alljoyn_Bus_Peer_Session__AcceptSession(connection, msg);
+    var org_alljoyn_bus_peer_session = (function () {
+        function org_alljoyn_bus_peer_session() {
         }
-        else if (member == "SessionJoined") {
-            return __process__org_alljoyn_Bus_Peer_Session__SessionJoined(connection, msg);
-        }
-        return false;
-    }
-    function __process__org_alljoyn_Bus_Peer_Session__AcceptSession(connection, msg) {
-        msg.body_StartReading();
-        var port = msg.body_Read_Q();
-        var id = msg.body_Read_U();
-        var src = msg.body_Read_S();
-        var opts = msg.body_ReadObject("a{sv}");
-        var ret = handle__org_alljoyn_Bus_Peer_Session__AcceptSession(connection, port, id, src, opts);
-        msg.CreateReply();
-        msg.m_Reply.hdr_SetSignature("b");
-        msg.m_Reply.body_StartWriting();
-        msg.m_Reply.body_Write_B(ret);
-        return true;
-    }
-    function __process__org_alljoyn_Bus_Peer_Session__SessionJoined(connection, msg) {
-        msg.body_StartReading();
-        var port = msg.body_Read_Q();
-        var id = msg.body_Read_U();
-        var src = msg.body_Read_S();
-        handle__org_alljoyn_Bus_Peer_Session__SessionJoined(connection, port, id, src);
-        return true;
-    }
-    function handle__org_alljoyn_Bus_Peer_Session__AcceptSession(connection, port, id, src, opts) {
-        return true;
-    }
-    function handle__org_alljoyn_Bus_Peer_Session__SessionJoined(connection, port, id, src) {
-    }
+        org_alljoyn_bus_peer_session._ProcessMsg = function (connection, msg) {
+            var member = msg.hdr_GetMember();
+            if (member == "AcceptSession") {
+                return this.__process__AcceptSession(connection, msg);
+            }
+            else if (member == "SessionJoined") {
+                return this.__process__SessionJoined(connection, msg);
+            }
+            return false;
+        };
+        org_alljoyn_bus_peer_session.__process__AcceptSession = function (connection, msg) {
+            msg.body_StartReading();
+            var port = msg.body_Read_Q();
+            var id = msg.body_Read_U();
+            var src = msg.body_Read_S();
+            var opts = msg.body_ReadObject("a{sv}");
+            var ret = this.handle__AcceptSession(connection, port, id, src, opts);
+            msg.CreateReply();
+            msg.m_Reply.hdr_SetSignature("b");
+            msg.m_Reply.body_StartWriting();
+            msg.m_Reply.body_Write_B(ret);
+            return true;
+        };
+        org_alljoyn_bus_peer_session.__process__SessionJoined = function (connection, msg) {
+            msg.body_StartReading();
+            var port = msg.body_Read_Q();
+            var id = msg.body_Read_U();
+            var src = msg.body_Read_S();
+            this.handle__SessionJoined(connection, port, id, src);
+            return true;
+        };
+        org_alljoyn_bus_peer_session.handle__AcceptSession = function (connection, port, id, src, opts) {
+            return true;
+        };
+        org_alljoyn_bus_peer_session.handle__SessionJoined = function (connection, port, id, src) {
+        };
+        return org_alljoyn_bus_peer_session;
+    }());
+    ;
     //==============================================================================================================
     // org.alljoyn.Daemon - producer
     //==============================================================================================================
-    function _org_alljoyn_daemon_ProcessMsg(connection, msg) {
-        var member = msg.hdr_GetMember();
-        if (member == "ProbeAck") {
-            return __process__org_alljoyn_Daemon__ProbeAck(connection, msg);
+    var org_alljoyn_daemon = (function () {
+        function org_alljoyn_daemon() {
         }
-        else if (member == "ProbeReq") {
-            return __process__org_alljoyn_Daemon__ProbeReq(connection, msg);
-        }
-        return false;
-    }
-    function __process__org_alljoyn_Daemon__ProbeAck(connection, msg) {
-        msg.body_StartReading();
-        handle__org_alljoyn_Daemon__ProbeAck(connection);
-        return true;
-    }
-    function __process__org_alljoyn_Daemon__ProbeReq(connection, msg) {
-        msg.body_StartReading();
-        handle__org_alljoyn_Daemon__ProbeReq(connection);
-        return true;
-    }
-    function signal__org_alljoyn_Daemon__ProbeAck(connection) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
-        msg.hdr_SetInterface("org.alljoyn.Daemon");
-        msg.hdr_SetObjectPath("x");
-        msg.hdr_SetMember("ProbeAck");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        connection.SendMsg(msg);
-    }
-    function signal__org_alljoyn_Daemon__ProbeReq(connection) {
-        var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
-        msg.hdr_SetInterface("org.alljoyn.Daemon");
-        msg.hdr_SetObjectPath("x");
-        msg.hdr_SetMember("ProbeReq");
-        if (null != connection.GetLocalNodeId())
-            msg.hdr_SetSender(connection.GetLocalNodeId());
-        msg.body_StartWriting();
-        connection.SendMsg(msg);
-    }
-    function handle__org_alljoyn_Daemon__ProbeAck(connection) {
-    }
-    function handle__org_alljoyn_Daemon__ProbeReq(connection) {
-    }
+        org_alljoyn_daemon._ProcessMsg = function (connection, msg) {
+            var member = msg.hdr_GetMember();
+            if (member == "ProbeAck") {
+                return this.__process__ProbeAck(connection, msg);
+            }
+            else if (member == "ProbeReq") {
+                return this.__process__ProbeReq(connection, msg);
+            }
+            return false;
+        };
+        org_alljoyn_daemon.__process__ProbeAck = function (connection, msg) {
+            msg.body_StartReading();
+            this.handle__ProbeAck(connection);
+            return true;
+        };
+        org_alljoyn_daemon.__process__ProbeReq = function (connection, msg) {
+            msg.body_StartReading();
+            this.handle__ProbeReq(connection);
+            return true;
+        };
+        org_alljoyn_daemon.signal__ProbeAck = function (connection) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
+            msg.hdr_SetInterface("org.alljoyn.Daemon");
+            msg.hdr_SetObjectPath("x");
+            msg.hdr_SetMember("ProbeAck");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            connection.SendMsg(msg);
+        };
+        org_alljoyn_daemon.signal__ProbeReq = function (connection) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
+            msg.hdr_SetInterface("org.alljoyn.Daemon");
+            msg.hdr_SetObjectPath("x");
+            msg.hdr_SetMember("ProbeReq");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            connection.SendMsg(msg);
+        };
+        org_alljoyn_daemon.handle__ProbeAck = function (connection) {
+        };
+        org_alljoyn_daemon.handle__ProbeReq = function (connection) {
+        };
+        return org_alljoyn_daemon;
+    }());
     //==============================================================================================================
     // org.alljoyn.Bus.Peer.Authentication - producer
     //==============================================================================================================
-    function _org_alljoyn_bus_peer_authentication_ProcessMsg(connection, msg) {
-        var member = msg.hdr_GetMember();
-        if (member == "AuthChallenge") {
-            return __process__org_alljoyn_Bus_Peer_Authentication__AuthChallenge(connection, msg);
+    var org_alljoyn_bus_peer_authentication = (function () {
+        function org_alljoyn_bus_peer_authentication() {
         }
-        else if (member == "ExchangeGroupKeys") {
-            return __process__org_alljoyn_Bus_Peer_Authentication__ExchangeGroupKeys(connection, msg);
-        }
-        else if (member == "ExchangeGuids") {
-            return __process__org_alljoyn_Bus_Peer_Authentication__ExchangeGuids(connection, msg);
-        }
-        else if (member == "ExchangeSuites") {
-            return __process__org_alljoyn_Bus_Peer_Authentication__ExchangeSuites(connection, msg);
-        }
-        else if (member == "GenSessionKey") {
-            return __process__org_alljoyn_Bus_Peer_Authentication__GenSessionKey(connection, msg);
-        }
-        else if (member == "KeyAuthentication") {
-            return __process__org_alljoyn_Bus_Peer_Authentication__KeyAuthentication(connection, msg);
-        }
-        else if (member == "KeyExchange") {
-            return __process__org_alljoyn_Bus_Peer_Authentication__KeyExchange(connection, msg);
-        }
-        else if (member == "SendManifest") {
-            return __process__org_alljoyn_Bus_Peer_Authentication__SendManifest(connection, msg);
-        }
-        else if (member == "SendMemberships") {
-            return __process__org_alljoyn_Bus_Peer_Authentication__SendMemberships(connection, msg);
-        }
-        return false;
-    }
-    function __process__org_alljoyn_Bus_Peer_Authentication__AuthChallenge(connection, msg) {
-        msg.body_StartReading();
-        var challenge = msg.body_Read_S();
-        var ret = handle__org_alljoyn_Bus_Peer_Authentication__AuthChallenge(connection, challenge);
-        msg.CreateReply();
-        msg.m_Reply.hdr_SetSignature("s");
-        msg.m_Reply.body_StartWriting();
-        msg.m_Reply.body_Write_S(ret);
-        return true;
-    }
-    function __process__org_alljoyn_Bus_Peer_Authentication__ExchangeGroupKeys(connection, msg) {
-        msg.body_StartReading();
-        var localKeyMatter = msg.body_Read_AY();
-        var ret = handle__org_alljoyn_Bus_Peer_Authentication__ExchangeGroupKeys(connection, localKeyMatter);
-        msg.CreateReply();
-        msg.m_Reply.hdr_SetSignature("ay");
-        msg.m_Reply.body_StartWriting();
-        msg.m_Reply.body_Write_AY(ret);
-        return true;
-    }
-    function __process__org_alljoyn_Bus_Peer_Authentication__ExchangeGuids(connection, msg) {
-        msg.body_StartReading();
-        var localGuid = msg.body_Read_S();
-        var localVersion = msg.body_Read_U();
-        var ret = handle__org_alljoyn_Bus_Peer_Authentication__ExchangeGuids(connection, localGuid, localVersion);
-        msg.CreateReply();
-        msg.m_Reply.hdr_SetSignature("s");
-        msg.m_Reply.body_StartWriting();
-        msg.m_Reply.body_Write_S(ret);
-        return true;
-    }
-    function __process__org_alljoyn_Bus_Peer_Authentication__ExchangeSuites(connection, msg) {
-        msg.body_StartReading();
-        var localAuthList = msg.body_Read_AU();
-        var ret = handle__org_alljoyn_Bus_Peer_Authentication__ExchangeSuites(connection, localAuthList);
-        msg.CreateReply();
-        msg.m_Reply.hdr_SetSignature("au");
-        msg.m_Reply.body_StartWriting();
-        msg.m_Reply.body_Write_AU(ret);
-        return true;
-    }
-    function __process__org_alljoyn_Bus_Peer_Authentication__GenSessionKey(connection, msg) {
-        msg.body_StartReading();
-        var localGuid = msg.body_Read_S();
-        var remoteGuid = msg.body_Read_S();
-        var localNonce = msg.body_Read_S();
-        var ret = handle__org_alljoyn_Bus_Peer_Authentication__GenSessionKey(connection, localGuid, remoteGuid, localNonce);
-        msg.CreateReply();
-        msg.m_Reply.hdr_SetSignature("s");
-        msg.m_Reply.body_StartWriting();
-        msg.m_Reply.body_Write_S(ret);
-        return true;
-    }
-    function __process__org_alljoyn_Bus_Peer_Authentication__KeyAuthentication(connection, msg) {
-        msg.body_StartReading();
-        var localVerifier = null; // msg.body_ReadVariant(); // XXX - fix this
-        var ret = handle__org_alljoyn_Bus_Peer_Authentication__KeyAuthentication(connection, localVerifier);
-        msg.CreateReply();
-        msg.m_Reply.hdr_SetSignature("v");
-        msg.m_Reply.body_StartWriting();
-        // msg.m_Reply.body_WriteVariant(ret); // XXX - fix this
-        return true;
-    }
-    function __process__org_alljoyn_Bus_Peer_Authentication__KeyExchange(connection, msg) {
-        msg.body_StartReading();
-        var localAuthMask = msg.body_Read_U();
-        var localPublicKey = null; // msg.body_ReadVariant(); // XXX - fix this
-        var ret = handle__org_alljoyn_Bus_Peer_Authentication__KeyExchange(connection, localAuthMask, localPublicKey);
-        msg.CreateReply();
-        msg.m_Reply.hdr_SetSignature("u");
-        msg.m_Reply.body_StartWriting();
-        msg.m_Reply.body_Write_U(ret);
-        return true;
-    }
-    function __process__org_alljoyn_Bus_Peer_Authentication__SendManifest(connection, msg) {
-        msg.body_StartReading();
-        var manifest = msg.body_ReadObject("a(ssa(syy))");
-        var ret = handle__org_alljoyn_Bus_Peer_Authentication__SendManifest(connection, manifest);
-        msg.CreateReply();
-        msg.m_Reply.hdr_SetSignature("a(ssa(syy))");
-        msg.m_Reply.body_StartWriting();
-        // msg.m_Reply.body_WriteObject(ret); // XXX - fix this
-        return true;
-    }
-    function __process__org_alljoyn_Bus_Peer_Authentication__SendMemberships(connection, msg) {
-        msg.body_StartReading();
-        var sendCode = msg.body_Read_Y();
-        var memberships = msg.body_ReadObject("a(yay)");
-        var ret = handle__org_alljoyn_Bus_Peer_Authentication__SendMemberships(connection, sendCode, memberships);
-        msg.CreateReply();
-        msg.m_Reply.hdr_SetSignature("y");
-        msg.m_Reply.body_StartWriting();
-        msg.m_Reply.body_Write_Y(ret);
-        return true;
-    }
-    function handle__org_alljoyn_Bus_Peer_Authentication__AuthChallenge(connection, challenge) {
-        return "default-string";
-    }
-    function handle__org_alljoyn_Bus_Peer_Authentication__ExchangeGroupKeys(connection, localKeyMatter) {
-        return null; //[1, 2, 3];
-    }
-    function handle__org_alljoyn_Bus_Peer_Authentication__ExchangeGuids(connection, localGuid, localVersion) {
-        return "default-string";
-    }
-    function handle__org_alljoyn_Bus_Peer_Authentication__ExchangeSuites(connection, localAuthList) {
-        return null; //[1, 2, 3];
-    }
-    function handle__org_alljoyn_Bus_Peer_Authentication__GenSessionKey(connection, localGuid, remoteGuid, localNonce) {
-        return "default-string";
-    }
-    function handle__org_alljoyn_Bus_Peer_Authentication__KeyAuthentication(connection, localVerifier) {
-        return 0;
-    }
-    function handle__org_alljoyn_Bus_Peer_Authentication__KeyExchange(connection, localAuthMask, localPublicKey) {
-        return 0;
-    }
-    function handle__org_alljoyn_Bus_Peer_Authentication__SendManifest(connection, manifest) {
-        return 0;
-    }
-    function handle__org_alljoyn_Bus_Peer_Authentication__SendMemberships(connection, sendCode, memberships) {
-        return 0;
-    }
+        org_alljoyn_bus_peer_authentication._ProcessMsg = function (connection, msg) {
+            var member = msg.hdr_GetMember();
+            if (member == "AuthChallenge") {
+                return this.__process__AuthChallenge(connection, msg);
+            }
+            else if (member == "ExchangeGroupKeys") {
+                return this.__process__ExchangeGroupKeys(connection, msg);
+            }
+            else if (member == "ExchangeGuids") {
+                return this.__process__ExchangeGuids(connection, msg);
+            }
+            else if (member == "ExchangeSuites") {
+                return this.__process__ExchangeSuites(connection, msg);
+            }
+            else if (member == "GenSessionKey") {
+                return this.__process__GenSessionKey(connection, msg);
+            }
+            else if (member == "KeyAuthentication") {
+                return this.__process__KeyAuthentication(connection, msg);
+            }
+            else if (member == "KeyExchange") {
+                return this.__process__KeyExchange(connection, msg);
+            }
+            else if (member == "SendManifest") {
+                return this.__process__SendManifest(connection, msg);
+            }
+            else if (member == "SendMemberships") {
+                return this.__process__SendMemberships(connection, msg);
+            }
+            return false;
+        };
+        org_alljoyn_bus_peer_authentication.__process__AuthChallenge = function (connection, msg) {
+            msg.body_StartReading();
+            var challenge = msg.body_Read_S();
+            var ret = this.handle__AuthChallenge(connection, challenge);
+            msg.CreateReply();
+            msg.m_Reply.hdr_SetSignature("s");
+            msg.m_Reply.body_StartWriting();
+            msg.m_Reply.body_Write_S(ret);
+            return true;
+        };
+        org_alljoyn_bus_peer_authentication.__process__ExchangeGroupKeys = function (connection, msg) {
+            msg.body_StartReading();
+            var localKeyMatter = msg.body_Read_AY();
+            var ret = this.handle__ExchangeGroupKeys(connection, localKeyMatter);
+            msg.CreateReply();
+            msg.m_Reply.hdr_SetSignature("ay");
+            msg.m_Reply.body_StartWriting();
+            msg.m_Reply.body_Write_AY(ret);
+            return true;
+        };
+        org_alljoyn_bus_peer_authentication.__process__ExchangeGuids = function (connection, msg) {
+            msg.body_StartReading();
+            var localGuid = msg.body_Read_S();
+            var localVersion = msg.body_Read_U();
+            var ret = this.handle__ExchangeGuids(connection, localGuid, localVersion);
+            msg.CreateReply();
+            msg.m_Reply.hdr_SetSignature("s");
+            msg.m_Reply.body_StartWriting();
+            msg.m_Reply.body_Write_S(ret);
+            return true;
+        };
+        org_alljoyn_bus_peer_authentication.__process__ExchangeSuites = function (connection, msg) {
+            msg.body_StartReading();
+            var localAuthList = msg.body_Read_AU();
+            var ret = this.handle__ExchangeSuites(connection, localAuthList);
+            msg.CreateReply();
+            msg.m_Reply.hdr_SetSignature("au");
+            msg.m_Reply.body_StartWriting();
+            msg.m_Reply.body_Write_AU(ret);
+            return true;
+        };
+        org_alljoyn_bus_peer_authentication.__process__GenSessionKey = function (connection, msg) {
+            msg.body_StartReading();
+            var localGuid = msg.body_Read_S();
+            var remoteGuid = msg.body_Read_S();
+            var localNonce = msg.body_Read_S();
+            var ret = this.handle__GenSessionKey(connection, localGuid, remoteGuid, localNonce);
+            msg.CreateReply();
+            msg.m_Reply.hdr_SetSignature("s");
+            msg.m_Reply.body_StartWriting();
+            msg.m_Reply.body_Write_S(ret);
+            return true;
+        };
+        org_alljoyn_bus_peer_authentication.__process__KeyAuthentication = function (connection, msg) {
+            msg.body_StartReading();
+            var localVerifier = null; // msg.body_ReadVariant(); // XXX - fix this
+            var ret = this.handle__KeyAuthentication(connection, localVerifier);
+            msg.CreateReply();
+            msg.m_Reply.hdr_SetSignature("v");
+            msg.m_Reply.body_StartWriting();
+            // msg.m_Reply.body_WriteVariant(ret); // XXX - fix this
+            return true;
+        };
+        org_alljoyn_bus_peer_authentication.__process__KeyExchange = function (connection, msg) {
+            msg.body_StartReading();
+            var localAuthMask = msg.body_Read_U();
+            var localPublicKey = null; // msg.body_ReadVariant(); // XXX - fix this
+            var ret = this.handle__KeyExchange(connection, localAuthMask, localPublicKey);
+            msg.CreateReply();
+            msg.m_Reply.hdr_SetSignature("u");
+            msg.m_Reply.body_StartWriting();
+            msg.m_Reply.body_Write_U(ret);
+            return true;
+        };
+        org_alljoyn_bus_peer_authentication.__process__SendManifest = function (connection, msg) {
+            msg.body_StartReading();
+            var manifest = msg.body_ReadObject("a(ssa(syy))");
+            var ret = this.handle__SendManifest(connection, manifest);
+            msg.CreateReply();
+            msg.m_Reply.hdr_SetSignature("a(ssa(syy))");
+            msg.m_Reply.body_StartWriting();
+            // msg.m_Reply.body_WriteObject(ret); // XXX - fix this
+            return true;
+        };
+        org_alljoyn_bus_peer_authentication.__process__SendMemberships = function (connection, msg) {
+            msg.body_StartReading();
+            var sendCode = msg.body_Read_Y();
+            var memberships = msg.body_ReadObject("a(yay)");
+            var ret = this.handle__SendMemberships(connection, sendCode, memberships);
+            msg.CreateReply();
+            msg.m_Reply.hdr_SetSignature("y");
+            msg.m_Reply.body_StartWriting();
+            msg.m_Reply.body_Write_Y(ret);
+            return true;
+        };
+        org_alljoyn_bus_peer_authentication.handle__AuthChallenge = function (connection, challenge) {
+            return "default-string";
+        };
+        org_alljoyn_bus_peer_authentication.handle__ExchangeGroupKeys = function (connection, localKeyMatter) {
+            return null; //[1, 2, 3];
+        };
+        org_alljoyn_bus_peer_authentication.handle__ExchangeGuids = function (connection, localGuid, localVersion) {
+            return "default-string";
+        };
+        org_alljoyn_bus_peer_authentication.handle__ExchangeSuites = function (connection, localAuthList) {
+            return null; //[1, 2, 3];
+        };
+        org_alljoyn_bus_peer_authentication.handle__GenSessionKey = function (connection, localGuid, remoteGuid, localNonce) {
+            return "default-string";
+        };
+        org_alljoyn_bus_peer_authentication.handle__KeyAuthentication = function (connection, localVerifier) {
+            return 0;
+        };
+        org_alljoyn_bus_peer_authentication.handle__KeyExchange = function (connection, localAuthMask, localPublicKey) {
+            return 0;
+        };
+        org_alljoyn_bus_peer_authentication.handle__SendManifest = function (connection, manifest) {
+            return 0;
+        };
+        org_alljoyn_bus_peer_authentication.handle__SendMemberships = function (connection, sendCode, memberships) {
+            return 0;
+        };
+        return org_alljoyn_bus_peer_authentication;
+    }());
     //==============================================================================================================
     // WEB SOCKET SPECIFIC CODE BELOW
     //==============================================================================================================
@@ -2807,6 +2874,12 @@ var AJ;
             this.m_socket.onerror = function (e) {
                 _this_.OnTransportConnected(false);
             };
+        };
+        ConnectorWebSocket.prototype.DisconnectTransport = function () {
+            if (this.m_socket != null) {
+                this.m_socket.close();
+                this.m_socket = null;
+            }
         };
         ConnectorWebSocket.prototype.WriteData = function (data) {
             this.m_socket.send(data);
@@ -2996,74 +3069,66 @@ var AJ;
             }
             return false;
         };
+        Application.__process__TestMethod = function (connection, msg) {
+            msg.body_StartReading();
+            var s1 = msg.body_Read_S();
+            var ret = this.handle__TestMethod(connection, s1);
+            msg.CreateReply();
+            msg.m_Reply.hdr_SetSignature("s");
+            msg.m_Reply.body_StartWriting();
+            msg.m_Reply.body_Write_S(ret);
+            return true;
+        };
+        Application.__process__FirstSignal = function (connection, msg) {
+            msg.body_StartReading();
+            var s1 = msg.body_Read_S();
+            var s2 = msg.body_Read_S();
+            this.handle__FirstSignal(connection, s1, s2);
+            return true;
+        };
+        Application.__process__SecondSignal = function (connection, msg) {
+            msg.body_StartReading();
+            var s1 = msg.body_Read_S();
+            var s2 = msg.body_Read_S();
+            var s3 = msg.body_Read_S();
+            this.handle__SecondSignal(connection, s1, s2, s3);
+            return true;
+        };
+        Application.signal__FirstSignal = function (connection, s1, s2) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
+            msg.hdr_SetInterface("org.allmake.TestInterface");
+            msg.hdr_SetObjectPath("/TestInterface");
+            msg.hdr_SetMember("FirstSignal");
+            msg.hdr_SetSignature("ss");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_S(s1);
+            msg.body_Write_S(s2);
+            connection.SendMsg(msg);
+        };
+        Application.signal__SecondSignal = function (connection, s1, s2, s3) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
+            msg.hdr_SetInterface("org.allmake.TestInterface");
+            msg.hdr_SetObjectPath("/TestInterface");
+            msg.hdr_SetMember("SecondSignal");
+            msg.hdr_SetSignature("sss");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            msg.body_Write_S(s1);
+            msg.body_Write_S(s2);
+            msg.body_Write_S(s3);
+            connection.SendMsg(msg);
+        };
+        Application.handle__TestMethod = function (connection, s1) {
+            return "default-string";
+        };
+        Application.handle__FirstSignal = function (connection, s1, s2) {
+        };
+        Application.handle__SecondSignal = function (connection, s1, s2, s3) {
+        };
         return Application;
     }());
-    __process__TestMethod(connection, AJ.ConnectorBase, msg, AJ.MsgGeneric);
-    boolean;
-    {
-        msg.body_StartReading();
-        var s1 = msg.body_Read_S();
-        var ret = handle__TestMethod(connection, s1);
-        msg.CreateReply();
-        msg.m_Reply.hdr_SetSignature("s");
-        msg.m_Reply.body_StartWriting();
-        msg.m_Reply.body_Write_S(ret);
-        return true;
-    }
-    __process__FirstSignal(connection, AJ.ConnectorBase, msg, AJ.MsgGeneric);
-    boolean;
-    {
-        msg.body_StartReading();
-        var s1 = msg.body_Read_S();
-        var s2 = msg.body_Read_S();
-        handle__FirstSignal(connection, s1, s2);
-        return true;
-    }
-    __process__SecondSignal(connection, AJ.ConnectorBase, msg, AJ.MsgGeneric);
-    boolean;
-    {
-        msg.body_StartReading();
-        var s1 = msg.body_Read_S();
-        var s2 = msg.body_Read_S();
-        var s3 = msg.body_Read_S();
-        handle__SecondSignal(connection, s1, s2, s3);
-        return true;
-    }
-    signal__FirstSignal(connection, s1, string, s2, string);
-    void {
-        var: msg = new AJ.MsgGeneric(AJ.MsgType.Signal),
-        msg: .hdr_SetInterface("org.allmake.TestInterface"),
-        msg: .hdr_SetObjectPath("/TestInterface"),
-        msg: .hdr_SetMember("FirstSignal"),
-        msg: .hdr_SetSignature("ss"),
-        if: function () { }, null:  != connection.GetLocalNodeId(), msg: .hdr_SetSender(connection.GetLocalNodeId()),
-        msg: .body_StartWriting(),
-        msg: .body_Write_S(s1),
-        msg: .body_Write_S(s2),
-        connection: .SendMsg(msg)
-    };
-    signal__SecondSignal(connection, s1, string, s2, string, s3, string);
-    void {
-        var: msg = new AJ.MsgGeneric(AJ.MsgType.Signal),
-        msg: .hdr_SetInterface("org.allmake.TestInterface"),
-        msg: .hdr_SetObjectPath("/TestInterface"),
-        msg: .hdr_SetMember("SecondSignal"),
-        msg: .hdr_SetSignature("sss"),
-        if: function () { }, null:  != connection.GetLocalNodeId(), msg: .hdr_SetSender(connection.GetLocalNodeId()),
-        msg: .body_StartWriting(),
-        msg: .body_Write_S(s1),
-        msg: .body_Write_S(s2),
-        msg: .body_Write_S(s3),
-        connection: .SendMsg(msg)
-    };
-    handle__TestMethod(connection, s1, string);
-    string;
-    {
-        return "default-string";
-    }
-    handle__FirstSignal(connection, s1, string, s2, string);
-    void {};
-    handle__SecondSignal(connection, s1, string, s2, string, s3, string);
-    void {};
 })(AJ || (AJ = {}));
-;
+//# sourceMappingURL=generated.js.map
