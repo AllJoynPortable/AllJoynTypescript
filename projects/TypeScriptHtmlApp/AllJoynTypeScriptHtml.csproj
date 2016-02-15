@@ -58,7 +58,6 @@
     <Content Include="styles\menu.css" />
     <Content Include="styles\ttcn.css" />
     <Content Include="styles\zenburn.css" />
-    <Content Include="template-websocket.js.txt" />
     <Content Include="typescript.js" />
     <Content Include="web.config" />
     <Content Include="xml.js" />

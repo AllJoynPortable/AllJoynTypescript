@@ -28,12 +28,13 @@ var AllJoynTsApp = (function () {
         this.editingTs = false;
         this.codeTs = "";
         this.codeJs = "";
-        this.m_ApplicationId = Generator.DEFAULT_APP_ID.toString();
+        this.m_ApplicationId = Generator.DEFAULT_APP_ID;
         this.m_ApplicationName = Generator.DEFAULT_APP_NAME;
         this.m_DeviceId = Generator.DEFAULT_DEVICE_ID;
         this.m_DeviceName = Generator.DEFAULT_DEVICE_NAME;
         this.m_Manufacturer = Generator.DEFAULT_MANUFACTURER;
         this.m_ModelNumber = Generator.DEFAULT_MODEL_NUMBER;
+        this.m_Locked = false;
         this.AppendLog("The time is: ");
         this.span = document.createElement('span');
         this.span.innerText = new Date().toUTCString();
@@ -94,7 +95,7 @@ var AllJoynTsApp = (function () {
             var gen = new Generator.CodeGeneratorTS(p.m_Methods);
             gen.SetIntrospectionXml(xml);
             gen.SetIconData(Generator.DEFAULT_DEVICE_ICON_MIME_TYPE, Generator.DEFAULT_DEVICE_ICON_URL, Generator.DEFAULT_DEVICE_ICON);
-            gen.SetDeviceData(Generator.DEFAULT_APP_ID, Generator.DEFAULT_APP_NAME, Generator.DEFAULT_DEVICE_ID, Generator.DEFAULT_DEVICE_NAME, Generator.DEFAULT_MANUFACTURER, Generator.DEFAULT_MODEL_NUMBER);
+            gen.SetDeviceData(this.m_ApplicationId, this.m_ApplicationName, this.m_DeviceId, this.m_DeviceName, this.m_Manufacturer, this.m_ModelNumber);
             this.codeTs = this.templateTS;
             this.codeTs = this.codeTs.replace("/*WRITER-CODE-HERE*/", gen.GenerateWriters());
             this.codeTs = this.codeTs.replace("/*READER-CODE-HERE*/", gen.GenerateReaders());
@@ -135,6 +136,19 @@ var AllJoynTsApp = (function () {
         });
         this.connector.ConnectAndAuthenticate();
     };
+    AllJoynTsApp.prototype.onDeviceInfoChanged = function () {
+        this.codeJs = "";
+        this.codeTs = "";
+        if (!this.m_Locked) {
+            // XXX - fix this
+            //this.m_ApplicationId = (window.document.getElementById("create-application-id") as HTMLInputElement).value;
+            this.m_ApplicationName = window.document.getElementById("create-application-name").value;
+            this.m_DeviceId = window.document.getElementById("create-device-id").value;
+            this.m_DeviceName = window.document.getElementById("create-device-name").value;
+            this.m_Manufacturer = window.document.getElementById("create-manufacturer").value;
+            this.m_ModelNumber = window.document.getElementById("create-model-number").value;
+        }
+    };
     AllJoynTsApp.prototype.GoToFrontPage = function () {
         var el = window.document.getElementById("main");
         el.innerHTML = this.htmlFront;
@@ -154,8 +168,7 @@ var AllJoynTsApp = (function () {
         var __this__ = this;
         window.editor.on("change", function (instance, changeObj) {
             console.log("INTROSPECTION XML CHANGED");
-            __this__.codeJs = "";
-            __this__.codeTs = "";
+            __this__.onDeviceInfoChanged();
         });
         window.editorScript = window.CodeMirror.fromTextArea(window.document.getElementById("generatedCode"), {
             lineNumbers: true, mode: "text/typescript", theme: "ttcn"
@@ -168,13 +181,15 @@ var AllJoynTsApp = (function () {
                 __this__.codeTs = window.editorScript.getValue();
             }
         });
+        this.m_Locked = true;
         window.editor.setValue(this.introspectionXml);
-        window.document.getElementById("create-application-id").value = this.m_ApplicationId;
+        //(window.document.getElementById("create-application-id") as HTMLInputElement).value = this.m_ApplicationId;
         window.document.getElementById("create-application-name").value = this.m_ApplicationName;
         window.document.getElementById("create-device-id").value = this.m_DeviceId;
         window.document.getElementById("create-device-name").value = this.m_DeviceName;
         window.document.getElementById("create-manufacturer").value = this.m_Manufacturer;
         window.document.getElementById("create-model-number").value = this.m_ModelNumber;
+        this.m_Locked = false;
         this.MenuHighlight("menu-create");
     };
     AllJoynTsApp.prototype.GoToExplore = function () {
