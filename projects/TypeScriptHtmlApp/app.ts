@@ -13,45 +13,8 @@ enum ConnectionType {
 
 class AllJoynTsApp {
 
-    span: HTMLElement;
-    timerToken: number;
-    connector: AJ.ConnectorWebSocket;
-    templateTS: string = "";
-    templateWebSocketTS: string = "";
-
-    // HTML fragments
-    htmlFront: string = "";
-    htmlBootstrap: string = "";
-    htmlCreate: string = "";
-    htmlExplore: string = "";
-    htmlSamples: string = "";
-    htmlSetup: string = "";
-    htmlHelp: string = "";
-
-    connectionType: ConnectionType = ConnectionType.CONNECTION_WEBSOCKET;
-    connectionAzureParam: string = "<azure connection string>";
-    connectionWebsocketParam: string = "ws://127.0.0.1:8088";
-
-    // create
-    introspectionXml: string = "";
-    editingTs = false;
-    codeTs: string = "";
-    codeJs: string = "";
-
-    m_ApplicationId: Uint8Array = Generator.DEFAULT_APP_ID;
-    m_ApplicationName: string = Generator.DEFAULT_APP_NAME;
-    m_DeviceId: string = Generator.DEFAULT_DEVICE_ID;
-    m_DeviceName: string = Generator.DEFAULT_DEVICE_NAME;
-    m_Manufacturer: string = Generator.DEFAULT_MANUFACTURER;
-    m_ModelNumber: string = Generator.DEFAULT_MODEL_NUMBER;
-    m_Locked: boolean = false;
-
     constructor() {
-        this.AppendLog("The time is: ");
-        this.span = document.createElement('span');
-        this.span.innerText = new Date().toUTCString();
-
-        this.introspectionXml = Generator.DEFAULT_APP_INTROSPECTION_XML.replace(/></g, ">\r\n<");
+        this.m_CreateIntrospectionXml = Generator.DEFAULT_APP_INTROSPECTION_XML.replace(/></g, ">\r\n<");
         //(window as any).editor.setValue(this.introspectionXml);
 
         this.RetrieveTemplate("template.ts.txt", "templateTS");
@@ -69,7 +32,6 @@ class AllJoynTsApp {
     }
 
     stop() {
-        clearTimeout(this.timerToken);
     }
 
     onConnectorEvent(e: AJ.ConnectorEventType, d: any) {
@@ -103,7 +65,7 @@ class AllJoynTsApp {
         var xml: string = (window as any).editor.getValue();
         //(window.document.getElementById("introspectionXml") as HTMLTextAreaElement).textContent;
 
-        if (this.codeTs == "") {
+        if (this.m_CreateCodeTs == "") {
 
             var p: Generator.IntrospectionXmlParser = new Generator.IntrospectionXmlParser();
 
@@ -122,89 +84,89 @@ class AllJoynTsApp {
 
             gen.SetIntrospectionXml(xml);
             gen.SetIconData(Generator.DEFAULT_DEVICE_ICON_MIME_TYPE, Generator.DEFAULT_DEVICE_ICON_URL, Generator.DEFAULT_DEVICE_ICON);
-            gen.SetDeviceData(this.m_ApplicationId, this.m_ApplicationName, this.m_DeviceId, this.m_DeviceName, this.m_Manufacturer, this.m_ModelNumber);
-            this.codeTs = this.templateTS;
+            gen.SetDeviceData(this.m_CreateApplicationId, this.m_CreateApplicationName, this.m_CreateDeviceId, this.m_CreateDeviceName, this.m_CreateManufacturer, this.m_CreateModelNumber);
+            this.m_CreateCodeTs = this.m_CreateTemplateTS;
 
-            this.codeTs = this.codeTs.replace("/*WRITER-CODE-HERE*/", gen.GenerateWriters());
-            this.codeTs = this.codeTs.replace("/*READER-CODE-HERE*/", gen.GenerateReaders());
-            this.codeTs = this.codeTs.replace("/*APPLICATION-CODE-HERE*/", gen.GenerateApplicationCode());
-            this.codeTs = this.codeTs.replace("/*CONNECTOR-CODE-HERE*/", this.templateWebSocketTS);
-            this.codeJs = "";
+            this.m_CreateCodeTs = this.m_CreateCodeTs.replace("/*WRITER-CODE-HERE*/", gen.GenerateWriters());
+            this.m_CreateCodeTs = this.m_CreateCodeTs.replace("/*READER-CODE-HERE*/", gen.GenerateReaders());
+            this.m_CreateCodeTs = this.m_CreateCodeTs.replace("/*APPLICATION-CODE-HERE*/", gen.GenerateApplicationCode());
+            this.m_CreateCodeTs = this.m_CreateCodeTs.replace("/*CONNECTOR-CODE-HERE*/", this.m_CreateTemplateWebSocketTS);
+            this.m_CreateCodeJs = "";
         }
     }
 
     private updateJs() {
-        if (this.codeJs == "") {
+        if (this.m_CreateCodeJs == "") {
             this.updateTs();
-            this.codeJs = ConvertTsToJs(this.codeTs);
+            this.m_CreateCodeJs = ConvertTsToJs(this.m_CreateCodeTs);
         }
     }
 
     public onShowTs() {
         this.updateTs();
-        (window as any).editorScript.setValue(this.codeTs);
-        this.editingTs = true;
+        (window as any).editorScript.setValue(this.m_CreateCodeTs);
+        this.m_CreateEditingTs = true;
     }
 
     public onShowJs() {
-        this.editingTs = false;
+        this.m_CreateEditingTs = false;
         this.updateJs();
-        (window as any).editorScript.setValue(this.codeJs);
+        (window as any).editorScript.setValue(this.m_CreateCodeJs);
     }
 
     public onTest() {
         this.onShowJs();
 
         var geval = eval;
-        geval(this.codeJs);
+        geval(this.m_CreateCodeJs);
 
         // try to restart with new service
-        if (null != this.connector) {
-            this.connector.Disconnect();
+        if (null != this.m_CreateConnector) {
+            this.m_CreateConnector.Disconnect();
         }
 
-        this.connector = null;
+        this.m_CreateConnector = null;
 
-        this.connector = new AJ.ConnectorWebSocket();
+        this.m_CreateConnector = new AJ.ConnectorWebSocket();
         var self = this;
 
-        this.connector.SetConnectorEvent(
+        this.m_CreateConnector.SetConnectorEvent(
             function (e: AJ.ConnectorEventType, d: any) {
                 self.onConnectorEvent(e, d);
             });
-        this.connector.ConnectAndAuthenticate();
+        this.m_CreateConnector.ConnectAndAuthenticate();
     }
 
     public onDeviceInfoChanged() {
-        this.codeJs = "";
-        this.codeTs = "";
+        this.m_CreateCodeJs = "";
+        this.m_CreateCodeTs = "";
 
-        if (!this.m_Locked) {
+        if (!this.m_CreateLocked) {
             // XXX - fix this
             //this.m_ApplicationId = (window.document.getElementById("create-application-id") as HTMLInputElement).value;
-            this.m_ApplicationName = (window.document.getElementById("create-application-name") as HTMLInputElement).value;
-            this.m_DeviceId = (window.document.getElementById("create-device-id") as HTMLInputElement).value;
-            this.m_DeviceName = (window.document.getElementById("create-device-name") as HTMLInputElement).value;
-            this.m_Manufacturer = (window.document.getElementById("create-manufacturer") as HTMLInputElement).value;
-            this.m_ModelNumber = (window.document.getElementById("create-model-number") as HTMLInputElement).value;
+            this.m_CreateApplicationName = (window.document.getElementById("create-application-name") as HTMLInputElement).value;
+            this.m_CreateDeviceId = (window.document.getElementById("create-device-id") as HTMLInputElement).value;
+            this.m_CreateDeviceName = (window.document.getElementById("create-device-name") as HTMLInputElement).value;
+            this.m_CreateManufacturer = (window.document.getElementById("create-manufacturer") as HTMLInputElement).value;
+            this.m_CreateModelNumber = (window.document.getElementById("create-model-number") as HTMLInputElement).value;
         }
     }
 
     GoToFrontPage() {
         var el = window.document.getElementById("main");
-        (el as HTMLElement).innerHTML = this.htmlFront;
+        (el as HTMLElement).innerHTML = this.m_HtmlFront;
         this.MenuHighlight("");
     }
 
     GoToBootstrap() {
         var el = window.document.getElementById("main");
-        (el as HTMLElement).innerHTML = this.htmlBootstrap;
+        (el as HTMLElement).innerHTML = this.m_HtmlBootstrap;
         this.MenuHighlight("menu-bootstrap");
     }
 
     GoToCreate() {
         var el = window.document.getElementById("main");
-        (el as HTMLElement).innerHTML = this.htmlCreate;
+        (el as HTMLElement).innerHTML = this.m_HtmlCreate;
 
         (window as any).editor = (window as any).CodeMirror.fromTextArea(window.document.getElementById("introspectionXml"), {
             lineNumbers: true, mode: "text/xml", theme: "ttcn"
@@ -223,57 +185,57 @@ class AllJoynTsApp {
         var __this__ = this;
         (window as any).editorScript.on("change", function (instance, changeObj) {
 
-            if (__this__.editingTs) {
+            if (__this__.m_CreateEditingTs) {
                 console.log("TS SCRIPT CHANGED");
-                __this__.codeJs = "";
-                __this__.codeTs = (window as any).editorScript.getValue();
+                __this__.m_CreateCodeJs = "";
+                __this__.m_CreateCodeTs = (window as any).editorScript.getValue();
             }
         });
 
-        this.m_Locked = true;
-        (window as any).editor.setValue(this.introspectionXml);
+        this.m_CreateLocked = true;
+        (window as any).editor.setValue(this.m_CreateIntrospectionXml);
 
         //(window.document.getElementById("create-application-id") as HTMLInputElement).value = this.m_ApplicationId;
-        (window.document.getElementById("create-application-name") as HTMLInputElement).value = this.m_ApplicationName;
-        (window.document.getElementById("create-device-id") as HTMLInputElement).value = this.m_DeviceId;
-        (window.document.getElementById("create-device-name") as HTMLInputElement).value = this.m_DeviceName;
-        (window.document.getElementById("create-manufacturer") as HTMLInputElement).value = this.m_Manufacturer;
-        (window.document.getElementById("create-model-number") as HTMLInputElement).value = this.m_ModelNumber;
-        this.m_Locked = false;
+        (window.document.getElementById("create-application-name") as HTMLInputElement).value = this.m_CreateApplicationName;
+        (window.document.getElementById("create-device-id") as HTMLInputElement).value = this.m_CreateDeviceId;
+        (window.document.getElementById("create-device-name") as HTMLInputElement).value = this.m_CreateDeviceName;
+        (window.document.getElementById("create-manufacturer") as HTMLInputElement).value = this.m_CreateManufacturer;
+        (window.document.getElementById("create-model-number") as HTMLInputElement).value = this.m_CreateModelNumber;
+        this.m_CreateLocked = false;
         this.MenuHighlight("menu-create");
     }
 
     GoToExplore() {
         var el = window.document.getElementById("main");
-        (el as HTMLElement).innerHTML = this.htmlExplore;
+        (el as HTMLElement).innerHTML = this.m_HtmlExplore;
         this.MenuHighlight("menu-explore");
     }
 
     GoToSamples() {
         var el = window.document.getElementById("main");
-        (el as HTMLElement).innerHTML = this.htmlSamples;
+        (el as HTMLElement).innerHTML = this.m_HtmlSamples;
         this.MenuHighlight("menu-samples");
     }
 
     GoToSetup() {
         var el = window.document.getElementById("main");
-        (el as HTMLElement).innerHTML = this.htmlSetup;
+        (el as HTMLElement).innerHTML = this.m_HtmlSetup;
 
-        switch (this.connectionType) {
+        switch (this.m_ConnectionType) {
             case ConnectionType.CONNECTION_LOOPBACK: (window.document.getElementById("connection-loopback") as HTMLInputElement).checked = true; break;
             case ConnectionType.CONNECTION_DISCOVER: (window.document.getElementById("connection-discover") as HTMLInputElement).checked = true; break;
             case ConnectionType.CONNECTION_WEBSOCKET: (window.document.getElementById("connection-websocket") as HTMLInputElement).checked = true; break;
             case ConnectionType.CONNECTION_AZURE: (window.document.getElementById("connection-azure") as HTMLInputElement).checked = true; break;
         }
 
-        (window.document.getElementById("connection-azure-text") as HTMLInputElement).value = this.connectionAzureParam;
-        (window.document.getElementById("connection-websocket-text") as HTMLInputElement).value = this.connectionWebsocketParam;
+        (window.document.getElementById("connection-azure-text") as HTMLInputElement).value = this.m_ConnectionAzureParam;
+        (window.document.getElementById("connection-websocket-text") as HTMLInputElement).value = this.m_ConnectionWebsocketParam;
         this.MenuHighlight("menu-setup");
     }
 
     GoToHelp() {
         var el = window.document.getElementById("main");
-        (el as HTMLElement).innerHTML = this.htmlHelp;
+        (el as HTMLElement).innerHTML = this.m_HtmlHelp;
         this.MenuHighlight("menu-help");
     }
 
@@ -299,27 +261,27 @@ class AllJoynTsApp {
     }
 
     OnLoopbackSelected() {
-        this.connectionType = ConnectionType.CONNECTION_LOOPBACK;
+        this.m_ConnectionType = ConnectionType.CONNECTION_LOOPBACK;
     }
 
     OnDiscoverSelected() {
-        this.connectionType = ConnectionType.CONNECTION_DISCOVER;
+        this.m_ConnectionType = ConnectionType.CONNECTION_DISCOVER;
     }
 
     OnWebsocketSelected() {
-        this.connectionType = ConnectionType.CONNECTION_WEBSOCKET;
+        this.m_ConnectionType = ConnectionType.CONNECTION_WEBSOCKET;
     }
 
     OnAzureSelected() {
-        this.connectionType = ConnectionType.CONNECTION_AZURE;
+        this.m_ConnectionType = ConnectionType.CONNECTION_AZURE;
     }
 
     OnWebsocketChanged() {
-        this.connectionWebsocketParam = (window.document.getElementById("connection-websocket-text") as HTMLInputElement).value;
+        this.m_ConnectionWebsocketParam = (window.document.getElementById("connection-websocket-text") as HTMLInputElement).value;
     }
 
     OnAzureChanged() {
-        this.connectionAzureParam = (window.document.getElementById("connection-azure-text") as HTMLInputElement).value;
+        this.m_ConnectionAzureParam = (window.document.getElementById("connection-azure-text") as HTMLInputElement).value;
     }
 
     private RetrieveTemplate(filename: string, field: string) {
@@ -357,6 +319,38 @@ class AllJoynTsApp {
             el.scrollTop += 100;
         }
     }
+
+    // HTML fragments
+    private m_HtmlFront: string = "";
+    private m_HtmlBootstrap: string = "";
+    private m_HtmlCreate: string = "";
+    private m_HtmlExplore: string = "";
+    private m_HtmlSamples: string = "";
+    private m_HtmlSetup: string = "";
+    private m_HtmlHelp: string = "";
+
+    // create view variables
+    private m_CreateConnector: AJ.ConnectorWebSocket = null;
+    private m_CreateIntrospectionXml: string = "";
+    private m_CreateEditingTs = false;
+    private m_CreateCodeTs: string = "";
+    private m_CreateCodeJs: string = "";
+
+    private m_CreateApplicationId: Uint8Array = Generator.DEFAULT_APP_ID;
+    private m_CreateApplicationName: string = Generator.DEFAULT_APP_NAME;
+    private m_CreateDeviceId: string = Generator.DEFAULT_DEVICE_ID;
+    private m_CreateDeviceName: string = Generator.DEFAULT_DEVICE_NAME;
+    private m_CreateManufacturer: string = Generator.DEFAULT_MANUFACTURER;
+    private m_CreateModelNumber: string = Generator.DEFAULT_MODEL_NUMBER;
+    private m_CreateLocked: boolean = false;
+
+    private m_CreateTemplateTS: string = "";
+    private m_CreateTemplateWebSocketTS: string = "";
+
+    // setup variables
+    private m_ConnectionType: ConnectionType = ConnectionType.CONNECTION_WEBSOCKET;
+    private m_ConnectionAzureParam: string = "<azure connection string>";
+    private m_ConnectionWebsocketParam: string = "ws://127.0.0.1:8088";
 }
 
 var app = null;
