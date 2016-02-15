@@ -19,7 +19,7 @@ var Generator;
             this.m_ParametersReply = new Array();
         }
         return InterfaceItemDescription;
-    })();
+    }());
     Generator.InterfaceItemDescription = InterfaceItemDescription;
     var ParamDescription = (function () {
         function ParamDescription(dt, name) {
@@ -29,7 +29,7 @@ var Generator;
             this.m_Name = name;
         }
         return ParamDescription;
-    })();
+    }());
     Generator.ParamDescription = ParamDescription;
     var IntrospectionXmlParser = (function () {
         function IntrospectionXmlParser() {
@@ -149,7 +149,7 @@ var Generator;
             }
         };
         return IntrospectionXmlParser;
-    })();
+    }());
     Generator.IntrospectionXmlParser = IntrospectionXmlParser;
     var ObjectHandler = (function () {
         function ObjectHandler(signature, code) {
@@ -157,7 +157,7 @@ var Generator;
             this.m_Code = code;
         }
         return ObjectHandler;
-    })();
+    }());
     var CodeGeneratorBase = (function () {
         function CodeGeneratorBase() {
             this.m_IsConsumer = false;
@@ -314,7 +314,7 @@ var Generator;
             return "body_Write_" + this.DbusTypeToFunctionPostfix(signature);
         };
         CodeGeneratorBase.prototype.CreateItemName = function (m) {
-            var name = "__" + m.m_Interface + "__" + m.m_Name;
+            var name = "__" + m.m_Name;
             return name.replace(/\./g, '_');
         };
         CodeGeneratorBase.prototype.DbusTypeToFunctionPostfix = function (type) {
@@ -425,17 +425,13 @@ var Generator;
             this.m_ObjectWriters.push(new ObjectHandler(signature, code));
         };
         return CodeGeneratorBase;
-    })();
+    }());
     var CodeGeneratorTS = (function (_super) {
         __extends(CodeGeneratorTS, _super);
         function CodeGeneratorTS(def) {
             _super.call(this);
-            this.m_JsOnly = false;
             this.m_Definition = def;
         }
-        CodeGeneratorTS.prototype.EnableJsOnly = function () {
-            this.m_JsOnly = true;
-        };
         CodeGeneratorTS.prototype.GenerateApplicationCode = function () {
             var o = "";
             if (!this.m_IsConsumer) {
@@ -443,50 +439,27 @@ var Generator;
                 var val = 0;
                 var buffer_idx = 0;
                 o += "\r\n";
-                if (!this.m_JsOnly) {
-                    o += "var APP_ID:           Uint8Array = new Uint8Array([" + this.Generate_HexNumbers(this.m_AppId) + "]);\r\n";
-                    o += "var APP_NAME:         string = \"" + this.m_AppName + "\";\r\n";
-                    o += "var APP_DESCRIPTION:  string = \"Application Description\";\r\n"; // XXX - should come from ui
-                    o += "var DEVICE_ID:        string = \"" + this.m_Deviceid + "\";\r\n";
-                    o += "var DEVICE_NAME:      string = \"" + this.m_DeviceName + "\";\r\n";
-                    o += "var MANUFACTURER:     string = \"" + this.m_Manufacturer + "\";\r\n";
-                    o += "var MODEL_NUMBER:     string = \"" + this.m_ModelNumber + "\";\r\n";
-                }
-                else {
-                    o += "var APP_ID             = new Uint8Array([" + this.Generate_HexNumbers(this.m_AppId) + "]);\r\n";
-                    o += "var APP_NAME           = \"" + this.m_AppName + "\";\r\n";
-                    o += "var APP_DESCRIPTION    = \"Application Description\";\r\n"; // XXX - should come from ui
-                    o += "var DEVICE_ID          = \"" + this.m_Deviceid + "\";\r\n";
-                    o += "var DEVICE_NAME        = \"" + this.m_DeviceName + "\";\r\n";
-                    o += "var MANUFACTURER       = \"" + this.m_Manufacturer + "\";\r\n";
-                    o += "var MODEL_NUMBER       = \"" + this.m_ModelNumber + "\";\r\n";
-                }
+                o += "var APP_ID:           Uint8Array = new Uint8Array([" + this.Generate_HexNumbers(this.m_AppId) + "]);\r\n";
+                o += "var APP_NAME:         string = \"" + this.m_AppName + "\";\r\n";
+                o += "var APP_DESCRIPTION:  string = \"Application Description\";\r\n"; // XXX - should come from ui
+                o += "var DEVICE_ID:        string = \"" + this.m_Deviceid + "\";\r\n";
+                o += "var DEVICE_NAME:      string = \"" + this.m_DeviceName + "\";\r\n";
+                o += "var MANUFACTURER:     string = \"" + this.m_Manufacturer + "\";\r\n";
+                o += "var MODEL_NUMBER:     string = \"" + this.m_ModelNumber + "\";\r\n";
                 o += "\r\n";
                 var xml = this.m_IntrospectionXml.replace(/\"/g, "\\\"");
                 xml = xml.replace(/</g, "\"<");
                 xml = xml.replace(/>/g, ">\" + ");
-                if (!this.m_JsOnly) {
-                    o += "var APP_INTROSPECTION_XML: string = \r\n";
-                }
-                else {
-                    o += "var APP_INTROSPECTION_XML     = \r\n";
-                }
+                o += "var APP_INTROSPECTION_XML: string = \r\n";
                 o += xml + " \"\";\r\n";
                 o += "\r\n";
-                if (!this.m_JsOnly) {
-                    o += "var DEVICE_ICON_VERSION: number = 1;\r\n";
-                    o += "var DEVICE_ICON_MIME_TYPE: string = \"" + this.m_IconMimeType + "\";\r\n";
-                    o += "var DEVICE_ICON_URL: string = \"" + this.m_IconUrl + "\";\r\n";
-                    o += "var DEVICE_ICON: Uint8Array = new Uint8Array([" + this.Generate_HexNumbers(this.m_IconData) + "]);\r\n";
-                }
-                else {
-                    o += "var DEVICE_ICON_VERSION = 1;\r\n";
-                    o += "var DEVICE_ICON_MIME_TYPE = \"" + this.m_IconMimeType + "\";\r\n";
-                    o += "var DEVICE_ICON_URL = \"" + this.m_IconUrl + "\";\r\n";
-                    o += "var DEVICE_ICON = new Uint8Array([" + this.Generate_HexNumbers(this.m_IconData) + "]);\r\n";
-                }
+                o += "var DEVICE_ICON_VERSION: number = 1;\r\n";
+                o += "var DEVICE_ICON_MIME_TYPE: string = \"" + this.m_IconMimeType + "\";\r\n";
+                o += "var DEVICE_ICON_URL: string = \"" + this.m_IconUrl + "\";\r\n";
+                o += "var DEVICE_ICON: Uint8Array = new Uint8Array([" + this.Generate_HexNumbers(this.m_IconData) + "]);\r\n";
             }
             o += "\r\n";
+            o += "    class Application {\r\n";
             o += this.GenerateInterfaceHandler();
             // these methods 
             for (var _i = 0, _a = this.m_Definition; _i < _a.length; _i++) {
@@ -510,17 +483,13 @@ var Generator;
                     o += this.Generate_StubMethod(m);
                 }
             }
+            o += "    };\r\n";
             o += "\r\n";
             return o;
         };
         CodeGeneratorTS.prototype.Generate_Data = function (name, data) {
             var o = "";
-            if (!this.m_JsOnly) {
-                o = "var " + name + ": Uint8Array = new Uint8Array([";
-            }
-            else {
-                o = "var " + name + " = new Uint8Array([";
-            }
+            o = "var " + name + ": Uint8Array = new Uint8Array([";
             if (null != data) {
                 o += this.Generate_HexNumbers(data);
                 o += "\r\n]);";
@@ -536,14 +505,9 @@ var Generator;
             var tstype;
             var default_value;
             var generic_type_name;
-            if (!this.m_JsOnly) {
-                o += "function " + this.CreateProcessFunctionName(m) + "(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean\r\n";
-            }
-            else {
-                o += "function " + this.CreateProcessFunctionName(m) + "(connection, msg)\r\n";
-            }
-            o += "{\r\n";
-            o += "    msg.body_StartReading();\r\n";
+            o += "        private static " + this.CreateProcessFunctionName(m) + "(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean\r\n";
+            o += "        {\r\n";
+            o += "            msg.body_StartReading();\r\n";
             // read parameters
             for (var _i = 0, _a = m.m_ParametersIn; _i < _a.length; _i++) {
                 var p = _a[_i];
@@ -553,27 +517,17 @@ var Generator;
                 if (generic_type_name == "Object") {
                     parameters = "\"" + p.m_DataType + "\"";
                 }
-                if (!this.m_JsOnly) {
-                    o += "    var " + p.m_Name + ": " + tstype + " = msg." + this.CreateReadFunctionName(p.m_DataType) + "(" + parameters + ");\r\n";
-                }
-                else {
-                    o += "    var " + p.m_Name + " = msg." + this.CreateReadFunctionName(p.m_DataType) + "(" + parameters + ");\r\n";
-                }
+                o += "            var " + p.m_Name + ": " + tstype + " = msg." + this.CreateReadFunctionName(p.m_DataType) + "(" + parameters + ");\r\n";
                 this.AddReader(p.m_DataType, "");
             }
             // actual method call
             tstype = this.TypeToTsType((m.m_ParametersReply.length > 0) ? m.m_ParametersReply[0].m_DataType : null);
             generic_type_name = this.DbusTypeToFunctionPostfix((m.m_ParametersReply.length > 0) ? m.m_ParametersReply[0].m_DataType : null);
             if ("void" != tstype) {
-                if (!this.m_JsOnly) {
-                    o += "    var ret: " + tstype + " = " + this.CreateHandlerFunctionName(m) + "(connection";
-                }
-                else {
-                    o += "    var ret = " + this.CreateHandlerFunctionName(m) + "(connection";
-                }
+                o += "            var ret: " + tstype + " = " + this.CreateHandlerFunctionName(m) + "(connection";
             }
             else {
-                o += "    " + this.CreateHandlerFunctionName(m) + "(connection";
+                o += "            " + this.CreateHandlerFunctionName(m) + "(connection";
             }
             for (var _b = 0, _c = m.m_ParametersIn; _b < _c.length; _b++) {
                 var p = _c[_b];
@@ -583,36 +537,30 @@ var Generator;
             o += ");\r\n";
             if (m.m_InterfaceItemType == InterfaceItemType.Method) {
                 o += "\r\n";
-                o += "    msg.CreateReply();\r\n";
+                o += "            msg.CreateReply();\r\n";
                 if (m.m_ParametersReply.length > 0) {
-                    o += "    msg.m_Reply.hdr_SetSignature(\"" + m.m_ParametersReply[0].m_DataType + "\");\r\n"; // XXX - fix this
+                    o += "            msg.m_Reply.hdr_SetSignature(\"" + m.m_ParametersReply[0].m_DataType + "\");\r\n"; // XXX - fix this
                 }
-                o += "    msg.m_Reply.body_StartWriting();\r\n";
+                o += "            msg.m_Reply.body_StartWriting();\r\n";
                 if (m.m_ParametersReply.length > 0) {
-                    o += "    msg.m_Reply." + this.CreateWriteFunctionName(m.m_ParametersReply[0].m_DataType) + "(ret);\r\n"; // XXX - fix this
+                    o += "            msg.m_Reply." + this.CreateWriteFunctionName(m.m_ParametersReply[0].m_DataType) + "(ret);\r\n"; // XXX - fix this
                     this.AddWriter(m.m_ParametersReply[0].m_DataType, "");
                 }
             }
             o += "\r\n";
-            o += "    return true;\r\n"; // XXX - fix this
-            o += "}\r\n";
+            o += "            return true;\r\n"; // XXX - fix this
+            o += "        }\r\n";
             return o;
         };
         CodeGeneratorTS.prototype.GenerateInterfaceHandler = function () {
             var o = "";
-            if (!this.m_JsOnly) {
-                o += "function _ProcessMsg(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {\r\n";
-                o += "    var member: string = msg.hdr_GetMember();\r\n\r\n";
-            }
-            else {
-                o += "function _ProcessMsg(connection, msg) {\r\n";
-                o += "    var member = msg.hdr_GetMember();\r\n\r\n";
-            }
+            o += "        public static _ProcessMsg(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {\r\n";
+            o += "            var member: string = msg.hdr_GetMember();\r\n\r\n";
             var first = true;
             for (var _i = 0, _a = this.m_Definition; _i < _a.length; _i++) {
                 var m = _a[_i];
                 if ((m.m_InterfaceItemType == InterfaceItemType.Signal) || ((m.m_InterfaceItemType == InterfaceItemType.Method) && !this.m_IsConsumer)) {
-                    o += "    ";
+                    o += "            ";
                     if (!first) {
                         o += "else ";
                     }
@@ -620,54 +568,55 @@ var Generator;
                         first = false;
                     }
                     o += "if (member == \"" + m.m_Name + "\") {\r\n";
-                    o += "        return " + this.CreateProcessFunctionName(m) + "(connection, msg);\r\n";
-                    o += "    }\r\n";
+                    o += "                return this." + this.CreateProcessFunctionName(m) + "(connection, msg);\r\n";
+                    o += "            }\r\n";
                 }
             }
             o += "\r\n";
-            o += "    return false;\r\n";
-            o += "}\r\n";
+            o += "            return false;\r\n";
+            o += "        }\r\n";
+            o += "    }\r\n";
             return o;
         };
         CodeGeneratorTS.prototype.Generate_StubMethod = function (m) {
             var o = "";
             // return type
-            o += this.Generate_StubMethodPrototype(m) + "\r\n";
-            o += "{\r\n";
+            o += "        " + this.Generate_StubMethodPrototype(m) + "\r\n";
+            o += "        {\r\n";
             if (m.m_ParametersReply.length > 0) {
                 var default_value = this.TypeToDefaultTsValue(m.m_ParametersReply[0].m_DataType);
                 if (null != default_value) {
-                    o += "    return " + default_value + ";\r\n";
+                    o += "            return " + default_value + ";\r\n";
                 }
             }
-            o += "}\r\n";
+            o += "        }\r\n";
             return o;
         };
         CodeGeneratorTS.prototype.Generate_SignalMethodWrapper = function (m) {
             var o = "";
             // return type
-            o += this.Generate_SignalMethodWrapperPrototype(m) + "\r\n";
-            o += "{\r\n";
+            o += "        " + this.Generate_SignalMethodWrapperPrototype(m) + "\r\n";
+            o += "        {\r\n";
             if (m.m_InterfaceItemType == InterfaceItemType.Method) {
-                o += "    var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);\r\n";
+                o += "            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);\r\n";
             }
             else {
-                o += "    var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);\r\n";
+                o += "            var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);\r\n";
             }
-            o += "    msg.hdr_SetInterface(\"" + m.m_Interface + "\");\r\n";
+            o += "            msg.hdr_SetInterface(\"" + m.m_Interface + "\");\r\n";
             if (m.m_ObjectPath != "") {
-                o += "    msg.hdr_SetObjectPath(\"" + m.m_ObjectPath + "\");\r\n";
+                o += "            msg.hdr_SetObjectPath(\"" + m.m_ObjectPath + "\");\r\n";
             }
             else {
-                o += "    msg.hdr_SetObjectPath(\"/" + m.m_Interface.replace(/./g, '/') + "\");\r\n";
-                o += "    msg.hdr_SetDestination(\"" + m.m_Interface + "\");\r\n";
+                o += "            msg.hdr_SetObjectPath(\"/" + m.m_Interface.replace(/./g, '/') + "\");\r\n";
+                o += "            msg.hdr_SetDestination(\"" + m.m_Interface + "\");\r\n";
             }
-            o += "    msg.hdr_SetMember(\"" + m.m_Name + "\");\r\n";
+            o += "            msg.hdr_SetMember(\"" + m.m_Name + "\");\r\n";
             if (m.m_SignatureIn != "") {
-                o += "    msg.hdr_SetSignature(\"" + m.m_SignatureIn + "\");\r\n";
+                o += "            msg.hdr_SetSignature(\"" + m.m_SignatureIn + "\");\r\n";
             }
-            o += "    if (null != connection.GetLocalNodeId()) msg.hdr_SetSender(connection.GetLocalNodeId());\r\n";
-            o += "    msg.body_StartWriting();\r\n";
+            o += "            if (null != connection.GetLocalNodeId()) msg.hdr_SetSender(connection.GetLocalNodeId());\r\n";
+            o += "            msg.body_StartWriting();\r\n";
             for (var _i = 0, _a = m.m_ParametersIn; _i < _a.length; _i++) {
                 var p = _a[_i];
                 var generic_type_name = this.DbusTypeToFunctionPostfix(p.m_DataType);
@@ -675,18 +624,18 @@ var Generator;
                 if (generic_type_name == "Object") {
                     parameters = ", " + "\"" + p.m_DataType + "\"";
                 }
-                o += "    msg." + this.CreateWriteFunctionName(p.m_DataType) + "(" + p.m_Name + parameters + ");\r\n";
+                o += "            msg." + this.CreateWriteFunctionName(p.m_DataType) + "(" + p.m_Name + parameters + ");\r\n";
                 this.AddWriter(p.m_DataType, "");
             }
             if (m.m_InterfaceItemType == InterfaceItemType.Signal) {
-                o += "    connection.SendMsg(msg);\r\n";
+                o += "            connection.SendMsg(msg);\r\n";
             }
             else {
                 // for method we have to create callback
-                o += "    connection.SendMsgWithCallback(msg,\r\n";
-                o += "        function() {\r\n";
-                o += "            msg = msg.m_Reply;\r\n";
-                o += "            msg.body_StartReading();\r\n";
+                o += "            connection.SendMsgWithCallback(msg,\r\n";
+                o += "                function() {\r\n";
+                o += "                    msg = msg.m_Reply;\r\n";
+                o += "                    msg.body_StartReading();\r\n";
                 for (var _b = 0, _c = m.m_ParametersReply; _b < _c.length; _b++) {
                     var p = _c[_b];
                     var tstype = this.TypeToTsType(p.m_DataType);
@@ -695,30 +644,25 @@ var Generator;
                     if (generic_type_name == "Object") {
                         parameters = "\"" + p.m_DataType + "\"";
                     }
-                    if (!this.m_JsOnly) {
-                        o += "            var " + p.m_Name + ": " + tstype + " = msg.body_Read" + generic_type_name + "(" + parameters + ");\r\n";
-                    }
-                    else {
-                        o += "            var " + p.m_Name + " = msg.body_Read" + generic_type_name + "(" + parameters + ");\r\n";
-                    }
+                    o += "                    var " + p.m_Name + ": " + tstype + " = msg.body_Read" + generic_type_name + "(" + parameters + ");\r\n";
                 }
                 // XXX - read return parameters here
-                o += "            if (null != cb) cb(connection";
+                o += "                    if (null != cb) cb(connection";
                 for (var pp in m.m_ParametersReply) {
                     o += ", ";
                     o += p.m_Name;
                 }
                 o += ");\r\n";
                 // XXX - here also need to list params
-                o += "        }\r\n";
-                o += "    );\r\n";
+                o += "                }\r\n";
+                o += "            );\r\n";
             }
-            o += "}\r\n";
+            o += "        }\r\n";
             return o;
         };
         CodeGeneratorTS.prototype.Generate_StubMethodPrototype = function (m) {
             var o = "";
-            o += "function ";
+            o += "private static ";
             // function name
             o += this.CreateHandlerFunctionName(m) + "(connection";
             // parameters
@@ -727,17 +671,15 @@ var Generator;
                 o += ", " + this.CreateParameter(p.m_Name, p.m_DataType);
             }
             o += ")";
-            if (!this.m_JsOnly) {
-                // return type
-                var ctype_ret = (m.m_ParametersReply.length > 0) ? this.TypeToTsType(m.m_ParametersReply[0].m_DataType) : "void";
-                o += ": " + ctype_ret;
-            }
+            // return type
+            var ctype_ret = (m.m_ParametersReply.length > 0) ? this.TypeToTsType(m.m_ParametersReply[0].m_DataType) : "void";
+            o += ": " + ctype_ret;
             return o;
         };
         CodeGeneratorTS.prototype.Generate_SignalMethodWrapperPrototype = function (m) {
             var o = "";
             var wrapper_name = this.CreateCallWrapperName(m);
-            o += "function ";
+            o += "public static ";
             // function name
             o += wrapper_name + "(connection";
             // parameters
@@ -749,44 +691,25 @@ var Generator;
                 o += ", cb";
             }
             o += ")";
-            if (!this.m_JsOnly) {
-                o += ": void";
-            }
+            o += ": void";
             return o;
         };
         CodeGeneratorTS.prototype.CreateParameter = function (name, type) {
             var p = name;
-            if (!this.m_JsOnly)
-                p += ": " + this.TypeToTsType(type);
+            p += ": " + this.TypeToTsType(type);
             return p;
         };
         CodeGeneratorTS.prototype.Generate_DbusObjectReader = function (signature) {
             var o = "";
             var sp = "        ";
-            if (this.m_JsOnly) {
-                o += sp + "MsgGeneric.prototype." + this.CreateReadFunctionName(signature) + " = function() {\r\n";
-            }
-            else {
-                o += sp + "public " + this.CreateReadFunctionName(signature) + "(): Array<any> {\r\n";
-            }
+            o += sp + "public " + this.CreateReadFunctionName(signature) + "(): Array<any> {\r\n";
             if (signature[0] == 'a') {
                 var ss = this.SignatureHelper_GetSubSignature(signature, 1);
-                if (!this.m_JsOnly) {
-                    o += sp + "    var length: number = this.body_Read_I();\r\n";
-                }
-                else {
-                    o += sp + "    var length = this.body_Read_I();\r\n";
-                }
+                o += sp + "    var length: number = this.body_Read_I();\r\n";
                 if (((ss[0] == '(') || (ss[0] == '{')))
                     o += sp + "    this.Align(8);\r\n";
-                if (!this.m_JsOnly) {
-                    o += sp + "    var end: number = this.m_position + length;\r\n";
-                    o += sp + "    var ret: Array <any> = new Array<any>();\r\n";
-                }
-                else {
-                    o += sp + "    var end = this.m_position + length;\r\n";
-                    o += sp + "    var ret = new Array();\r\n";
-                }
+                o += sp + "    var end: number = this.m_position + length;\r\n";
+                o += sp + "    var ret: Array <any> = new Array<any>();\r\n";
                 o += sp + "    while (this.m_position < end)\r\n";
                 o += sp + "        ret.push(this." + this.CreateReadFunctionName(ss) + "());\r\n";
                 o += sp + "    return ret;\r\n";
@@ -825,21 +748,11 @@ var Generator;
         CodeGeneratorTS.prototype.Generate_DbusObjectWriter = function (signature) {
             var o = "";
             var sp = "        ";
-            if (this.m_JsOnly) {
-                o += sp + "MsgGeneric.prototype." + this.CreateWriteFunctionName(signature) + " = function (v) {\r\n";
-            }
-            else {
-                o += sp + "public " + this.CreateWriteFunctionName(signature) + "(v: Array<any>) {\r\n";
-            }
+            o += sp + "public " + this.CreateWriteFunctionName(signature) + "(v: Array<any>) {\r\n";
             if (signature[0] == 'a') {
                 var ss = this.SignatureHelper_GetSubSignature(signature, 1);
                 o += sp + "    this.body_Write_A_Start();\r\n";
-                if (!this.m_JsOnly) {
-                    o += sp + "    for (var k of v) this." + this.CreateWriteFunctionName(ss) + "(k);\r\n";
-                }
-                else {
-                    o += sp + "    for (var i = 0; i < v.length; i++) this." + this.CreateWriteFunctionName(ss) + "(v[i]);\r\n";
-                }
+                o += sp + "    for (var k of v) this." + this.CreateWriteFunctionName(ss) + "(k);\r\n";
                 o += sp + "    this.body_Write_A_End(" + (((ss[0] == '(') || (ss[0] == '{')) ? "true" : "false") + ");\r\n";
                 this.AddWriter(ss, "");
             }
@@ -927,7 +840,7 @@ var Generator;
             return "0";
         };
         return CodeGeneratorTS;
-    })(CodeGeneratorBase);
+    }(CodeGeneratorBase));
     Generator.CodeGeneratorTS = CodeGeneratorTS;
     Generator.DEFAULT_APP_ID = new Uint8Array([0x12, 0x34]);
     Generator.DEFAULT_APP_NAME = "Test";
