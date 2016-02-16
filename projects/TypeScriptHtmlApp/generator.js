@@ -435,7 +435,7 @@ var Generator;
         CodeGeneratorTS.prototype.GenerateApplicationCode = function () {
             var o = "";
             o += "\r\n";
-            o += "    class Application extends ApplicationBase {\r\n";
+            o += "    export class Application extends ApplicationBase {\r\n";
             o += this.GenerateInterfaceHandler();
             if (!this.m_IsConsumer) {
                 var first = true;
