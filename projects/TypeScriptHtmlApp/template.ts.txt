@@ -1157,6 +1157,18 @@
 
     export abstract class ApplicationBase {
         public abstract _ProcessMsg(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric);
+        public abstract GetId(): Uint8Array;
+        public abstract GetName(): string;
+        public abstract GetDeviceId(): string;
+        public abstract GetDeviceName(): string;
+        public abstract GetManufacturer(): string;
+        public abstract GetModelNumber(): string;
+        public abstract GetDescription(): string;
+        public abstract GetIcon(): Uint8Array;
+        public abstract GetIconUrl(): string;
+        public abstract GetIconVersion(): number;
+        public abstract GetIconMimeType(): string;
+        public abstract GetIntrospectionXml(): string;
     };
 
     export abstract class ConnectorBase {
@@ -1178,6 +1190,10 @@
 
         public SetApplication(application: ApplicationBase): void {
             this.m_Application = application;
+        }
+
+        public GetApplication(): ApplicationBase {
+            return this.m_Application;
         }
 
         public GetLocalNodeId(): string {
@@ -1336,7 +1352,7 @@
 
                     __this__.m_State = ConnectorState.StateConnected;
 
-                    if (APP_NAME != "") {
+                    if (__this__.m_Application != null) {
                         __this__.BindSessionPort();
                     } else {
                         __this__.AttachSession();
@@ -1475,6 +1491,7 @@
 
         public static signal__Announce(connection, q1: number, q2: number, o1: any, o2: any): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
+            var application: ApplicationBase = connection.GetApplication();
             msg.hdr_SetSessionless(true);
             msg.hdr_SetObjectPath("/About");
             msg.hdr_SetInterface("org.alljoyn.About");
@@ -1493,49 +1510,31 @@
                 ["/About/DeviceIcon", ["org.alljoyn.Icon"]],
                 ["/TestInterface", ["org.allmake.TestInterface"]]]);
 
-            //msg.body_WriteArrayStart();
-
-            //msg.body_WriteStructStart();
-            //msg.body_WriteString("/About");
-            //msg.body_WriteStringArray(new Array<string>("org.alljoyn.About"));
-
-            //msg.body_WriteStructStart();
-            //msg.body_WriteString("/About/DeviceIcon");
-            //msg.body_WriteStringArray(new Array<string>("org.alljoyn.Icon"));
-
-            //msg.body_WriteStructStart();
-            //msg.body_WriteString("/TestInterface");
-            //msg.body_WriteStringArray(new Array<string>("org.allmake.TestInterface"));
-
-            //msg.body_WriteArray_End(true);
-
-            // at this time we will write array elements manually
-            //msg.body_WriteObject(o2, "a{sv}");
             msg.body_Write_A_Start();
 
             msg.body_Write_R_Start();
             msg.body_Write_S("AppId");
-            msg.body_Write_V(APP_ID, "ay");
+            msg.body_Write_V(application.GetId(), "ay");
 
             msg.body_Write_R_Start();
             msg.body_Write_S("AppName");
-            msg.body_Write_V(APP_NAME, "s");
+            msg.body_Write_V(application.GetName(), "s");
 
             msg.body_Write_R_Start();
             msg.body_Write_S("DeviceId");
-            msg.body_Write_V(DEVICE_ID, "s");
+            msg.body_Write_V(application.GetDeviceId(), "s");
 
             msg.body_Write_R_Start();
             msg.body_Write_S("DeviceName");
-            msg.body_Write_V(DEVICE_NAME, "s");
+            msg.body_Write_V(application.GetDeviceName(), "s");
 
             msg.body_Write_R_Start();
             msg.body_Write_S("Manufacturer");
-            msg.body_Write_V(MANUFACTURER, "s");
+            msg.body_Write_V(application.GetManufacturer(), "s");
 
             msg.body_Write_R_Start();
             msg.body_Write_S("ModelNumber");
-            msg.body_Write_V(MODEL_NUMBER, "s");
+            msg.body_Write_V(application.GetModelNumber(), "s");
 
             msg.body_Write_R_Start();
             msg.body_Write_S("SupportedLanguages");
@@ -1543,7 +1542,7 @@
 
             msg.body_Write_R_Start();
             msg.body_Write_S("Description");
-            msg.body_Write_V(APP_DESCRIPTION, "s");
+            msg.body_Write_V(application.GetDescription(), "s");
 
             msg.body_Write_R_Start();
             msg.body_Write_S("DefaultLanguage");
@@ -1612,8 +1611,8 @@
             return "";
         }
 
-        public static handle__GetContent(connection): Uint8Array {
-            return DEVICE_ICON;
+        public static handle__GetContent(connection: ConnectorBase): Uint8Array {
+            return connection.GetApplication().GetIcon();
         }
     }
 
@@ -1683,13 +1682,14 @@
         }
 
         private static handle__Get(connection, s1: string, s2: string): any {
+            var application: ApplicationBase = connection.GetApplication();
 
             if (s1 == "org.alljoyn.Icon") {
                 if (s2 == "Version") {
-                    return DEVICE_ICON_VERSION;
+                    return application.GetIconVersion();
                 }
                 else if (s2 == "MimeType") {
-                    return DEVICE_ICON_MIME_TYPE;
+                    return application.GetIconMimeType();
                 }
             }
 
@@ -1803,7 +1803,7 @@
                     "</node>";
             }
             else {
-                ret = APP_INTROSPECTION_XML;
+                ret = connection.GetApplication().GetIntrospectionXml();
             }
 
             return ret;
