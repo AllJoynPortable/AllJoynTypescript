@@ -287,6 +287,8 @@ class AllJoynTsApp {
             function (e: AJ.ConnectorEventType, d: any) {
                 self.onExploreConnectorEvent(e, d);
             });
+
+        this.m_ExploreConnector.SetAnnouncementListener(this.onExploreAnnouncement);
         this.m_ExploreConnector.ConnectAndAuthenticate();
 
         // XXX - create some html
@@ -307,6 +309,9 @@ class AllJoynTsApp {
 
         var el: HTMLDivElement = window.document.getElementById("explore-form") as HTMLDivElement;
         gen.GenerateForm(el, window.document);
+    }
+
+    public onExploreAnnouncement(introspection: string) {
     }
 
     private onExploreConnectorEvent(e: AJ.ConnectorEventType, d: any) {

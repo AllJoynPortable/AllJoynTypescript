@@ -1210,6 +1210,10 @@
             return this.m_LocalNodeId;
         }
 
+        public SetAnnouncementListener(listener: any) {
+            this.m_AnnouncementListener = listener;
+        }
+
         protected OnTransportConnected(ok: boolean) {
             if (ok) {
                 this.m_State = ConnectorState.StateAuthAnonumousSent;
@@ -1367,6 +1371,10 @@
                     } else {
                         __this__.AttachSession();
                     }
+
+                    if (__this__.m_AnnouncementListener != null) {
+                        org_freedesktop_dbus.method__AddMatch(__this__, "org.alljoyn.About", "Announce", null);
+                    }
                 }
             );
         }
@@ -1441,6 +1449,7 @@
         private m_EventHandler: (e: ConnectorEventType, d: any) => void = null;
         private m_CalledMethods: Array<MsgGeneric> = new Array<MsgGeneric>();
         private m_Application: ApplicationBase = null;
+        private m_AnnouncementListener: any = null;
     };
 
     //==============================================================================================================
@@ -2047,7 +2056,7 @@
             );
         };
 
-        public static method__AddMatch(connection, s1: string, cb): void {
+        public static method__AddMatch(connection, iface: string, member: string, cb): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
             msg.hdr_SetInterface("org.freedesktop.DBus");
             msg.hdr_SetObjectPath("/org/freedesktop/DBus");
@@ -2056,7 +2065,7 @@
             msg.hdr_SetSignature("s");
             if (null != connection.GetLocalNodeId()) msg.hdr_SetSender(connection.GetLocalNodeId());
             msg.body_StartWriting();
-            msg.body_Write_S(s1);
+            msg.body_Write_S("type='signal',interface='" + iface + "',member='" + member + "'");
             connection.SendMsgWithCallback(msg,
                 function () {
                     msg = msg.m_Reply;
