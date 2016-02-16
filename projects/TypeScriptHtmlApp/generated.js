@@ -460,14 +460,14 @@ var AJ;
                     var d = v;
                     for (var _i = 0, d_1 = d; _i < d_1.length; _i++) {
                         var k = d_1[_i];
-                        this.body_WriteObject(this.GetSubSignature(sig, 1), k);
+                        this.body_WriteObject(MsgGeneric.GetSubSignature(sig, 1), k);
                     }
                 }
                 else {
                     var l = v;
                     for (var _a = 0, l_1 = l; _a < l_1.length; _a++) {
                         var o = l_1[_a];
-                        this.body_WriteObject(this.GetSubSignature(sig, 1), o);
+                        this.body_WriteObject(MsgGeneric.GetSubSignature(sig, 1), o);
                     }
                 }
                 this.body_Write_A_End((sig[1] == '{') || (sig[1] == '('));
@@ -476,9 +476,9 @@ var AJ;
                 // XXX - keyvalue pair will be array with 2 elemenst for now
                 var kv = v;
                 this.Align(8);
-                var ss = this.GetSubSignature(sig, 1);
+                var ss = MsgGeneric.GetSubSignature(sig, 1);
                 this.body_WriteObject(ss, kv[0]);
-                ss = this.GetSubSignature(sig, 1 + ss.length);
+                ss = MsgGeneric.GetSubSignature(sig, 1 + ss.length);
                 this.body_WriteObject(ss, kv[1]);
             }
             else if (sig[0] == '(') {
@@ -486,7 +486,7 @@ var AJ;
                 var idx = 1;
                 for (var _b = 0, _c = v; _b < _c.length; _b++) {
                     var o = _c[_b];
-                    var ss = this.GetSubSignature(sig, idx);
+                    var ss = MsgGeneric.GetSubSignature(sig, idx);
                     idx += ss.length;
                     this.body_WriteObject(ss, o);
                 }
@@ -655,7 +655,7 @@ var AJ;
             if (sig[0] == 'a') {
                 var size = this.body_ReadArrayLength();
                 var end = this.m_position + size;
-                var ss = this.GetSubSignature(sig, 1);
+                var ss = MsgGeneric.GetSubSignature(sig, 1);
                 if (ss[0] == '{') {
                     var ret = new Array();
                     while (this.m_position < end) {
@@ -675,9 +675,9 @@ var AJ;
             }
             else if (sig[0] == '{') {
                 this.Align(8);
-                var subSignature = this.GetSubSignature(sig, 1);
+                var subSignature = MsgGeneric.GetSubSignature(sig, 1);
                 var k = this.body_ReadObject(subSignature);
-                subSignature = this.GetSubSignature(sig, 1 + subSignature.length);
+                subSignature = MsgGeneric.GetSubSignature(sig, 1 + subSignature.length);
                 var v = this.body_ReadObject(subSignature);
                 var ret = new Array(2);
                 ret[0] = k;
@@ -691,7 +691,7 @@ var AJ;
                 var idx = 1;
                 while (sig[idx + subSignature.length] != ')') {
                     idx += subSignature.length;
-                    subSignature = this.GetSubSignature(sig, idx);
+                    subSignature = MsgGeneric.GetSubSignature(sig, idx);
                     ret.push(this.body_ReadObject(subSignature));
                 }
                 return ret;
@@ -907,13 +907,13 @@ var AJ;
         /* ------------------------------------------------------------------------------------------------------- */
         /*  SIGNATURE HELPER                                                                                       */
         /* ------------------------------------------------------------------------------------------------------- */
-        MsgGeneric.prototype.ValidateSignature = function (signature, single) {
+        MsgGeneric.ValidateSignature = function (signature, single) {
             if ((null == signature) || (0 == signature.length))
                 return false;
             var count = 0;
             var idx = 0;
             while (idx < signature.length) {
-                var ss = this.GetSubSignature(signature, idx);
+                var ss = MsgGeneric.GetSubSignature(signature, idx);
                 if (null == ss)
                     return false;
                 idx += ss.length;
@@ -923,8 +923,8 @@ var AJ;
                 return false;
             return true;
         };
-        MsgGeneric.prototype.GetSubSignature = function (signature, idx) {
-            var end = this.GetSubSignatureEnd(signature, idx);
+        MsgGeneric.GetSubSignature = function (signature, idx) {
+            var end = MsgGeneric.GetSubSignatureEnd(signature, idx);
             if (end > 0) {
                 return signature.substring(idx, end);
             }
@@ -932,7 +932,7 @@ var AJ;
                 return null;
             }
         };
-        MsgGeneric.prototype.GetSubSignatureEnd = function (signature, idx) {
+        MsgGeneric.GetSubSignatureEnd = function (signature, idx) {
             // check if index is correct in first place
             if ((null == signature) || (idx >= signature.length) || (idx < 0))
                 return -1;
@@ -954,7 +954,7 @@ var AJ;
                 case '(':
                     idx++;
                     while (idx > 0) {
-                        idx = this.GetSubSignatureEnd(signature, idx);
+                        idx = MsgGeneric.GetSubSignatureEnd(signature, idx);
                         if (idx > 0) {
                             if (idx >= signature.length) {
                                 idx = -1;
@@ -968,11 +968,11 @@ var AJ;
                     }
                     return idx;
                 case 'a':
-                    return this.GetSubSignatureEnd(signature, idx + 1);
+                    return MsgGeneric.GetSubSignatureEnd(signature, idx + 1);
                 case '{':
-                    idx = this.GetSubSignatureEnd(signature, idx + 1);
+                    idx = MsgGeneric.GetSubSignatureEnd(signature, idx + 1);
                     if (idx > 0) {
-                        idx = this.GetSubSignatureEnd(signature, idx);
+                        idx = MsgGeneric.GetSubSignatureEnd(signature, idx);
                         if (idx > 0) {
                             if ((idx >= signature.length) || (signature[idx] != '}')) {
                                 idx = -1;
@@ -2863,7 +2863,7 @@ var AJ;
         }
         ConnectorWebSocket.prototype.ConnectTransport = function () {
             var _this_ = this;
-            this.m_socket = new WebSocket("ws://localhost:8088", "binary");
+            this.m_socket = new WebSocket("ws://localhost:8088/", "binary");
             this.m_socket.binaryType = "arraybuffer";
             this.m_socket.onopen = function (event) {
                 _this_.OnTransportConnected(true);
