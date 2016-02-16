@@ -248,6 +248,8 @@ class AllJoynTsApp {
             function (e: AJ.ConnectorEventType, d: any) {
                 self.onConnectorEvent(e, d);
             });
+
+        this.m_CreateConnector.SetApplication(new AJ.Application())
         this.m_CreateConnector.ConnectAndAuthenticate();
     }
 

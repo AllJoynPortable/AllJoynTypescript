@@ -568,7 +568,7 @@
 
             o += "\r\n";
 
-            o += "    class Application {\r\n";
+            o += "    class Application extends ApplicationBase {\r\n";
 
             o += this.GenerateInterfaceHandler();
 
@@ -628,7 +628,7 @@
             var default_value: string;
             var generic_type_name: string;
 
-            o += "        private static " + this.CreateProcessFunctionName(m) + "(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean\r\n";
+            o += "        private " + this.CreateProcessFunctionName(m) + "(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean\r\n";
 
             o += "        {\r\n";
 
@@ -697,12 +697,12 @@
 
             return o;
         }
-
+        
         private GenerateInterfaceHandler(): string
         {
             var o: string = "";
 
-            o += "        public static _ProcessMsg(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {\r\n";
+            o += "        public _ProcessMsg(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {\r\n";
             o += "            var member: string = msg.hdr_GetMember();\r\n\r\n";
 
             var first: boolean = true;
@@ -842,7 +842,7 @@
         {
             var o: string = "";
 
-            o += "private static ";
+            o += "private ";
 
             // function name
 
@@ -868,7 +868,7 @@
             var o: string = "";
             var wrapper_name: string = this.CreateCallWrapperName(m);
 
-            o += "public static ";
+            o += "public ";
 
             // function name
 

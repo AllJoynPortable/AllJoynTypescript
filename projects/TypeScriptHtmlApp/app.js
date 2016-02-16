@@ -238,6 +238,7 @@ var AllJoynTsApp = (function () {
         this.m_CreateConnector.SetConnectorEvent(function (e, d) {
             self.onConnectorEvent(e, d);
         });
+        this.m_CreateConnector.SetApplication(new AJ.Application());
         this.m_CreateConnector.ConnectAndAuthenticate();
     };
     AllJoynTsApp.prototype.onDeviceInfoChanged = function () {

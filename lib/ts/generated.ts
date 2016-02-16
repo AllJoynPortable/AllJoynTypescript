@@ -1165,6 +1165,10 @@
         ConnectorEventMsgReplySent
     };
 
+    export abstract class ApplicationBase {
+        public abstract _ProcessMsg(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric);
+    };
+
     export abstract class ConnectorBase {
 
         protected abstract ConnectTransport();
@@ -1180,6 +1184,10 @@
 
         public Disconnect() {
             this.DisconnectTransport();
+        }
+
+        public SetApplication(application: ApplicationBase): void {
+            this.m_Application = application;
         }
 
         public GetLocalNodeId(): string {
@@ -1282,7 +1290,7 @@
                         else if (iface == "org.alljoyn.Daemon") org_alljoyn_daemon._ProcessMsg(this, msg);
                         else if (iface == "org.alljoyn.Bus.Peer.Session") org_alljoyn_bus_peer_session._ProcessMsg(this, msg);
                         else if (iface == "org.alljoyn.Bus.Peer.Authentication") org_alljoyn_bus_peer_authentication._ProcessMsg(this, msg);
-                        else Application._ProcessMsg(this, msg);
+                        else if (null != this.m_Application) this.m_Application._ProcessMsg(this, msg);
 
                         if (msg.m_Reply != null) this.SendMsg(msg.m_Reply);
                     }
@@ -1416,6 +1424,7 @@
         private m_PeerNodeId: string = "";
         private m_EventHandler: (e: ConnectorEventType, d: any) => void = null;
         private m_CalledMethods: Array<MsgGeneric> = new Array<MsgGeneric>();
+        private m_Application: ApplicationBase = null;
     };
 
     //==============================================================================================================
@@ -3399,90 +3408,7 @@
         0xC0, 0x7F, 0x1D, 0x0D, 0x74, 0x0F, 0x36, 0x02, 0x82, 0x34, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45,
         0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82]);
 
-    class Application {
-        public static _ProcessMsg(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {
-            var member: string = msg.hdr_GetMember();
-
-            if (member == "TestMethod") {
-                return this.__process__TestMethod(connection, msg);
-            }
-            else if (member == "FirstSignal") {
-                return this.__process__FirstSignal(connection, msg);
-            }
-            else if (member == "SecondSignal") {
-                return this.__process__SecondSignal(connection, msg);
-            }
-
-            return false;
-        }
-
-        private static __process__TestMethod(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {
-            msg.body_StartReading();
-            var s1: string = msg.body_Read_S();
-            var ret: string = this.handle__TestMethod(connection, s1);
-
-            msg.CreateReply();
-            msg.m_Reply.hdr_SetSignature("s");
-            msg.m_Reply.body_StartWriting();
-            msg.m_Reply.body_Write_S(ret);
-
-            return true;
-        }
-
-        private static __process__FirstSignal(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {
-            msg.body_StartReading();
-            var s1: string = msg.body_Read_S();
-            var s2: string = msg.body_Read_S();
-            this.handle__FirstSignal(connection, s1, s2);
-
-            return true;
-        }
-
-        private static __process__SecondSignal(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {
-            msg.body_StartReading();
-            var s1: string = msg.body_Read_S();
-            var s2: string = msg.body_Read_S();
-            var s3: string = msg.body_Read_S();
-            this.handle__SecondSignal(connection, s1, s2, s3);
-
-            return true;
-        }
-
-        public static signal__FirstSignal(connection, s1: string, s2: string): void {
-            var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
-            msg.hdr_SetInterface("org.allmake.TestInterface");
-            msg.hdr_SetObjectPath("/TestInterface");
-            msg.hdr_SetMember("FirstSignal");
-            msg.hdr_SetSignature("ss");
-            if (null != connection.GetLocalNodeId()) msg.hdr_SetSender(connection.GetLocalNodeId());
-            msg.body_StartWriting();
-            msg.body_Write_S(s1);
-            msg.body_Write_S(s2);
-            connection.SendMsg(msg);
-        }
-
-        public static signal__SecondSignal(connection, s1: string, s2: string, s3: string): void {
-            var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
-            msg.hdr_SetInterface("org.allmake.TestInterface");
-            msg.hdr_SetObjectPath("/TestInterface");
-            msg.hdr_SetMember("SecondSignal");
-            msg.hdr_SetSignature("sss");
-            if (null != connection.GetLocalNodeId()) msg.hdr_SetSender(connection.GetLocalNodeId());
-            msg.body_StartWriting();
-            msg.body_Write_S(s1);
-            msg.body_Write_S(s2);
-            msg.body_Write_S(s3);
-            connection.SendMsg(msg);
-        }
-
-        private static handle__TestMethod(connection, s1: string): string {
-            return "default-string";
-        }
-
-        private static handle__FirstSignal(connection, s1: string, s2: string): void {
-        }
-
-        private static handle__SecondSignal(connection, s1: string, s2: string, s3: string): void {
-        }
-    }
+    export class Application extends ApplicationBase {
+        public _ProcessMsg(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric) { }
+    };
 }

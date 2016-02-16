@@ -1155,6 +1155,10 @@
         ConnectorEventMsgReplySent
     };
 
+    export abstract class ApplicationBase {
+        public abstract _ProcessMsg(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric);
+    };
+
     export abstract class ConnectorBase {
 
         protected abstract ConnectTransport();
@@ -1170,6 +1174,10 @@
 
         public Disconnect() {
             this.DisconnectTransport();
+        }
+
+        public SetApplication(application: ApplicationBase): void {
+            this.m_Application = application;
         }
 
         public GetLocalNodeId(): string {
@@ -1272,7 +1280,7 @@
                         else if (iface == "org.alljoyn.Daemon") org_alljoyn_daemon._ProcessMsg(this, msg);
                         else if (iface == "org.alljoyn.Bus.Peer.Session") org_alljoyn_bus_peer_session._ProcessMsg(this, msg);
                         else if (iface == "org.alljoyn.Bus.Peer.Authentication") org_alljoyn_bus_peer_authentication._ProcessMsg(this, msg);
-                        else Application._ProcessMsg(this, msg);
+                        else if (null != this.m_Application) this.m_Application._ProcessMsg(this, msg);
 
                         if (msg.m_Reply != null) this.SendMsg(msg.m_Reply);
                     }
@@ -1406,6 +1414,7 @@
         private m_PeerNodeId: string = "";
         private m_EventHandler: (e: ConnectorEventType, d: any) => void = null;
         private m_CalledMethods: Array<MsgGeneric> = new Array<MsgGeneric>();
+        private m_Application: ApplicationBase = null;
     };
 
     //==============================================================================================================
