@@ -10,187 +10,114 @@ var ConnectionType;
 ;
 var AllJoynTsApp = (function () {
     function AllJoynTsApp() {
-        this.templateTS = "";
-        this.templateWebSocketTS = "";
+        //----------------------------------------------------------------------------------------------------------
+        // MEMBERS
+        //----------------------------------------------------------------------------------------------------------
         // HTML fragments
-        this.htmlFront = "";
-        this.htmlBootstrap = "";
-        this.htmlCreate = "";
-        this.htmlExplore = "";
-        this.htmlSamples = "";
-        this.htmlSetup = "";
-        this.htmlHelp = "";
-        this.connectionType = ConnectionType.CONNECTION_WEBSOCKET;
-        this.connectionAzureParam = "<azure connection string>";
-        this.connectionWebsocketParam = "ws://127.0.0.1:8088";
-        // create
-        this.introspectionXml = "";
-        this.editingTs = false;
-        this.codeTs = "";
-        this.codeJs = "";
-        this.m_ApplicationId = Generator.DEFAULT_APP_ID.toString();
-        this.m_ApplicationName = Generator.DEFAULT_APP_NAME;
-        this.m_DeviceId = Generator.DEFAULT_DEVICE_ID;
-        this.m_DeviceName = Generator.DEFAULT_DEVICE_NAME;
-        this.m_Manufacturer = Generator.DEFAULT_MANUFACTURER;
-        this.m_ModelNumber = Generator.DEFAULT_MODEL_NUMBER;
-        this.AppendLog("The time is: ");
-        this.span = document.createElement('span');
-        this.span.innerText = new Date().toUTCString();
-        this.introspectionXml = Generator.DEFAULT_APP_INTROSPECTION_XML.replace(/></g, ">\r\n<");
+        this.m_HtmlFront = "";
+        this.m_HtmlBootstrap = "";
+        this.m_HtmlCreate = "";
+        this.m_HtmlExplore = "";
+        this.m_HtmlSamples = "";
+        this.m_HtmlSetup = "";
+        this.m_HtmlHelp = "";
+        // create view variables
+        this.m_CreateConnector = null;
+        this.m_CreateIntrospectionXml = "";
+        this.m_CreateEditingTs = false;
+        this.m_CreateCodeTs = "";
+        this.m_CreateCodeJs = "";
+        this.m_CreateApplicationId = Generator.DEFAULT_APP_ID;
+        this.m_CreateApplicationName = Generator.DEFAULT_APP_NAME;
+        this.m_CreateDeviceId = Generator.DEFAULT_DEVICE_ID;
+        this.m_CreateDeviceName = Generator.DEFAULT_DEVICE_NAME;
+        this.m_CreateManufacturer = Generator.DEFAULT_MANUFACTURER;
+        this.m_CreateModelNumber = Generator.DEFAULT_MODEL_NUMBER;
+        this.m_CreateLocked = false;
+        this.m_CreateTemplateTS = "";
+        this.m_CreateTemplateWebSocketTS = "";
+        // explore variables
+        this.m_ExploreConnector = null;
+        // setup variables
+        this.m_ConnectionType = ConnectionType.CONNECTION_WEBSOCKET;
+        this.m_ConnectionAzureParam = "<azure connection string>";
+        this.m_ConnectionWebsocketParam = "ws://127.0.0.1:8088";
+        this.m_CreateIntrospectionXml = Generator.DEFAULT_APP_INTROSPECTION_XML.replace(/></g, ">\r\n<");
         //(window as any).editor.setValue(this.introspectionXml);
-        this.RetrieveTemplate("template.ts.txt", "templateTS");
-        this.RetrieveTemplate("template-websocket.ts.txt", "templateWebSocketTS");
-        this.RetrieveTemplate("front.html", "htmlFront");
-        this.RetrieveTemplate("bootstrap.html", "htmlBootstrap");
-        this.RetrieveTemplate("create.html", "htmlCreate");
-        this.RetrieveTemplate("explore.html", "htmlExplore");
-        this.RetrieveTemplate("samples.html", "htmlSamples");
-        this.RetrieveTemplate("setup.html", "htmlSetup");
-        this.RetrieveTemplate("help.html", "htmlHelp");
+        this.RetrieveTemplate("template.ts.txt", "m_CreateTemplateTS");
+        this.RetrieveTemplate("template-websocket.ts.txt", "m_CreateTemplateWebSocketTS");
+        this.RetrieveTemplate("front.html", "m_HtmlFront");
+        this.RetrieveTemplate("bootstrap.html", "m_HtmlBootstrap");
+        this.RetrieveTemplate("create.html", "m_HtmlCreate");
+        this.RetrieveTemplate("explore.html", "m_HtmlExplore");
+        this.RetrieveTemplate("samples.html", "m_HtmlSamples");
+        this.RetrieveTemplate("setup.html", "m_HtmlSetup");
+        this.RetrieveTemplate("help.html", "m_HtmlHelp");
     }
     AllJoynTsApp.prototype.start = function () {
     };
     AllJoynTsApp.prototype.stop = function () {
-        clearTimeout(this.timerToken);
     };
-    AllJoynTsApp.prototype.onConnectorEvent = function (e, d) {
-        var el = window.document.getElementById("content");
-        if (e == AJ.ConnectorEventType.ConnectorEventConnected) {
-            this.AppendLog("<br/>ALLJOYN CONNECTED");
-        }
-        else if (e == AJ.ConnectorEventType.ConnectorEventConnectionFailed) {
-            this.AppendLog("<br/>ALLJOYN CONNECTION FAILED");
-        }
-        else if (e == AJ.ConnectorEventType.ConnectorEventTextSent) {
-            this.AppendLog("<br/>AUTH >> " + d);
-        }
-        else if (e == AJ.ConnectorEventType.ConnectorEventTextReceived) {
-            this.AppendLog("<br/>AUTH << " + d);
-        }
-        else if (e == AJ.ConnectorEventType.ConnectorEventMsgSent) {
-            this.AppendLog("<br/>Message Sent: " + d.hdr_GetMsgType() + " " + d.hdr_GetMember());
-        }
-        else if (e == AJ.ConnectorEventType.ConnectorEventMsgReceived) {
-            this.AppendLog("<br/>Message Received: " + d.hdr_GetMsgType() + " " + d.hdr_GetMember());
-        }
-    };
-    AllJoynTsApp.prototype.updateXml = function () {
-    };
-    AllJoynTsApp.prototype.updateTs = function () {
-        var xml = window.editor.getValue();
-        //(window.document.getElementById("introspectionXml") as HTMLTextAreaElement).textContent;
-        if (this.codeTs == "") {
-            var p = new Generator.IntrospectionXmlParser();
-            // first, parse introspection xml
-            try {
-                p.ParseXml(xml);
-            }
-            catch (e) {
-                this.AppendLog("<br/>" + e);
-            }
-            this.AppendLog("<br/>PARSER FINISHED: " + p.m_ObjectPath + " " + p.m_Interface);
-            // create code generator
-            var gen = new Generator.CodeGeneratorTS(p.m_Methods);
-            gen.SetIntrospectionXml(xml);
-            gen.SetIconData(Generator.DEFAULT_DEVICE_ICON_MIME_TYPE, Generator.DEFAULT_DEVICE_ICON_URL, Generator.DEFAULT_DEVICE_ICON);
-            gen.SetDeviceData(Generator.DEFAULT_APP_ID, Generator.DEFAULT_APP_NAME, Generator.DEFAULT_DEVICE_ID, Generator.DEFAULT_DEVICE_NAME, Generator.DEFAULT_MANUFACTURER, Generator.DEFAULT_MODEL_NUMBER);
-            this.codeTs = this.templateTS;
-            this.codeTs = this.codeTs.replace("/*WRITER-CODE-HERE*/", gen.GenerateWriters());
-            this.codeTs = this.codeTs.replace("/*READER-CODE-HERE*/", gen.GenerateReaders());
-            this.codeTs = this.codeTs.replace("/*APPLICATION-CODE-HERE*/", gen.GenerateApplicationCode());
-            this.codeTs = this.codeTs.replace("/*CONNECTOR-CODE-HERE*/", this.templateWebSocketTS);
-            this.codeJs = "";
-        }
-    };
-    AllJoynTsApp.prototype.updateJs = function () {
-        if (this.codeJs == "") {
-            this.updateTs();
-            this.codeJs = ConvertTsToJs(this.codeTs);
-        }
-    };
-    AllJoynTsApp.prototype.onShowTs = function () {
-        this.updateTs();
-        window.editorScript.setValue(this.codeTs);
-        this.editingTs = true;
-    };
-    AllJoynTsApp.prototype.onShowJs = function () {
-        this.editingTs = false;
-        this.updateJs();
-        window.editorScript.setValue(this.codeJs);
-    };
-    AllJoynTsApp.prototype.onTest = function () {
-        this.onShowJs();
-        var geval = eval;
-        geval(this.codeJs);
-        // try to restart with new service
-        if (null != this.connector) {
-            this.connector.Disconnect();
-        }
-        this.connector = null;
-        this.connector = new AJ.ConnectorWebSocket();
-        var self = this;
-        this.connector.SetConnectorEvent(function (e, d) {
-            self.onConnectorEvent(e, d);
-        });
-        this.connector.ConnectAndAuthenticate();
-    };
+    //----------------------------------------------------------------------------------------------------------
+    // MAIN MENU HANDLING
+    //----------------------------------------------------------------------------------------------------------
     AllJoynTsApp.prototype.GoToFrontPage = function () {
         var el = window.document.getElementById("main");
-        el.innerHTML = this.htmlFront;
+        el.innerHTML = this.m_HtmlFront;
         this.MenuHighlight("");
     };
     AllJoynTsApp.prototype.GoToBootstrap = function () {
         var el = window.document.getElementById("main");
-        el.innerHTML = this.htmlBootstrap;
+        el.innerHTML = this.m_HtmlBootstrap;
         this.MenuHighlight("menu-bootstrap");
     };
     AllJoynTsApp.prototype.GoToCreate = function () {
         var el = window.document.getElementById("main");
-        el.innerHTML = this.htmlCreate;
+        el.innerHTML = this.m_HtmlCreate;
         window.editor = window.CodeMirror.fromTextArea(window.document.getElementById("introspectionXml"), {
             lineNumbers: true, mode: "text/xml", theme: "ttcn"
         });
         var __this__ = this;
         window.editor.on("change", function (instance, changeObj) {
             console.log("INTROSPECTION XML CHANGED");
-            __this__.codeJs = "";
-            __this__.codeTs = "";
+            __this__.onDeviceInfoChanged();
         });
         window.editorScript = window.CodeMirror.fromTextArea(window.document.getElementById("generatedCode"), {
             lineNumbers: true, mode: "text/typescript", theme: "ttcn"
         });
         var __this__ = this;
         window.editorScript.on("change", function (instance, changeObj) {
-            if (__this__.editingTs) {
+            if (__this__.m_CreateEditingTs) {
                 console.log("TS SCRIPT CHANGED");
-                __this__.codeJs = "";
-                __this__.codeTs = window.editorScript.getValue();
+                __this__.m_CreateCodeJs = "";
+                __this__.m_CreateCodeTs = window.editorScript.getValue();
             }
         });
-        window.editor.setValue(this.introspectionXml);
-        window.document.getElementById("create-application-id").value = this.m_ApplicationId;
-        window.document.getElementById("create-application-name").value = this.m_ApplicationName;
-        window.document.getElementById("create-device-id").value = this.m_DeviceId;
-        window.document.getElementById("create-device-name").value = this.m_DeviceName;
-        window.document.getElementById("create-manufacturer").value = this.m_Manufacturer;
-        window.document.getElementById("create-model-number").value = this.m_ModelNumber;
+        this.m_CreateLocked = true;
+        window.editor.setValue(this.m_CreateIntrospectionXml);
+        //(window.document.getElementById("create-application-id") as HTMLInputElement).value = this.m_ApplicationId;
+        window.document.getElementById("create-application-name").value = this.m_CreateApplicationName;
+        window.document.getElementById("create-device-id").value = this.m_CreateDeviceId;
+        window.document.getElementById("create-device-name").value = this.m_CreateDeviceName;
+        window.document.getElementById("create-manufacturer").value = this.m_CreateManufacturer;
+        window.document.getElementById("create-model-number").value = this.m_CreateModelNumber;
+        this.m_CreateLocked = false;
         this.MenuHighlight("menu-create");
     };
     AllJoynTsApp.prototype.GoToExplore = function () {
         var el = window.document.getElementById("main");
-        el.innerHTML = this.htmlExplore;
+        el.innerHTML = this.m_HtmlExplore;
         this.MenuHighlight("menu-explore");
     };
     AllJoynTsApp.prototype.GoToSamples = function () {
         var el = window.document.getElementById("main");
-        el.innerHTML = this.htmlSamples;
+        el.innerHTML = this.m_HtmlSamples;
         this.MenuHighlight("menu-samples");
     };
     AllJoynTsApp.prototype.GoToSetup = function () {
         var el = window.document.getElementById("main");
-        el.innerHTML = this.htmlSetup;
-        switch (this.connectionType) {
+        el.innerHTML = this.m_HtmlSetup;
+        switch (this.m_ConnectionType) {
             case ConnectionType.CONNECTION_LOOPBACK:
                 window.document.getElementById("connection-loopback").checked = true;
                 break;
@@ -204,13 +131,13 @@ var AllJoynTsApp = (function () {
                 window.document.getElementById("connection-azure").checked = true;
                 break;
         }
-        window.document.getElementById("connection-azure-text").value = this.connectionAzureParam;
-        window.document.getElementById("connection-websocket-text").value = this.connectionWebsocketParam;
+        window.document.getElementById("connection-azure-text").value = this.m_ConnectionAzureParam;
+        window.document.getElementById("connection-websocket-text").value = this.m_ConnectionWebsocketParam;
         this.MenuHighlight("menu-setup");
     };
     AllJoynTsApp.prototype.GoToHelp = function () {
         var el = window.document.getElementById("main");
-        el.innerHTML = this.htmlHelp;
+        el.innerHTML = this.m_HtmlHelp;
         this.MenuHighlight("menu-help");
     };
     AllJoynTsApp.prototype.MenuHighlight = function (id) {
@@ -229,24 +156,181 @@ var AllJoynTsApp = (function () {
             child = child.nextElementSibling;
         }
     };
+    //----------------------------------------------------------------------------------------------------------
+    // CREATE VIEW
+    //----------------------------------------------------------------------------------------------------------
+    AllJoynTsApp.prototype.onConnectorEvent = function (e, d) {
+        var el = window.document.getElementById("content");
+        if (e == AJ.ConnectorEventType.ConnectorEventConnected) {
+            this.AppendLog("log-create", "<br/>ALLJOYN CONNECTED");
+        }
+        else if (e == AJ.ConnectorEventType.ConnectorEventConnectionFailed) {
+            this.AppendLog("log-create", "<br/>ALLJOYN CONNECTION FAILED");
+        }
+        else if (e == AJ.ConnectorEventType.ConnectorEventTextSent) {
+            this.AppendLog("log-create", "<br/>AUTH >> " + d);
+        }
+        else if (e == AJ.ConnectorEventType.ConnectorEventTextReceived) {
+            this.AppendLog("log-create", "<br/>AUTH << " + d);
+        }
+        else if (e == AJ.ConnectorEventType.ConnectorEventMsgSent) {
+            this.AppendLog("log-create", "<br/>Message Sent: " + d.hdr_GetMsgType() + " " + d.hdr_GetMember());
+        }
+        else if (e == AJ.ConnectorEventType.ConnectorEventMsgReceived) {
+            this.AppendLog("log-create", "<br/>Message Received: " + d.hdr_GetMsgType() + " " + d.hdr_GetMember());
+        }
+    };
+    AllJoynTsApp.prototype.updateXml = function () {
+    };
+    AllJoynTsApp.prototype.updateTs = function () {
+        var xml = window.editor.getValue();
+        //(window.document.getElementById("introspectionXml") as HTMLTextAreaElement).textContent;
+        if (this.m_CreateCodeTs == "") {
+            var p = new Generator.IntrospectionXmlParser();
+            // first, parse introspection xml
+            try {
+                p.ParseXml(xml);
+            }
+            catch (e) {
+                this.AppendLog("log-create", "<br/>" + e);
+            }
+            this.AppendLog("log-create", "<br/>PARSER FINISHED: " + p.m_ObjectPath + " " + p.m_Interface);
+            // create code generator
+            var gen = new Generator.CodeGeneratorTS(p.m_Methods);
+            gen.SetIntrospectionXml(xml);
+            gen.SetIconData(Generator.DEFAULT_DEVICE_ICON_MIME_TYPE, Generator.DEFAULT_DEVICE_ICON_URL, Generator.DEFAULT_DEVICE_ICON);
+            gen.SetDeviceData(this.m_CreateApplicationId, this.m_CreateApplicationName, this.m_CreateDeviceId, this.m_CreateDeviceName, this.m_CreateManufacturer, this.m_CreateModelNumber);
+            this.m_CreateCodeTs = this.m_CreateTemplateTS;
+            this.m_CreateCodeTs = this.m_CreateCodeTs.replace("/*WRITER-CODE-HERE*/", gen.GenerateWriters());
+            this.m_CreateCodeTs = this.m_CreateCodeTs.replace("/*READER-CODE-HERE*/", gen.GenerateReaders());
+            this.m_CreateCodeTs = this.m_CreateCodeTs.replace("/*APPLICATION-CODE-HERE*/", gen.GenerateApplicationCode());
+            this.m_CreateCodeTs = this.m_CreateCodeTs.replace("/*CONNECTOR-CODE-HERE*/", this.m_CreateTemplateWebSocketTS);
+            this.m_CreateCodeJs = "";
+        }
+    };
+    AllJoynTsApp.prototype.updateJs = function () {
+        if (this.m_CreateCodeJs == "") {
+            this.updateTs();
+            this.m_CreateCodeJs = ConvertTsToJs(this.m_CreateCodeTs);
+        }
+    };
+    AllJoynTsApp.prototype.onShowTs = function () {
+        this.updateTs();
+        window.editorScript.setValue(this.m_CreateCodeTs);
+        this.m_CreateEditingTs = true;
+    };
+    AllJoynTsApp.prototype.onShowJs = function () {
+        this.m_CreateEditingTs = false;
+        this.updateJs();
+        window.editorScript.setValue(this.m_CreateCodeJs);
+    };
+    AllJoynTsApp.prototype.onTest = function () {
+        this.onShowJs();
+        var geval = eval;
+        geval(this.m_CreateCodeJs);
+        // try to restart with new service
+        if (null != this.m_CreateConnector) {
+            this.m_CreateConnector.Disconnect();
+        }
+        this.m_CreateConnector = null;
+        this.m_CreateConnector = new AJ.ConnectorWebSocket();
+        var self = this;
+        this.m_CreateConnector.SetConnectorEvent(function (e, d) {
+            self.onConnectorEvent(e, d);
+        });
+        this.m_CreateConnector.SetApplication(new AJ.Application());
+        this.m_CreateConnector.ConnectAndAuthenticate();
+    };
+    AllJoynTsApp.prototype.onDeviceInfoChanged = function () {
+        this.m_CreateCodeJs = "";
+        this.m_CreateCodeTs = "";
+        if (!this.m_CreateLocked) {
+            // XXX - fix this
+            //this.m_ApplicationId = (window.document.getElementById("create-application-id") as HTMLInputElement).value;
+            this.m_CreateApplicationName = window.document.getElementById("create-application-name").value;
+            this.m_CreateDeviceId = window.document.getElementById("create-device-id").value;
+            this.m_CreateDeviceName = window.document.getElementById("create-device-name").value;
+            this.m_CreateManufacturer = window.document.getElementById("create-manufacturer").value;
+            this.m_CreateModelNumber = window.document.getElementById("create-model-number").value;
+        }
+    };
+    //----------------------------------------------------------------------------------------------------------
+    // EXPLORE VIEW
+    //----------------------------------------------------------------------------------------------------------
+    AllJoynTsApp.prototype.onExploreConnect = function () {
+        this.AppendLog("log-explore", "<br/>CONNECTING....");
+        // try to restart with new service
+        if (null != this.m_ExploreConnector) {
+            this.m_ExploreConnector.Disconnect();
+        }
+        this.m_ExploreConnector = new AJ.ConnectorWebSocket();
+        var self = this;
+        this.m_ExploreConnector.SetConnectorEvent(function (e, d) {
+            self.onExploreConnectorEvent(e, d);
+        });
+        this.m_ExploreConnector.SetAnnouncementListener(this.onExploreAnnouncement);
+        this.m_ExploreConnector.ConnectAndAuthenticate();
+        // XXX - create some html
+        var p = new Generator.IntrospectionXmlParser();
+        // first, parse introspection xml
+        try {
+            p.ParseXml(this.m_CreateIntrospectionXml);
+        }
+        catch (e) {
+            this.AppendLog("log-explore", "<br/>" + e);
+        }
+        this.AppendLog("log-explore", "<br/>PARSER FINISHED: " + p.m_ObjectPath + " " + p.m_Interface);
+        // create code generator
+        var gen = new Generator.CodeGeneratorHTML(p.m_Methods);
+        var el = window.document.getElementById("explore-form");
+        gen.GenerateForm(el, window.document);
+    };
+    AllJoynTsApp.prototype.onExploreAnnouncement = function (introspection) {
+    };
+    AllJoynTsApp.prototype.onExploreConnectorEvent = function (e, d) {
+        if (e == AJ.ConnectorEventType.ConnectorEventConnected) {
+            this.AppendLog("log-explore", "<br/>ALLJOYN CONNECTED");
+        }
+        else if (e == AJ.ConnectorEventType.ConnectorEventConnectionFailed) {
+            this.AppendLog("log-explore", "<br/>ALLJOYN CONNECTION FAILED");
+        }
+        else if (e == AJ.ConnectorEventType.ConnectorEventTextSent) {
+            this.AppendLog("log-explore", "<br/>AUTH >> " + d);
+        }
+        else if (e == AJ.ConnectorEventType.ConnectorEventTextReceived) {
+            this.AppendLog("log-explore", "<br/>AUTH << " + d);
+        }
+        else if (e == AJ.ConnectorEventType.ConnectorEventMsgSent) {
+            this.AppendLog("log-explore", "<br/>Message Sent: " + d.hdr_GetMsgType() + " " + d.hdr_GetMember());
+        }
+        else if (e == AJ.ConnectorEventType.ConnectorEventMsgReceived) {
+            this.AppendLog("log-explore", "<br/>Message Received: " + d.hdr_GetMsgType() + " " + d.hdr_GetMember());
+        }
+    };
+    //----------------------------------------------------------------------------------------------------------
+    // SETUP VIEW
+    //----------------------------------------------------------------------------------------------------------
     AllJoynTsApp.prototype.OnLoopbackSelected = function () {
-        this.connectionType = ConnectionType.CONNECTION_LOOPBACK;
+        this.m_ConnectionType = ConnectionType.CONNECTION_LOOPBACK;
     };
     AllJoynTsApp.prototype.OnDiscoverSelected = function () {
-        this.connectionType = ConnectionType.CONNECTION_DISCOVER;
+        this.m_ConnectionType = ConnectionType.CONNECTION_DISCOVER;
     };
     AllJoynTsApp.prototype.OnWebsocketSelected = function () {
-        this.connectionType = ConnectionType.CONNECTION_WEBSOCKET;
+        this.m_ConnectionType = ConnectionType.CONNECTION_WEBSOCKET;
     };
     AllJoynTsApp.prototype.OnAzureSelected = function () {
-        this.connectionType = ConnectionType.CONNECTION_AZURE;
+        this.m_ConnectionType = ConnectionType.CONNECTION_AZURE;
     };
     AllJoynTsApp.prototype.OnWebsocketChanged = function () {
-        this.connectionWebsocketParam = window.document.getElementById("connection-websocket-text").value;
+        this.m_ConnectionWebsocketParam = window.document.getElementById("connection-websocket-text").value;
     };
     AllJoynTsApp.prototype.OnAzureChanged = function () {
-        this.connectionAzureParam = window.document.getElementById("connection-azure-text").value;
+        this.m_ConnectionAzureParam = window.document.getElementById("connection-azure-text").value;
     };
+    //----------------------------------------------------------------------------------------------------------
+    // OTHER
+    //----------------------------------------------------------------------------------------------------------
     AllJoynTsApp.prototype.RetrieveTemplate = function (filename, field) {
         var __this__ = this;
         var client = new XMLHttpRequest();
@@ -269,8 +353,8 @@ var AllJoynTsApp = (function () {
         client.send();
         client["dataField"] = field;
     };
-    AllJoynTsApp.prototype.AppendLog = function (v) {
-        var el = window.document.getElementById("content");
+    AllJoynTsApp.prototype.AppendLog = function (target, v) {
+        var el = window.document.getElementById(target);
         if (null != el) {
             el.innerHTML += v;
             el.scrollTop += 100;

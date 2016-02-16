@@ -537,40 +537,40 @@
         {
             var o: string = "";
 
+            o += "\r\n";
+
+            o += "    export class Application extends ApplicationBase {\r\n";
+
+            o += this.GenerateInterfaceHandler();
+
             if (!this.m_IsConsumer) {
                 var first: boolean = true;
                 var val: number = 0;
                 var buffer_idx: number = 0;
 
                 o += "\r\n";
-                o += "var APP_ID:           Uint8Array = new Uint8Array([" + this.Generate_HexNumbers(this.m_AppId) + "]);\r\n";
-                o += "var APP_NAME:         string = \"" + this.m_AppName + "\";\r\n";
-                o += "var APP_DESCRIPTION:  string = \"Application Description\";\r\n"; // XXX - should come from ui
-                o += "var DEVICE_ID:        string = \"" + this.m_Deviceid + "\";\r\n";
-                o += "var DEVICE_NAME:      string = \"" + this.m_DeviceName + "\";\r\n";
-                o += "var MANUFACTURER:     string = \"" + this.m_Manufacturer + "\";\r\n";
-                o += "var MODEL_NUMBER:     string = \"" + this.m_ModelNumber + "\";\r\n";
+                o += "        public GetId(): Uint8Array { return new Uint8Array([" + this.Generate_HexNumbers(this.m_AppId) + "]); }\r\n";
+                o += "        public GetName(): string { return \"" + this.m_AppName + "\"; }\r\n";
+                o += "        public GetDescription(): string { return \"Application Description\"; }\r\n"; // XXX - should come from ui
+                o += "        public GetDeviceId(): string { return \"" + this.m_Deviceid + "\"; }\r\n";
+                o += "        public GetDeviceName(): string { return \"" + this.m_DeviceName + "\"; }\r\n";
+                o += "        public GetManufacturer(): string { return \"" + this.m_Manufacturer + "\"; }\r\n";
+                o += "        public GetModelNumber(): string { return \"" + this.m_ModelNumber + "\"; }\r\n";
                 o += "\r\n";
 
                 var xml: string = this.m_IntrospectionXml.replace(/\"/g, "\\\"");
                 xml = xml.replace(/</g, "\"<");
                 xml = xml.replace(/>/g, ">\" + ");
 
-                o += "var APP_INTROSPECTION_XML: string = \r\n";
-                o += xml + " \"\";\r\n";
+                o += "        public GetIntrospectionXml(): string { return ( \r\n";
+                o += xml + " \"\");\r\n";
                 o += "\r\n";
 
-                o += "var DEVICE_ICON_VERSION: number = 1;\r\n";
-                o += "var DEVICE_ICON_MIME_TYPE: string = \"" + this.m_IconMimeType + "\";\r\n";
-                o += "var DEVICE_ICON_URL: string = \"" + this.m_IconUrl + "\";\r\n";
-                o += "var DEVICE_ICON: Uint8Array = new Uint8Array([" + this.Generate_HexNumbers(this.m_IconData) + "]);\r\n";
+                o += "        public GetIconVersion(): number { return 1; }\r\n";
+                o += "        public GetIconMimeType(): string { return \"" + this.m_IconMimeType + "\"; }\r\n";
+                o += "        public GetIconUrl(): string { return \"" + this.m_IconUrl + "\"; }\r\n";
+                o += "        public GetIcon(): Uint8Array { return new Uint8Array([" + this.Generate_HexNumbers(this.m_IconData) + "]); }\r\n";
             }
-
-            o += "\r\n";
-
-            o += "    class Application {\r\n";
-
-            o += this.GenerateInterfaceHandler();
 
             // these methods 
             for (var m of this.m_Definition)
@@ -628,7 +628,7 @@
             var default_value: string;
             var generic_type_name: string;
 
-            o += "        private static " + this.CreateProcessFunctionName(m) + "(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean\r\n";
+            o += "        private " + this.CreateProcessFunctionName(m) + "(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean\r\n";
 
             o += "        {\r\n";
 
@@ -697,12 +697,12 @@
 
             return o;
         }
-
+        
         private GenerateInterfaceHandler(): string
         {
             var o: string = "";
 
-            o += "        public static _ProcessMsg(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {\r\n";
+            o += "        public _ProcessMsg(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {\r\n";
             o += "            var member: string = msg.hdr_GetMember();\r\n\r\n";
 
             var first: boolean = true;
@@ -842,7 +842,7 @@
         {
             var o: string = "";
 
-            o += "private static ";
+            o += "private ";
 
             // function name
 
@@ -868,7 +868,7 @@
             var o: string = "";
             var wrapper_name: string = this.CreateCallWrapperName(m);
 
-            o += "public static ";
+            o += "public ";
 
             // function name
 
