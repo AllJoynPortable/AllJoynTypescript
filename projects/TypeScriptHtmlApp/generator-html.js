@@ -1,21 +1,14 @@
 var Generator;
 (function (Generator) {
     var CodeGeneratorHTML = (function () {
-        function CodeGeneratorHTML() {
+        function CodeGeneratorHTML(def) {
             this.m_Definition = null;
-        }
-        CodeGeneratorHTML.prototype.CodeGeneratorHTML = function (def) {
             this.m_Definition = def;
-        };
-        //!public void SetScript(string s)
-        //!{
-        //!    m_Script = s;
-        //!}
-        CodeGeneratorHTML.prototype.GenerateForm = function () {
-            this.m_Document = new XMLDocument();
+        }
+        CodeGeneratorHTML.prototype.GenerateForm = function (root, document) {
             // create body element
-            this.m_BodyElement = this.m_Document.createElement("body");
-            this.m_Document.appendChild(this.m_BodyElement);
+            this.m_BodyElement = root;
+            this.m_Document = document;
             var hdr = this.m_Document.createElement("h2");
             this.m_BodyElement.appendChild(hdr);
             hdr.innerText = this.m_Definition[0].m_Interface;
@@ -62,8 +55,6 @@ var Generator;
             //var se = this.m_Document.createElement("script");
             //m_BodyElement.appendChild(se);
             //se.innerText = "[XXXYYYZZZ]";
-            var xml = (new XMLSerializer()).serializeToString(this.m_Document);
-            return xml;
         };
         //protected override string Generate_DbusObjectReader(string signature)
         //{

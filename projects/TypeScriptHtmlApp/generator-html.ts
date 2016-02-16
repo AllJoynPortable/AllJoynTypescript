@@ -2,27 +2,20 @@
 {
     export class CodeGeneratorHTML
     {
-        public CodeGeneratorHTML(def: Array<InterfaceItemDescription>)
+        public constructor(def: Array<InterfaceItemDescription>)
         {
             this.m_Definition = def;
         }
 
         private m_Definition: Array<InterfaceItemDescription> = null;
-        private m_Document: XMLDocument;
-        private m_BodyElement: HTMLBodyElement;
+        private m_Document: Document;
+        private m_BodyElement: HTMLDivElement;
 
-        //!public void SetScript(string s)
-        //!{
-        //!    m_Script = s;
-        //!}
-
-        public GenerateForm(): string
+        public GenerateForm(root: HTMLDivElement, document: Document): void
         {
-            this.m_Document = new XMLDocument();
-
             // create body element
-            this.m_BodyElement = this.m_Document.createElement("body");
-            this.m_Document.appendChild(this.m_BodyElement);
+            this.m_BodyElement = root;
+            this.m_Document = document;
 
             var hdr: HTMLHeadingElement = this.m_Document.createElement("h2");
             this.m_BodyElement.appendChild(hdr);
@@ -92,10 +85,6 @@
             //m_BodyElement.appendChild(se);
             //se.innerText = "[XXXYYYZZZ]";
 
-
-            var xml: string = (new XMLSerializer()).serializeToString(this.m_Document);
-
-            return xml;
         }
 
         //protected override string Generate_DbusObjectReader(string signature)

@@ -268,6 +268,20 @@ var AllJoynTsApp = (function () {
             self.onExploreConnectorEvent(e, d);
         });
         this.m_ExploreConnector.ConnectAndAuthenticate();
+        // XXX - create some html
+        var p = new Generator.IntrospectionXmlParser();
+        // first, parse introspection xml
+        try {
+            p.ParseXml(this.m_CreateIntrospectionXml);
+        }
+        catch (e) {
+            this.AppendLog("log-explore", "<br/>" + e);
+        }
+        this.AppendLog("log-explore", "<br/>PARSER FINISHED: " + p.m_ObjectPath + " " + p.m_Interface);
+        // create code generator
+        var gen = new Generator.CodeGeneratorHTML(p.m_Methods);
+        var el = window.document.getElementById("explore-form");
+        gen.GenerateForm(el, window.document);
     };
     AllJoynTsApp.prototype.onExploreConnectorEvent = function (e, d) {
         if (e == AJ.ConnectorEventType.ConnectorEventConnected) {
