@@ -88,8 +88,8 @@
             le.setAttribute("id", "MainParagraph");
             this.m_BodyElement.appendChild(le);
 
-            //XmlElement se = m_Document.CreateElement("script");
-            //m_BodyElement.AppendChild(se);
+            //var se = this.m_Document.createElement("script");
+            //m_BodyElement.appendChild(se);
             //se.InnerText = "[XXXYYYZZZ]";
 
 
@@ -168,29 +168,29 @@
 
                 if (signature[0] == 'a')
                 {
-                    XmlElement btns = m_Document.CreateElement("table");
-                    btns.SetAttribute("id", "btns");
+                    var btns = this.m_Document.createElement("table");
+                    btns.setAttribute("id", "btns");
                     //btns.Orientation = Orientation.Horizontal;
-                    XmlElement btnAdd = m_Document.CreateElement("button");
+                    var btnAdd = this.m_Document.createElement("button");
                     btnAdd.InnerText = "+";
                     //btnAdd.Margin = new Thickness(5);
                     //btnAdd.Click += BtnAdd_Click;
-                    btns.AppendChild(btnAdd);
+                    btns.appendChild(btnAdd);
 
-                    XmlElement btnRemove = m_Document.CreateElement("button");
+                    var btnRemove = this.m_Document.createElement("button");
                     btnRemove.InnerText = "-";
                     //btnRemove.Margin = new Thickness(5);
                     //btnRemove.Click += BtnRemove_Click;
-                    btns.AppendChild(btnRemove);
-                    fld.AppendChild(btns);
+                    btns.appendChild(btnRemove);
+                    fld.appendChild(btns);
                 }
             }
 
-            fld.SetAttribute("id", parentName + "-" + fld_idx.ToString());
+            fld.setAttribute("id", parentName + "-" + fld_idx.ToString());
             //fld.Margin = new Thickness(5);
             //fld.MinWidth = 200;
 
-            fld_container.AppendChild(fld);
+            fld_container.appendChild(fld);
         }
 
         //UInt64 GetUint64FromField(string fld)
@@ -264,22 +264,21 @@
         //    return FindName(fld) != null;
         //}
 
-        private void CreateFieldsFromSignature(string signature, string prefix, int fld_idx)
+        private CreateFieldsFromSignature(signature: string, prefix: string, fld_idx: number): void
         {
-            int idx = 0;
+            var idx: number = 0;
 
-            while (idx < signature.Length)
+            while (idx < signature.length)
             {
-                string subSignature = SignatureHelper.GetSubSignature(signature, idx);
+                // XXX-SIGNATURE-HELPER
+                var subSignature: string = AJ.MsgGeneric.GetSubSignature(signature, idx);
 
                 if (null == subSignature)
                     break;
 
-                CreateTextField(prefix, subSignature, fld_idx);
+                this.CreateTextField(prefix, subSignature, fld_idx);
 
-                char t = subSignature[0];
-
-                switch (t)
+                switch (subSignature[0])
                 {
                     case 'y':
                     case 'n':
@@ -299,14 +298,14 @@
 
                     case '(':
                     case '{':
-                        CreateFieldsFromSignature(subSignature.Substring(1, subSignature.Length - 2), prefix + "-" + fld_idx.ToString(), 0);
-                        idx += subSignature.Length;
+                        this.CreateFieldsFromSignature(subSignature.substr(1, subSignature.length - 2), prefix + "-" + fld_idx, 0);
+                        idx += subSignature.length;
                         fld_idx++;
                         break;
 
                     case 'a':
-                        CreateFieldsFromSignature(SignatureHelper.GetSubSignature(subSignature, 1), prefix + "-" + fld_idx.ToString(), 0);
-                        idx += subSignature.Length;
+                        this.CreateFieldsFromSignature(AJ.MsgGeneric.GetSubSignature(subSignature, 1), prefix + "-" + fld_idx, 0);
+                        idx += subSignature.length;
                         fld_idx++;
                         break;
 
@@ -506,59 +505,5 @@
         //    return v;
         //}
 
-        private string Generate_SignalMethodWrapper(InterfaceItemDescription m)
-        {
-            string o = "";
-            string wrapper_name = CreateCallWrapperName(m);
-
-            o += "function ___" + wrapper_name + "()\r\n";
-            o += "{\r\n";
-            o += "    " + wrapper_name + "(connection\r\n";
-
-            int idx = 0;
-
-            foreach (ParamDescription p in m.ParametersIn)
-            {
-                o += ",\r\n    GetValueFromElement(\"" + wrapper_name + "-" + idx++ + "\")";
-            }
-
-            o += "\r\n    );\r\n";
-
-            o += "}";
-
-            return o;
-        }
-
-        private string Generate_SignalMethodHandler(InterfaceItemDescription m)
-        {
-            string o = "";
-            bool first = true;
-
-            o += "function " + CreateHandlerFunctionName(m) + "(";
-
-            foreach (ParamDescription p in m.ParametersIn)
-            {
-                if (first) first = false; else o += ", ";
-                o += p.Name;
-            }
-
-            o += ")\r\n";
-            o += "{\r\n";
-            o += "    var v='';\r\n";
-
-            foreach (ParamDescription p in m.ParametersIn)
-            {
-                o += "v += ' ' + " + p.Name + ";\r\n";
-            }
-
-            o += "    document.getElementById('" + CreateHandlerFunctionName(m) + "').innerText = v;\r\n";
-
-            o += "}";
-
-            return o;
-        }
-
-        string m_Script = "";
-        XmlElement m_BodyElement = null;
     }
 }

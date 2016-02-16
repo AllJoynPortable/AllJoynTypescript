@@ -509,14 +509,14 @@
                     var d: Array<any> = v;
 
                     for (var k of d) {
-                        this.body_WriteObject(this.GetSubSignature(sig, 1), k);
+                        this.body_WriteObject(MsgGeneric.GetSubSignature(sig, 1), k);
                     }
                 }
                 else {
                     var l: Array<any> = v;
 
                     for (var o of l) {
-                        this.body_WriteObject(this.GetSubSignature(sig, 1), o);
+                        this.body_WriteObject(MsgGeneric.GetSubSignature(sig, 1), o);
                     }
                 }
 
@@ -528,9 +528,9 @@
 
                 this.Align(8);
 
-                var ss: string = this.GetSubSignature(sig, 1);
+                var ss: string = MsgGeneric.GetSubSignature(sig, 1);
                 this.body_WriteObject(ss, kv[0]);
-                ss = this.GetSubSignature(sig, 1 + ss.length);
+                ss = MsgGeneric.GetSubSignature(sig, 1 + ss.length);
                 this.body_WriteObject(ss, kv[1]);
             }
             else if (sig[0] == '(') {
@@ -538,7 +538,7 @@
                 var idx: number = 1;
 
                 for (var o of (v as Array<any>)) {
-                    var ss: string = this.GetSubSignature(sig, idx);
+                    var ss: string = MsgGeneric.GetSubSignature(sig, idx);
                     idx += ss.length;
                     this.body_WriteObject(ss, o);
                 }
@@ -737,7 +737,7 @@
             if (sig[0] == 'a') {
                 var size: number = this.body_ReadArrayLength();
                 var end: number = this.m_position + size;
-                var ss: string = this.GetSubSignature(sig, 1);
+                var ss: string = MsgGeneric.GetSubSignature(sig, 1);
 
                 if (ss[0] == '{') {
                     var ret: Array<any> = new Array<any>();
@@ -762,10 +762,10 @@
             else if (sig[0] == '{') {
                 this.Align(8);
 
-                var subSignature: string = this.GetSubSignature(sig, 1);
+                var subSignature: string = MsgGeneric.GetSubSignature(sig, 1);
 
                 var k: any = this.body_ReadObject(subSignature);
-                subSignature = this.GetSubSignature(sig, 1 + subSignature.length);
+                subSignature = MsgGeneric.GetSubSignature(sig, 1 + subSignature.length);
                 var v: any = this.body_ReadObject(subSignature);
 
                 var ret: Array<any> = new Array<any>(2);
@@ -782,7 +782,7 @@
 
                 while (sig[idx + subSignature.length] != ')') {
                     idx += subSignature.length;
-                    subSignature = this.GetSubSignature(sig, idx);
+                    subSignature = MsgGeneric.GetSubSignature(sig, idx);
 
                     ret.push(this.body_ReadObject(subSignature));
                 }
@@ -1032,7 +1032,7 @@
         /*  SIGNATURE HELPER                                                                                       */
         /* ------------------------------------------------------------------------------------------------------- */
 
-        public ValidateSignature(signature: string, single: boolean): boolean {
+        public static ValidateSignature(signature: string, single: boolean): boolean {
             if ((null == signature) || (0 == signature.length))
                 return false;
 
@@ -1041,7 +1041,7 @@
 
 
             while (idx < signature.length) {
-                var ss: string = this.GetSubSignature(signature, idx);
+                var ss: string = MsgGeneric.GetSubSignature(signature, idx);
 
                 if (null == ss)
                     return false;
@@ -1056,8 +1056,8 @@
             return true;
         }
 
-        public GetSubSignature(signature: string, idx: number): string {
-            var end: number = this.GetSubSignatureEnd(signature, idx);
+        public static GetSubSignature(signature: string, idx: number): string {
+            var end: number = MsgGeneric.GetSubSignatureEnd(signature, idx);
 
             if (end > 0) {
                 return signature.substring(idx, end);
@@ -1067,7 +1067,7 @@
             }
         }
 
-        public GetSubSignatureEnd(signature: string, idx: number): number {
+        public static GetSubSignatureEnd(signature: string, idx: number): number {
             // check if index is correct in first place
             if ((null == signature) || (idx >= signature.length) || (idx < 0))
                 return -1;
@@ -1093,7 +1093,7 @@
                     idx++;
 
                     while (idx > 0) {
-                        idx = this.GetSubSignatureEnd(signature, idx);
+                        idx = MsgGeneric.GetSubSignatureEnd(signature, idx);
 
                         if (idx > 0) {
                             if (idx >= signature.length) {
@@ -1110,13 +1110,13 @@
                     return idx;
 
                 case 'a':
-                    return this.GetSubSignatureEnd(signature, idx + 1);
+                    return MsgGeneric.GetSubSignatureEnd(signature, idx + 1);
 
                 case '{':
-                    idx = this.GetSubSignatureEnd(signature, idx + 1);
+                    idx = MsgGeneric.GetSubSignatureEnd(signature, idx + 1);
 
                     if (idx > 0) {
-                        idx = this.GetSubSignatureEnd(signature, idx);
+                        idx = MsgGeneric.GetSubSignatureEnd(signature, idx);
 
                         if (idx > 0) {
                             if ((idx >= signature.length) || (signature[idx] != '}')) {
