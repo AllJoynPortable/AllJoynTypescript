@@ -125,61 +125,30 @@ var Generator;
             //fld.MinWidth = 200;
             fld_container.appendChild(fld);
         };
-        //UInt64 GetUint64FromField(string fld)
-        //{
-        //    UInt64 v = 0;
-        //    try
-        //    {
-        //        v = Convert.ToUInt64((FindName(fld) as TextBox).Text);
-        //    }
-        //    catch (Exception) { };
-        //    return v;
-        //}
-        //Int64 GetInt64FromField(string fld)
-        //{
-        //    Int64 v = 0;
-        //    try
-        //    {
-        //        v = Convert.ToInt64((FindName(fld) as TextBox).Text);
-        //    }
-        //    catch (Exception) { };
-        //    return v;
-        //}
-        //Double GetDoubleFromField(string fld)
-        //{
-        //    Double v = 0;
-        //    try
-        //    {
-        //        v = Convert.ToDouble((FindName(fld) as TextBox).Text);
-        //    }
-        //    catch (Exception) { };
-        //    return v;
-        //}
-        //bool GetBooleanFromField(string fld)
-        //{
-        //    bool v = false;
-        //    try
-        //    {
-        //        if ((FindName(fld) as TextBox).Text == "true")
-        //            v = true;
-        //    }
-        //    catch (Exception) { };
-        //    return v;
-        //}
-        //string GetStringFromField(string fld)
-        //{
-        //    string v = "";
-        //    try
-        //    {
-        //        v = (FindName(fld) as TextBox).Text;
-        //    }
-        //    catch (Exception) { };
-        //    return v;
-        //}
-        //bool FieldExists(string fld)
-        //{
-        //    return FindName(fld) != null;
-        //}
+        CodeGeneratorHTML.prototype.GetNumberFromField = function (fld) {
+            var v = 0;
+            try {
+                v = parseFloat(this.GetStringFromField(fld));
+            }
+            catch (Exception) { }
+            ;
+            return v;
+        };
+        CodeGeneratorHTML.prototype.GetBooleanFromField = function (fld) {
+            return this.GetStringFromField(fld) == "true";
+        };
+        CodeGeneratorHTML.prototype.GetStringFromField = function (fld) {
+            var v = "";
+            try {
+                v = this.m_Document.getElementById(fld).value;
+            }
+            catch (Exception) { }
+            ;
+            return v;
+        };
+        CodeGeneratorHTML.prototype.FieldExists = function (fld) {
+            return this.m_Document.getElementById(fld) != null;
+        };
         CodeGeneratorHTML.prototype.CreateFieldsFromSignature = function (signature, prefix, fld_idx) {
             var idx = 0;
             while (idx < signature.length) {
@@ -254,126 +223,110 @@ var Generator;
         //    signature = SignatureHelper.GetSubSignature(signature, 1);
         //    CreateFieldsFromSignature(signature, prefix, cnt);
         //}
-        //private List<object> CreateDataFromFields(string signature)
-        //{
-        //    int fld_idx = 0;
-        //    int idx = 0;
-        //    List<object> flds = new List<object>();
-        //    while (idx < signature.Length)
-        //    {
-        //        string subSignature = SignatureHelper.GetSubSignature(signature, idx);
-        //        if (null == subSignature)
-        //            break;
-        //        object fld = CreateDataFromField(subSignature, "xparamsx", fld_idx++);
-        //        idx += subSignature.Length;
-        //        if (null != fld)
-        //            flds.Add(fld);
-        //    }
-        //    return flds;
-        //}
-        //private object CreateDataFromField(string signature, string prefix, int fld_idx)
-        //{
-        //    object v = null;
-        //    string subprefix = prefix + "-" + fld_idx.ToString();
-        //    string subSignature = SignatureHelper.GetSubSignature(signature, 0);
-        //    switch (subSignature[0])
-        //    {
-        //        case 'y':
-        //            v = (byte)GetInt64FromField(subprefix);
-        //            break;
-        //        case 'n':
-        //            v = (Int16)GetInt64FromField(subprefix);
-        //            break;
-        //        case 'q':
-        //            v = (UInt16)GetInt64FromField(subprefix);
-        //            break;
-        //        case 'i':
-        //            v = (Int32)GetInt64FromField(subprefix);
-        //            break;
-        //        case 'u':
-        //            v = (UInt32)GetInt64FromField(subprefix);
-        //            break;
-        //        case 's':
-        //            v = GetStringFromField(subprefix);
-        //            break;
-        //        case 'o':
-        //            v = GetStringFromField(subprefix);
-        //            break;
-        //        case 'g':
-        //            v = GetStringFromField(subprefix);
-        //            break;
-        //        case 'x':
-        //            v = GetInt64FromField(subprefix);
-        //            break;
-        //        case 't':
-        //            v = GetUint64FromField(subprefix);
-        //            break;
-        //        case 'd':
-        //            v = GetDoubleFromField(subprefix);
-        //            break;
-        //        case 'b':
-        //            v = GetBooleanFromField(subprefix);
-        //            break;
-        //        case '(':
-        //            {
-        //                List<object> flds = new List<object>();
-        //                int sub_fld_idx = 0;
-        //                int idx = 0;
-        //                subSignature = subSignature.Substring(1, subSignature.Length - 2);
-        //                while (idx < subSignature.Length)
-        //                {
-        //                    string subSubSignature = SignatureHelper.GetSubSignature(subSignature, idx);
-        //                    object fld = CreateDataFromField(subSubSignature, prefix + "-" + fld_idx.ToString(), sub_fld_idx++);
-        //                    idx += subSubSignature.Length;
-        //                    if (null != fld)
-        //                        flds.Add(fld);
-        //                }
-        //                v = flds;
-        //            }
-        //            break;
-        //        case '{':
-        //            string kSignature = SignatureHelper.GetSubSignature(subSignature, 1);
-        //            string vSignature = SignatureHelper.GetSubSignature(subSignature, 1 + kSignature.Length);
-        //            KeyValuePair<object, object> kv = new KeyValuePair<object, object>(
-        //                CreateDataFromField(kSignature, prefix + "-" + fld_idx.ToString(), 0),
-        //                CreateDataFromField(kSignature, prefix + "-" + fld_idx.ToString(), 1));
-        //            v = kv;
-        //            break;
-        //        case 'a':
-        //            {
-        //                if (subSignature[1] == '{')
-        //                {
-        //                    Dictionary<object, object> flds = new Dictionary<object, object>();
-        //                    object fld = null;
-        //                    int sub_fld_idx = 0;
-        //                    while (FieldExists(prefix + "-" + fld_idx.ToString() + "-" + sub_fld_idx))
-        //                    {
-        //                        fld = CreateDataFromField(SignatureHelper.GetSubSignature(subSignature, 1), prefix + "-" + fld_idx.ToString(), sub_fld_idx++);
-        //                        if (null != fld)
-        //                            flds.Add(((KeyValuePair<object, object>)fld).Key, ((KeyValuePair<object, object>)fld).Value);
-        //                    }
-        //                    v = flds;
-        //                }
-        //                else
-        //                {
-        //                    List<object> flds = new List<object>();
-        //                    object fld = null;
-        //                    int sub_fld_idx = 0;
-        //                    while (FieldExists(prefix + "-" + fld_idx.ToString() + "-" + sub_fld_idx))
-        //                    {
-        //                        fld = CreateDataFromField(SignatureHelper.GetSubSignature(subSignature, 1), prefix + "-" + fld_idx.ToString(), sub_fld_idx++);
-        //                        if (null != fld) flds.Add(fld);
-        //                    }
-        //                    v = flds;
-        //                }
-        //            }
-        //            break;
-        //        default:
-        //            v = null; // XXX - more types
-        //            break;
-        //    }
-        //    return v;
-        //}
+        CodeGeneratorHTML.prototype.CreateDataFromFields = function (signature) {
+            var fld_idx = 0;
+            var idx = 0;
+            var flds = new Array();
+            while (idx < signature.length) {
+                var subSignature = AJ.MsgGeneric.GetSubSignature(signature, idx);
+                if (null == subSignature)
+                    break;
+                var fld = this.CreateDataFromField(subSignature, "xparamsx", fld_idx++);
+                idx += subSignature.length;
+                if (null != fld)
+                    flds.push(fld);
+            }
+            return flds;
+        };
+        CodeGeneratorHTML.prototype.CreateDataFromField = function (signature, prefix, fld_idx) {
+            var v = null;
+            var subprefix = prefix + "-" + fld_idx;
+            var subSignature = AJ.MsgGeneric.GetSubSignature(signature, 0);
+            switch (subSignature[0]) {
+                case 'y':
+                case 'n':
+                case 'q':
+                case 'i':
+                case 'u':
+                    v = this.GetNumberFromField(subprefix);
+                    break;
+                case 's':
+                    v = this.GetStringFromField(subprefix);
+                    break;
+                case 'o':
+                    v = this.GetStringFromField(subprefix);
+                    break;
+                case 'g':
+                    v = this.GetStringFromField(subprefix);
+                    break;
+                case 'x':
+                    v = this.GetNumberFromField(subprefix);
+                    break;
+                case 't':
+                    v = this.GetNumberFromField(subprefix);
+                    break;
+                case 'd':
+                    v = this.GetNumberFromField(subprefix);
+                    break;
+                case 'b':
+                    v = this.GetBooleanFromField(subprefix);
+                    break;
+                case '(':
+                    {
+                        var flds = new Array();
+                        var sub_fld_idx = 0;
+                        var idx = 0;
+                        subSignature = subSignature.substr(1, subSignature.length - 2);
+                        while (idx < subSignature.length) {
+                            var subSubSignature = AJ.MsgGeneric.GetSubSignature(subSignature, idx);
+                            var fld = this.CreateDataFromField(subSubSignature, prefix + "-" + fld_idx, sub_fld_idx++);
+                            idx += subSubSignature.length;
+                            if (null != fld)
+                                flds.push(fld);
+                        }
+                        v = flds;
+                    }
+                    break;
+                case '{':
+                    var kSignature = AJ.MsgGeneric.GetSubSignature(subSignature, 1);
+                    var vSignature = AJ.MsgGeneric.GetSubSignature(subSignature, 1 + kSignature.length);
+                    var kv = new Array(2);
+                    kv[0] = this.CreateDataFromField(kSignature, prefix + "-" + fld_idx, 0);
+                    kv[1] = this.CreateDataFromField(vSignature, prefix + "-" + fld_idx, 1);
+                    v = kv;
+                    break;
+                case 'a':
+                    {
+                        if (subSignature[1] == '{') {
+                            var flds = new Array();
+                            var fld = null;
+                            var sub_fld_idx = 0;
+                            while (this.FieldExists(prefix + "-" + fld_idx + "-" + sub_fld_idx)) {
+                                fld = this.CreateDataFromField(AJ.MsgGeneric.GetSubSignature(subSignature, 1), prefix + "-" + fld_idx, sub_fld_idx++);
+                                if (null != fld)
+                                    flds.push(fld);
+                            }
+                            v = flds;
+                        }
+                        else {
+                            var flds = new Array();
+                            var fld = null;
+                            var sub_fld_idx = 0;
+                            while (this.FieldExists(prefix + "-" + fld_idx + "-" + sub_fld_idx)) {
+                                fld = this.CreateDataFromField(AJ.MsgGeneric.GetSubSignature(subSignature, 1), prefix + "-" + fld_idx, sub_fld_idx++);
+                                if (null != fld)
+                                    flds.push(fld);
+                            }
+                            v = flds;
+                        }
+                    }
+                    break;
+                default:
+                    v = null; // XXX - more types
+                    break;
+            }
+            return v;
+        };
         CodeGeneratorHTML.prototype.CreateHandlerFunctionName = function (m) {
             return "handle" + this.CreateItemName(m);
         };
