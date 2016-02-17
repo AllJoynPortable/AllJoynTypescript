@@ -34,8 +34,10 @@ var AllJoynTsApp = (function () {
         this.m_CreateManufacturer = Generator.DEFAULT_MANUFACTURER;
         this.m_CreateModelNumber = Generator.DEFAULT_MODEL_NUMBER;
         this.m_CreateLocked = false;
-        this.m_CreateTemplateTS = "";
-        this.m_CreateTemplateWebSocketTS = "";
+        this.m_TsMsg = "";
+        this.m_TsConnectorBase = "";
+        this.m_TsConnectorWebSocket = "";
+        this.m_TsApplicationBase = "";
         // explore variables
         this.m_ExploreConnector = null;
         // setup variables
@@ -44,8 +46,6 @@ var AllJoynTsApp = (function () {
         this.m_ConnectionWebsocketParam = "ws://127.0.0.1:8088";
         this.m_CreateIntrospectionXml = Generator.DEFAULT_APP_INTROSPECTION_XML.replace(/></g, ">\r\n<");
         //(window as any).editor.setValue(this.introspectionXml);
-        this.RetrieveTemplate("template.ts.txt", "m_CreateTemplateTS");
-        this.RetrieveTemplate("template-websocket.ts.txt", "m_CreateTemplateWebSocketTS");
         this.RetrieveTemplate("front.html", "m_HtmlFront");
         this.RetrieveTemplate("bootstrap.html", "m_HtmlBootstrap");
         this.RetrieveTemplate("create.html", "m_HtmlCreate");
@@ -53,6 +53,10 @@ var AllJoynTsApp = (function () {
         this.RetrieveTemplate("samples.html", "m_HtmlSamples");
         this.RetrieveTemplate("setup.html", "m_HtmlSetup");
         this.RetrieveTemplate("help.html", "m_HtmlHelp");
+        this.RetrieveTemplate("alljoyn/alljoyn-msg.ts", "m_TsMsg");
+        this.RetrieveTemplate("alljoyn/alljoyn-connector-base.ts", "m_TsConnectorBase");
+        this.RetrieveTemplate("alljoyn/alljoyn-connector-websocket.ts", "m_TsConnectorWebSocket");
+        this.RetrieveTemplate("alljoyn/alljoyn-application-base.ts", "m_TsApplicationBase");
     }
     AllJoynTsApp.prototype.start = function () {
     };
@@ -200,11 +204,11 @@ var AllJoynTsApp = (function () {
             gen.SetIntrospectionXml(xml);
             gen.SetIconData(Generator.DEFAULT_DEVICE_ICON_MIME_TYPE, Generator.DEFAULT_DEVICE_ICON_URL, Generator.DEFAULT_DEVICE_ICON);
             gen.SetDeviceData(this.m_CreateApplicationId, this.m_CreateApplicationName, this.m_CreateDeviceId, this.m_CreateDeviceName, this.m_CreateManufacturer, this.m_CreateModelNumber);
-            this.m_CreateCodeTs = this.m_CreateTemplateTS;
-            this.m_CreateCodeTs = this.m_CreateCodeTs.replace("/*WRITER-CODE-HERE*/", gen.GenerateWriters());
-            this.m_CreateCodeTs = this.m_CreateCodeTs.replace("/*READER-CODE-HERE*/", gen.GenerateReaders());
-            this.m_CreateCodeTs = this.m_CreateCodeTs.replace("/*APPLICATION-CODE-HERE*/", gen.GenerateApplicationCode());
-            this.m_CreateCodeTs = this.m_CreateCodeTs.replace("/*CONNECTOR-CODE-HERE*/", this.m_CreateTemplateWebSocketTS);
+            this.m_CreateCodeTs = this.m_TsMsg + this.m_TsConnectorBase + this.m_TsConnectorWebSocket + this.m_TsApplicationBase;
+            // XXX - add readers & writers
+            //this.m_CreateCodeTs = this.m_CreateCodeTs.replace("/*WRITER-CODE-HERE*/", gen.GenerateWriters());
+            //this.m_CreateCodeTs = this.m_CreateCodeTs.replace("/*READER-CODE-HERE*/", gen.GenerateReaders());
+            this.m_CreateCodeTs += gen.GenerateApplicationCode();
             this.m_CreateCodeJs = "";
         }
     };
