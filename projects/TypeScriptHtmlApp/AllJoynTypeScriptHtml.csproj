@@ -58,7 +58,6 @@
     <Content Include="styles\menu.css" />
     <Content Include="styles\ttcn.css" />
     <Content Include="styles\zenburn.css" />
-    <Content Include="template-websocket.js.txt" />
     <Content Include="typescript.js" />
     <Content Include="web.config" />
     <Content Include="xml.js" />
@@ -73,6 +72,7 @@
     <TypeScriptCompile Include="app.ts" />
     <Content Include="template.ts.txt" />
     <Content Include="template-websocket.ts.txt" />
+    <TypeScriptCompile Include="generator-html.ts" />
     <TypeScriptCompile Include="TypeScriptConversion.ts" />
   </ItemGroup>
   <ItemGroup>
