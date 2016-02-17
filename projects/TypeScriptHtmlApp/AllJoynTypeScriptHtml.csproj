@@ -144,6 +144,8 @@ copy $(ProjectDir)..\..\lib\ts\alljoyn-connector-base.ts $(ProjectDir)alljoyn\al
 copy $(ProjectDir)..\..\lib\ts\alljoyn-connector-websocket.ts $(ProjectDir)alljoyn\alljoyn-connector-websocket.ts
 copy $(ProjectDir)..\..\lib\ts\alljoyn-msg.ts $(ProjectDir)alljoyn\alljoyn-msg.ts
 copy $(ProjectDir)..\..\lib\ts\alljoyn-msg-ext.ts $(ProjectDir)alljoyn\alljoyn-msg-ext.ts
+copy $(ProjectDir)..\..\lib\ts\generator.ts $(ProjectDir)generator.ts
+copy $(ProjectDir)..\..\lib\ts\generator.js $(ProjectDir)generator.js
 </PostBuildEvent>
   </PropertyGroup>
 </Project>

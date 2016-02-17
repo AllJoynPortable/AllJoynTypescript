@@ -209,11 +209,7 @@ class AllJoynTsApp {
             //this.m_CreateCodeTs = this.m_CreateCodeTs.replace("/*WRITER-CODE-HERE*/", gen.GenerateWriters());
             //this.m_CreateCodeTs = this.m_CreateCodeTs.replace("/*READER-CODE-HERE*/", gen.GenerateReaders());
 
-            // XXX - wrap it in namespace for timebeing
-            this.m_CreateCodeTs += "namespace AJ {\r\n";
             this.m_CreateCodeTs += gen.GenerateApplicationCode();
-            this.m_CreateCodeTs += "};\r\n";
-            //this.m_CreateCodeTs = this.m_CreateCodeTs.replace("/*CONNECTOR-CODE-HERE*/", this.m_CreateTemplateWebSocketTS);
             this.m_CreateCodeJs = "";
         }
     }

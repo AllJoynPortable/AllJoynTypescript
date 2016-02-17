@@ -435,6 +435,7 @@ var Generator;
         CodeGeneratorTS.prototype.GenerateApplicationCode = function () {
             var o = "";
             o += "\r\n";
+            o += "namespace AJ {\r\n";
             o += "    export class Application extends ApplicationBase {\r\n";
             o += this.GenerateInterfaceHandler();
             if (!this.m_IsConsumer) {
@@ -484,6 +485,7 @@ var Generator;
                 }
             }
             o += "    };\r\n";
+            o += "};\r\n";
             o += "\r\n";
             return o;
         };
