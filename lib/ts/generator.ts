@@ -660,10 +660,10 @@
 
             if ("void" != tstype) {
 
-                o += "            var ret: " + tstype + " = " + this.CreateHandlerFunctionName(m) + "(connection";
+                o += "            var ret: " + tstype + " = this." + this.CreateHandlerFunctionName(m) + "(connection";
             }
             else {
-                o += "            " + this.CreateHandlerFunctionName(m) + "(connection";
+                o += "            this." + this.CreateHandlerFunctionName(m) + "(connection";
             }
 
             for (var p of m.m_ParametersIn)

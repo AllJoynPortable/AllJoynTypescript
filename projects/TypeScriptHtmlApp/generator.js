@@ -526,10 +526,10 @@ var Generator;
             tstype = this.TypeToTsType((m.m_ParametersReply.length > 0) ? m.m_ParametersReply[0].m_DataType : null);
             generic_type_name = this.DbusTypeToFunctionPostfix((m.m_ParametersReply.length > 0) ? m.m_ParametersReply[0].m_DataType : null);
             if ("void" != tstype) {
-                o += "            var ret: " + tstype + " = " + this.CreateHandlerFunctionName(m) + "(connection";
+                o += "            var ret: " + tstype + " = this." + this.CreateHandlerFunctionName(m) + "(connection";
             }
             else {
-                o += "            " + this.CreateHandlerFunctionName(m) + "(connection";
+                o += "            this." + this.CreateHandlerFunctionName(m) + "(connection";
             }
             for (var _b = 0, _c = m.m_ParametersIn; _b < _c.length; _b++) {
                 var p = _c[_b];
