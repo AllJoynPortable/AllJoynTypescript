@@ -168,10 +168,10 @@ class AllJoynTsApp {
             this.AppendLog("log-create", "<br/>AUTH << " + d);
         }
         else if (e == AJ.ConnectorEventType.ConnectorEventMsgSent) {
-            this.AppendLog("log-create", "<br/>Message Sent: " + d.hdr_GetMsgType() + " " + d.hdr_GetMember());
+            this.AppendLog("log-create", "<br/>DBUS >> " + d.hdr_GetMsgType() + " " + d.hdr_GetMember());
         }
         else if (e == AJ.ConnectorEventType.ConnectorEventMsgReceived) {
-            this.AppendLog("log-create", "<br/>Message Received: " + d.hdr_GetMsgType() + " " + d.hdr_GetMember());
+            this.AppendLog("log-create", "<br/>DBUS << " + d.hdr_GetMsgType() + " " + d.hdr_GetMember());
         }
     }
 
