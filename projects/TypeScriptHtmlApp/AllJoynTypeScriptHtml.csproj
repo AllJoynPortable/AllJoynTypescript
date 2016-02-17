@@ -63,15 +63,27 @@
     <Content Include="xml.js" />
   </ItemGroup>
   <ItemGroup>
-    <TypeScriptCompile Include="..\..\lib\ts\generated.ts">
-      <Link>generated.ts</Link>
+    <TypeScriptCompile Include="..\..\lib\ts\alljoyn-application.ts">
+      <Link>alljoyn\alljoyn-application.ts</Link>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="..\..\lib\ts\alljoyn-connector-base.ts">
+      <Link>alljoyn\alljoyn-connector-base.ts</Link>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="..\..\lib\ts\alljoyn-connector-websocket.ts">
+      <Link>alljoyn\alljoyn-connector-websocket.ts</Link>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="..\..\lib\ts\alljoyn-msg-ext.ts">
+      <Link>alljoyn\alljoyn-msg-ext.ts</Link>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="..\..\lib\ts\alljoyn-msg.ts">
+      <Link>alljoyn\alljoyn-msg.ts</Link>
     </TypeScriptCompile>
     <TypeScriptCompile Include="..\..\lib\ts\generator.ts">
       <Link>generator.ts</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </TypeScriptCompile>
+    <TypeScriptCompile Include="alljoyn\alljoyn-application-base.ts" />
     <TypeScriptCompile Include="app.ts" />
-    <Content Include="template.ts.txt" />
-    <Content Include="template-websocket.ts.txt" />
     <TypeScriptCompile Include="generator-html.ts" />
     <TypeScriptCompile Include="TypeScriptConversion.ts" />
   </ItemGroup>
@@ -119,4 +131,19 @@
     <TypeScriptSourceMap>false</TypeScriptSourceMap>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets')" />
+  <PropertyGroup>
+    <PostBuildEvent>copy $(ProjectDir)..\..\lib\ts\alljoyn-application.js $(ProjectDir)alljoyn\alljoyn-application.js
+copy $(ProjectDir)..\..\lib\ts\alljoyn-application-base.js $(ProjectDir)alljoyn\alljoyn-application-base.js
+copy $(ProjectDir)..\..\lib\ts\alljoyn-connector-base.js $(ProjectDir)alljoyn\alljoyn-connector-base.js
+copy $(ProjectDir)..\..\lib\ts\alljoyn-connector-websocket.js $(ProjectDir)alljoyn\alljoyn-connector-websocket.js
+copy $(ProjectDir)..\..\lib\ts\alljoyn-msg.js $(ProjectDir)alljoyn\alljoyn-msg.js
+copy $(ProjectDir)..\..\lib\ts\alljoyn-msg-ext.js $(ProjectDir)alljoyn\alljoyn-msg-ext.js
+copy $(ProjectDir)..\..\lib\ts\alljoyn-application.ts $(ProjectDir)alljoyn\alljoyn-application.ts
+copy $(ProjectDir)..\..\lib\ts\alljoyn-application-base.ts $(ProjectDir)alljoyn\alljoyn-application-base.ts
+copy $(ProjectDir)..\..\lib\ts\alljoyn-connector-base.ts $(ProjectDir)alljoyn\alljoyn-connector-base.ts
+copy $(ProjectDir)..\..\lib\ts\alljoyn-connector-websocket.ts $(ProjectDir)alljoyn\alljoyn-connector-websocket.ts
+copy $(ProjectDir)..\..\lib\ts\alljoyn-msg.ts $(ProjectDir)alljoyn\alljoyn-msg.ts
+copy $(ProjectDir)..\..\lib\ts\alljoyn-msg-ext.ts $(ProjectDir)alljoyn\alljoyn-msg-ext.ts
+</PostBuildEvent>
+  </PropertyGroup>
 </Project>

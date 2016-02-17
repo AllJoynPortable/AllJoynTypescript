@@ -1,15 +1,11 @@
-﻿    //==============================================================================================================
-    // WEB SOCKET SPECIFIC CODE BELOW
-    //==============================================================================================================
-
+﻿namespace AJ {
     export class ConnectorWebSocket extends ConnectorBase {
 
         m_socket: any;
-        m_ConnectionId: number;
 
         protected ConnectTransport() {
             var _this_ = this;
-            this.m_socket = new WebSocket("ws://localhost:8088", "binary");
+            this.m_socket = new WebSocket("ws://localhost:8088/", "binary");
             this.m_socket.binaryType = "arraybuffer";
 
             this.m_socket.onopen = function (event: any) {
@@ -22,6 +18,13 @@
 
             this.m_socket.onerror = function (e: any) {
                 _this_.OnTransportConnected(false);
+            }
+        }
+
+        protected DisconnectTransport() {
+            if (this.m_socket != null) {
+                (this.m_socket as WebSocket).close();
+                this.m_socket = null;
             }
         }
 
@@ -41,3 +44,4 @@
             // nothing to do in this implementation
         }
     }
+}
