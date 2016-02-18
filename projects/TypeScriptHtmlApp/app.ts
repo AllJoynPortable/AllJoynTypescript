@@ -295,13 +295,15 @@ class AllJoynTsApp {
 
         this.m_ExploreConnector.SetAnnouncementListener(this.onExploreAnnouncement);
         this.m_ExploreConnector.ConnectAndAuthenticate();
+    }
 
+    public onExploreAnnouncement(introspection: string) {
         // XXX - create some html
         var p: Generator.IntrospectionXmlParser = new Generator.IntrospectionXmlParser();
 
         // first, parse introspection xml
         try {
-            p.ParseXml(this.m_CreateIntrospectionXml);
+            p.ParseXml(introspection);
 
         } catch (e) {
             this.AppendLog("log-explore", "<br/>" + e);
@@ -314,9 +316,6 @@ class AllJoynTsApp {
 
         var el: HTMLDivElement = window.document.getElementById("explore-form") as HTMLDivElement;
         gen.GenerateForm(el, window.document);
-    }
-
-    public onExploreAnnouncement(introspection: string) {
     }
 
     private onExploreConnectorEvent(e: AJ.ConnectorEventType, d: any) {

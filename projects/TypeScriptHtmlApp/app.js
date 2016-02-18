@@ -274,11 +274,13 @@ var AllJoynTsApp = (function () {
         });
         this.m_ExploreConnector.SetAnnouncementListener(this.onExploreAnnouncement);
         this.m_ExploreConnector.ConnectAndAuthenticate();
+    };
+    AllJoynTsApp.prototype.onExploreAnnouncement = function (introspection) {
         // XXX - create some html
         var p = new Generator.IntrospectionXmlParser();
         // first, parse introspection xml
         try {
-            p.ParseXml(this.m_CreateIntrospectionXml);
+            p.ParseXml(introspection);
         }
         catch (e) {
             this.AppendLog("log-explore", "<br/>" + e);
@@ -288,8 +290,6 @@ var AllJoynTsApp = (function () {
         var gen = new Generator.CodeGeneratorHTML(p.m_Methods);
         var el = window.document.getElementById("explore-form");
         gen.GenerateForm(el, window.document);
-    };
-    AllJoynTsApp.prototype.onExploreAnnouncement = function (introspection) {
     };
     AllJoynTsApp.prototype.onExploreConnectorEvent = function (e, d) {
         if (e == AJ.ConnectorEventType.ConnectorEventConnected) {
