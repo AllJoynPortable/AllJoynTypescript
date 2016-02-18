@@ -272,24 +272,32 @@ var AllJoynTsApp = (function () {
         this.m_ExploreConnector.SetConnectorEvent(function (e, d) {
             self.onExploreConnectorEvent(e, d);
         });
-        this.m_ExploreConnector.SetAnnouncementListener(this.onExploreAnnouncement);
+        this.m_ExploreConnector.SetAnnouncementListener(function (sender, q1, q2, o1, o2) {
+            self.onExploreAnnouncement(sender, q1, q2, o1, o2);
+        });
         this.m_ExploreConnector.ConnectAndAuthenticate();
     };
-    AllJoynTsApp.prototype.onExploreAnnouncement = function (introspection) {
+    AllJoynTsApp.prototype.onExploreAnnouncement = function (sender, q1, q2, o1, o2) {
+        var introspection = "";
+        this.AppendLog("log-explore", "<br/>ANNOUNCEMENT RECEIVED FROM: " + sender);
+        for (var _i = 0, o1_1 = o1; _i < o1_1.length; _i++) {
+            var o = o1_1[_i];
+            this.AppendLog("log-explore", "<br/>" + o[0] + " - " + o[1][0]);
+        }
+        return;
         // XXX - create some html
-        var p = new Generator.IntrospectionXmlParser();
-        // first, parse introspection xml
-        try {
-            p.ParseXml(introspection);
-        }
-        catch (e) {
-            this.AppendLog("log-explore", "<br/>" + e);
-        }
-        this.AppendLog("log-explore", "<br/>PARSER FINISHED: " + p.m_ObjectPath + " " + p.m_Interface);
-        // create code generator
-        var gen = new Generator.CodeGeneratorHTML(p.m_Methods);
-        var el = window.document.getElementById("explore-form");
-        gen.GenerateForm(el, window.document);
+        //var p: Generator.IntrospectionXmlParser = new Generator.IntrospectionXmlParser();
+        //// first, parse introspection xml
+        //try {
+        //    p.ParseXml(introspection);
+        //} catch (e) {
+        //    this.AppendLog("log-explore", "<br/>" + e);
+        //}
+        //this.AppendLog("log-explore", "<br/>PARSER FINISHED: " + p.m_ObjectPath + " " + p.m_Interface);
+        //// create code generator
+        //var gen: Generator.CodeGeneratorHTML = new Generator.CodeGeneratorHTML(p.m_Methods);
+        //var el: HTMLDivElement = window.document.getElementById("explore-form") as HTMLDivElement;
+        //gen.GenerateForm(el, window.document);
     };
     AllJoynTsApp.prototype.onExploreConnectorEvent = function (e, d) {
         if (e == AJ.ConnectorEventType.ConnectorEventConnected) {

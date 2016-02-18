@@ -52,8 +52,14 @@
             return this.m_LocalNodeId;
         }
 
-        public SetAnnouncementListener(listener: any) {
+        public SetAnnouncementListener(listener: (sender: string, q1: number, q2: number, o1: any, o2: any) => void) {
             this.m_AnnouncementListener = listener;
+        }
+
+        public NotifyAnnouncement(sender: string, q1: number, q2: number, o1: number, o2: number) {
+            if (this.m_AnnouncementListener != null) {
+                this.m_AnnouncementListener(sender, q1, q2, o1, o2);
+            }
         }
 
         protected OnTransportConnected(ok: boolean) {
@@ -291,7 +297,7 @@
         private m_EventHandler: (e: ConnectorEventType, d: any) => void = null;
         private m_CalledMethods: Array<MsgGeneric> = new Array<MsgGeneric>();
         private m_Application: ApplicationBase = null;
-        private m_AnnouncementListener: any = null;
+        private m_AnnouncementListener: (sender: string, q1: number, q2: number, o1: any, o2: any) => void = null;
     };
 
     //==============================================================================================================
@@ -345,7 +351,7 @@
             var q2: number = msg.body_Read_Q();
             var o1: any = msg.body_ReadObject("a(oas)");
             var o2: any = msg.body_ReadObject("a{sv}");
-            this.handle__Announce(connection, q1, q2, o1, o2);
+            this.handle__Announce(connection, msg.hdr_GetSender(), q1, q2, o1, o2);
 
             return true;
         }
@@ -422,7 +428,8 @@
             return 0;
         }
 
-        private static handle__Announce(connection: ConnectorBase, q1: number, q2: number, o1: any, o2: any): void {
+        private static handle__Announce(connection: ConnectorBase, sender: string, q1: number, q2: number, o1: any, o2: any): void {
+            connection.NotifyAnnouncement(sender, q1, q2, o1, o2);
         }
     }
 

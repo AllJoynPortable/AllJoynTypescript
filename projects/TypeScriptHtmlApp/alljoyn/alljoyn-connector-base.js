@@ -55,6 +55,11 @@ var AJ;
         ConnectorBase.prototype.SetAnnouncementListener = function (listener) {
             this.m_AnnouncementListener = listener;
         };
+        ConnectorBase.prototype.NotifyAnnouncement = function (sender, q1, q2, o1, o2) {
+            if (this.m_AnnouncementListener != null) {
+                this.m_AnnouncementListener(sender, q1, q2, o1, o2);
+            }
+        };
         ConnectorBase.prototype.OnTransportConnected = function (ok) {
             if (ok) {
                 this.m_State = ConnectorState.StateAuthAnonumousSent;
@@ -291,7 +296,7 @@ var AJ;
             var q2 = msg.body_Read_Q();
             var o1 = msg.body_ReadObject("a(oas)");
             var o2 = msg.body_ReadObject("a{sv}");
-            this.handle__Announce(connection, q1, q2, o1, o2);
+            this.handle__Announce(connection, msg.hdr_GetSender(), q1, q2, o1, o2);
             return true;
         };
         org_alljoyn_about.signal__Announce = function (connection, q1, q2, o1, o2) {
@@ -350,7 +355,8 @@ var AJ;
         org_alljoyn_about.handle__GetObjectDescription = function (connection) {
             return 0;
         };
-        org_alljoyn_about.handle__Announce = function (connection, q1, q2, o1, o2) {
+        org_alljoyn_about.handle__Announce = function (connection, sender, q1, q2, o1, o2) {
+            connection.NotifyAnnouncement(sender, q1, q2, o1, o2);
         };
         return org_alljoyn_about;
     }());
