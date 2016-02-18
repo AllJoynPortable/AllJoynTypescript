@@ -363,6 +363,19 @@ class AllJoynTsApp {
         }
     }
 
+    private onMethodSignalCall(iface: string, ms: string) {
+        this.AppendLog("log-explore", "<br/>CALLING METHOD/SIGNAL: " + iface + " " + ms);
+
+
+        // create code generator
+        var gen: Generator.CodeGeneratorHTML = new Generator.CodeGeneratorHTML(null);
+
+
+        var data: any = gen.CreateDataFromFields(window.document, iface, "ss");
+
+        this.AppendLog("log-explore", "<br/>DATA: " + data[0] + " " + data[1]);
+
+    }
     //----------------------------------------------------------------------------------------------------------
     // SETUP VIEW
     //----------------------------------------------------------------------------------------------------------

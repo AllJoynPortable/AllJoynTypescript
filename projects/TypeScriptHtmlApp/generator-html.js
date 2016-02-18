@@ -29,7 +29,7 @@ var Generator;
                     var btn = this.m_Document.createElement("button");
                     this.m_BodyElement.appendChild(btn);
                     btn.innerText = "Send";
-                    btn.setAttribute("onclick", "___" + wrapper_name + "()");
+                    btn.setAttribute("onclick", "app.onMethodSignalCall('" + wrapper_name + "', '" + m.m_Name + "');");
                     // create horizontal line
                     hr = this.m_Document.createElement("hr");
                     this.m_BodyElement.appendChild(hr);
@@ -140,7 +140,10 @@ var Generator;
         CodeGeneratorHTML.prototype.GetStringFromField = function (fld) {
             var v = "";
             try {
-                v = this.m_Document.getElementById(fld).value;
+                var el = this.m_Document.getElementById(fld);
+                console.log(el);
+                v = el.value;
+                console.log(v);
             }
             catch (Exception) { }
             ;
@@ -223,15 +226,16 @@ var Generator;
         //    signature = SignatureHelper.GetSubSignature(signature, 1);
         //    CreateFieldsFromSignature(signature, prefix, cnt);
         //}
-        CodeGeneratorHTML.prototype.CreateDataFromFields = function (signature) {
+        CodeGeneratorHTML.prototype.CreateDataFromFields = function (document, prefix, signature) {
             var fld_idx = 0;
             var idx = 0;
             var flds = new Array();
+            this.m_Document = document;
             while (idx < signature.length) {
                 var subSignature = AJ.MsgGeneric.GetSubSignature(signature, idx);
                 if (null == subSignature)
                     break;
-                var fld = this.CreateDataFromField(subSignature, "xparamsx", fld_idx++);
+                var fld = this.CreateDataFromField(subSignature, prefix, fld_idx++);
                 idx += subSignature.length;
                 if (null != fld)
                     flds.push(fld);

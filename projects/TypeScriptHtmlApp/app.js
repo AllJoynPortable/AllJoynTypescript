@@ -327,6 +327,13 @@ var AllJoynTsApp = (function () {
             this.AppendLog("log-explore", "<br/>Message Received: " + d.hdr_GetMsgType() + " " + d.hdr_GetMember());
         }
     };
+    AllJoynTsApp.prototype.onMethodSignalCall = function (iface, ms) {
+        this.AppendLog("log-explore", "<br/>CALLING METHOD/SIGNAL: " + iface + " " + ms);
+        // create code generator
+        var gen = new Generator.CodeGeneratorHTML(null);
+        var data = gen.CreateDataFromFields(window.document, iface, "ss");
+        this.AppendLog("log-explore", "<br/>DATA: " + data[0] + " " + data[1]);
+    };
     //----------------------------------------------------------------------------------------------------------
     // SETUP VIEW
     //----------------------------------------------------------------------------------------------------------

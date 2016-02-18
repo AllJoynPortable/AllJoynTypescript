@@ -8,4 +8,4 @@ var AJ;
     AJ.ApplicationBase = ApplicationBase;
     ;
 })(AJ || (AJ = {}));
-//# sourceMappingURL=alljoyn-application-base.js.map
+//# sourceMappingURL=allljoyn-application-base.js.map
