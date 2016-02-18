@@ -576,7 +576,7 @@
     // org.freedesktop.DBus.Introspectable - producer
     //==============================================================================================================
 
-    class org_freedesktop_dbus_introspectable {
+    export class org_freedesktop_dbus_introspectable {
         public static _ProcessMsg(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {
             var member: string = msg.hdr_GetMember();
 
@@ -676,6 +676,26 @@
 
             return ret;
         }
+
+        public static method__Introspect(connection: ConnectorBase, target: string, iface: string, cb): void {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.freedesktop.DBus.Introspectable");
+            msg.hdr_SetObjectPath(iface);
+            msg.hdr_SetDestination(target);
+            msg.hdr_SetMember("Introspect");
+            if (null != connection.GetLocalNodeId()) msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            connection.SendMsgWithCallback(msg,
+                function () {
+                    msg = msg.m_Reply;
+                    msg.body_StartReading();
+                    var xml: string = msg.body_Read_S();
+                    if (null != cb) cb(connection, xml);
+                }
+            );
+        };
+
+
     }
 
     //==============================================================================================================

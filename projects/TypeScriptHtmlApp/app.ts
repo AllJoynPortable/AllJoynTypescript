@@ -300,35 +300,45 @@ class AllJoynTsApp {
     }
 
     public onExploreAnnouncement(sender: string, q1: number, q2: number, o1: any, o2: any): void {
-
-        var introspection: string = "";
-
+        var self = this;
         this.AppendLog("log-explore", "<br/>ANNOUNCEMENT RECEIVED FROM: " + sender);
 
         for (var o of o1) {
             this.AppendLog("log-explore", "<br/>" + o[0] + " - " + o[1][0]);
+
+            if (o[0] == "/About")
+                continue;
+
+            if (o[0] == "/About/DeviceIcon")
+                continue;
+
+            AJ.org_freedesktop_dbus_introspectable.method__Introspect(self.m_ExploreConnector, sender, o[0] as string, function (connection: AJ.ConnectorBase, xml: string) {
+
+                self.AppendLog("log-explore", "<br/>XML RECEIVED");
+
+                // XXX - create some html
+                var p: Generator.IntrospectionXmlParser = new Generator.IntrospectionXmlParser();
+
+                // first, parse introspection xml
+                try {
+                    p.ParseXml(xml);
+
+                } catch (e) {
+                    self.AppendLog("log-explore", "<br/>" + e);
+                }
+
+                self.AppendLog("log-explore", "<br/>PARSER FINISHED: " + p.m_ObjectPath + " " + p.m_Interface);
+
+                // create code generator
+                var gen: Generator.CodeGeneratorHTML = new Generator.CodeGeneratorHTML(p.m_Methods);
+
+                var el: HTMLDivElement = window.document.getElementById("explore-form") as HTMLDivElement;
+                gen.GenerateForm(el, window.document);
+            });
         }
 
         return;
 
-        // XXX - create some html
-        //var p: Generator.IntrospectionXmlParser = new Generator.IntrospectionXmlParser();
-
-        //// first, parse introspection xml
-        //try {
-        //    p.ParseXml(introspection);
-
-        //} catch (e) {
-        //    this.AppendLog("log-explore", "<br/>" + e);
-        //}
-
-        //this.AppendLog("log-explore", "<br/>PARSER FINISHED: " + p.m_ObjectPath + " " + p.m_Interface);
-
-        //// create code generator
-        //var gen: Generator.CodeGeneratorHTML = new Generator.CodeGeneratorHTML(p.m_Methods);
-
-        //var el: HTMLDivElement = window.document.getElementById("explore-form") as HTMLDivElement;
-        //gen.GenerateForm(el, window.document);
     }
 
     private onExploreConnectorEvent(e: AJ.ConnectorEventType, d: any) {
