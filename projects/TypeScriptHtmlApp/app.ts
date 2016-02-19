@@ -318,42 +318,33 @@ class AllJoynTsApp {
         var self = this;
         this.AppendLog("log-explore", "<br/>ANNOUNCEMENT RECEIVED FROM: " + sender);
 
+        var device: ExploreDeviceData = new ExploreDeviceData();
+        device.m_NodeId = sender;
+
         for (var o of o1) {
+            var iface: ExploreDeviceInterface = new ExploreDeviceInterface();
+
             this.AppendLog("log-explore", "<br/>" + o[0] + " - " + o[1][0]);
 
-            //if (o[0] == "/About")
-            //    continue;
-
-            //if (o[0] == "/About/DeviceIcon")
-            //    continue;
+            iface.m_ObjectPath = o[0];
+            iface.m_Interface = o[0][1];
+            iface.m_IntrospectionXml = "";
 
             AJ.org_freedesktop_dbus_introspectable.method__Introspect(self.m_ExploreConnector, sender, o[0] as string, function (connection: AJ.ConnectorBase, xml: string) {
 
                 self.AppendLog("log-explore", "<br/>XML RECEIVED");
-
-                // XXX - create some html
-                var p: Generator.IntrospectionXmlParser = new Generator.IntrospectionXmlParser();
-
-                // first, parse introspection xml
-                try {
-                    p.ParseXml(xml);
-
-                } catch (e) {
-                    self.AppendLog("log-explore", "<br/>" + e);
-                }
-
-                self.AppendLog("log-explore", "<br/>PARSER FINISHED: " + p.m_ObjectPath + " " + p.m_Interface);
-
-                // create code generator
-                var gen: Generator.CodeGeneratorHTML = new Generator.CodeGeneratorHTML(p.m_Methods);
-
-                var el: HTMLDivElement = window.document.getElementById("explore-form") as HTMLDivElement;
-                gen.GenerateForm(el, window.document);
+                iface.m_IntrospectionXml = xml;
+                self.ExploreUpdateView();
             });
+
+            device.m_Interfaces.push(iface);
         }
 
-        return;
+        this.m_ExploreCurrentDevice = device;
+        this.m_ExploreDeviceData.push(device);
+        this.ExploreUpdateView();
 
+        return;
     }
 
     private onExploreConnectorEvent(e: AJ.ConnectorEventType, d: any) {
@@ -391,6 +382,50 @@ class AllJoynTsApp {
         this.AppendLog("log-explore", "<br/>DATA: " + data[0] + " " + data[1]);
 
     }
+
+    private ExploreUpdateView() {
+        this.AppendLog("log-explore", "<br/>UPDATING VIEW");
+        if (this.m_ExploreCurrentDevice == null) {
+            this.ExploreUpdateDeviceList();
+        } else {
+            this.ExploreUpdateDevice();
+        }
+    }
+
+    private ExploreUpdateDeviceList() {
+        this.AppendLog("log-explore", "<br/>UPDATING DEVICE LIST");
+    }
+
+    private ExploreUpdateDevice() {
+        this.AppendLog("log-explore", "<br/>UPDATING INTERFACES");
+
+        for (var i of this.m_ExploreCurrentDevice.m_Interfaces) {
+            this.AppendLog("log-explore", "<br/>UPDATING INTERFACE");
+
+            if (i.m_IntrospectionXml != "") {
+
+                this.AppendLog("log-explore", "<br/>INTROSPECTION IN PLACE");
+                var p: Generator.IntrospectionXmlParser = new Generator.IntrospectionXmlParser();
+
+                // first, parse introspection xml
+                try {
+                    p.ParseXml(i.m_IntrospectionXml);
+
+                } catch (e) {
+                    this.AppendLog("log-explore", "<br/>" + e);
+                }
+
+                this.AppendLog("log-explore", "<br/>PARSER FINISHED: " + p.m_ObjectPath + " " + p.m_Interface);
+
+                // create code generator
+                var gen: Generator.CodeGeneratorHTML = new Generator.CodeGeneratorHTML(p.m_Methods);
+
+                var el: HTMLDivElement = window.document.getElementById("explore-form") as HTMLDivElement;
+                gen.GenerateForm(el, window.document);
+            }
+        }
+    }
+
     //----------------------------------------------------------------------------------------------------------
     // SETUP VIEW
     //----------------------------------------------------------------------------------------------------------

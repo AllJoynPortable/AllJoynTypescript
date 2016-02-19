@@ -295,31 +295,25 @@ var AllJoynTsApp = (function () {
     AllJoynTsApp.prototype.onExploreAnnouncement = function (sender, q1, q2, o1, o2) {
         var self = this;
         this.AppendLog("log-explore", "<br/>ANNOUNCEMENT RECEIVED FROM: " + sender);
+        var device = new ExploreDeviceData();
+        device.m_NodeId = sender;
         for (var _i = 0, o1_1 = o1; _i < o1_1.length; _i++) {
             var o = o1_1[_i];
+            var iface = new ExploreDeviceInterface();
             this.AppendLog("log-explore", "<br/>" + o[0] + " - " + o[1][0]);
-            //if (o[0] == "/About")
-            //    continue;
-            //if (o[0] == "/About/DeviceIcon")
-            //    continue;
+            iface.m_ObjectPath = o[0];
+            iface.m_Interface = o[0][1];
+            iface.m_IntrospectionXml = "";
             AJ.org_freedesktop_dbus_introspectable.method__Introspect(self.m_ExploreConnector, sender, o[0], function (connection, xml) {
                 self.AppendLog("log-explore", "<br/>XML RECEIVED");
-                // XXX - create some html
-                var p = new Generator.IntrospectionXmlParser();
-                // first, parse introspection xml
-                try {
-                    p.ParseXml(xml);
-                }
-                catch (e) {
-                    self.AppendLog("log-explore", "<br/>" + e);
-                }
-                self.AppendLog("log-explore", "<br/>PARSER FINISHED: " + p.m_ObjectPath + " " + p.m_Interface);
-                // create code generator
-                var gen = new Generator.CodeGeneratorHTML(p.m_Methods);
-                var el = window.document.getElementById("explore-form");
-                gen.GenerateForm(el, window.document);
+                iface.m_IntrospectionXml = xml;
+                self.ExploreUpdateView();
             });
+            device.m_Interfaces.push(iface);
         }
+        this.m_ExploreCurrentDevice = device;
+        this.m_ExploreDeviceData.push(device);
+        this.ExploreUpdateView();
         return;
     };
     AllJoynTsApp.prototype.onExploreConnectorEvent = function (e, d) {
@@ -348,6 +342,41 @@ var AllJoynTsApp = (function () {
         var gen = new Generator.CodeGeneratorHTML(null);
         var data = gen.CreateDataFromFields(window.document, iface, "ss");
         this.AppendLog("log-explore", "<br/>DATA: " + data[0] + " " + data[1]);
+    };
+    AllJoynTsApp.prototype.ExploreUpdateView = function () {
+        this.AppendLog("log-explore", "<br/>UPDATING VIEW");
+        if (this.m_ExploreCurrentDevice == null) {
+            this.ExploreUpdateDeviceList();
+        }
+        else {
+            this.ExploreUpdateDevice();
+        }
+    };
+    AllJoynTsApp.prototype.ExploreUpdateDeviceList = function () {
+        this.AppendLog("log-explore", "<br/>UPDATING DEVICE LIST");
+    };
+    AllJoynTsApp.prototype.ExploreUpdateDevice = function () {
+        this.AppendLog("log-explore", "<br/>UPDATING INTERFACES");
+        for (var _i = 0, _a = this.m_ExploreCurrentDevice.m_Interfaces; _i < _a.length; _i++) {
+            var i = _a[_i];
+            this.AppendLog("log-explore", "<br/>UPDATING INTERFACE");
+            if (i.m_IntrospectionXml != "") {
+                this.AppendLog("log-explore", "<br/>INTROSPECTION IN PLACE");
+                var p = new Generator.IntrospectionXmlParser();
+                // first, parse introspection xml
+                try {
+                    p.ParseXml(i.m_IntrospectionXml);
+                }
+                catch (e) {
+                    this.AppendLog("log-explore", "<br/>" + e);
+                }
+                this.AppendLog("log-explore", "<br/>PARSER FINISHED: " + p.m_ObjectPath + " " + p.m_Interface);
+                // create code generator
+                var gen = new Generator.CodeGeneratorHTML(p.m_Methods);
+                var el = window.document.getElementById("explore-form");
+                gen.GenerateForm(el, window.document);
+            }
+        }
     };
     //----------------------------------------------------------------------------------------------------------
     // SETUP VIEW
