@@ -10,6 +10,21 @@ enum ConnectionType {
     CONNECTION_AZURE
 };
 
+class ExploreDeviceInterface {
+    public m_ObjectPath: string;
+    public m_Interface: string;
+    public m_IntrospectionXml: string;
+}
+
+class ExploreDeviceData {
+    // AllJoyn node name / identifier
+    public m_NodeId: string;
+
+    public m_DeviceName: string = "";
+    // XXX - other device details
+
+    public m_Interfaces: Array<ExploreDeviceInterface> = [];
+}
 
 class AllJoynTsApp {
 
@@ -168,10 +183,10 @@ class AllJoynTsApp {
             this.AppendLog("log-create", "<br/>AUTH << " + d);
         }
         else if (e == AJ.ConnectorEventType.ConnectorEventMsgSent) {
-            this.AppendLog("log-create", "<br/>Message Sent: " + d.hdr_GetMsgType() + " " + d.hdr_GetMember());
+            this.AppendLog("log-create", "<br/>DBUS >> " + d.hdr_GetMsgType() + " " + d.hdr_GetMember());
         }
         else if (e == AJ.ConnectorEventType.ConnectorEventMsgReceived) {
-            this.AppendLog("log-create", "<br/>Message Received: " + d.hdr_GetMsgType() + " " + d.hdr_GetMember());
+            this.AppendLog("log-create", "<br/>DBUS << " + d.hdr_GetMsgType() + " " + d.hdr_GetMember());
         }
     }
 
@@ -201,7 +216,7 @@ class AllJoynTsApp {
 
             gen.SetIntrospectionXml(xml);
             gen.SetIconData(Generator.DEFAULT_DEVICE_ICON_MIME_TYPE, Generator.DEFAULT_DEVICE_ICON_URL, Generator.DEFAULT_DEVICE_ICON);
-            gen.SetDeviceData(this.m_CreateApplicationId, this.m_CreateApplicationName, this.m_CreateDeviceId, this.m_CreateDeviceName, this.m_CreateManufacturer, this.m_CreateModelNumber);
+            gen.SetDeviceData(this.m_CreateApplicationId, this.m_CreateApplicationName, this.m_CreateDeviceId, this.m_CreateDeviceName, this.m_CreateManufacturer, this.m_CreateModelNumber, p.m_ObjectPath, p.m_Interface);
             this.m_CreateCodeTs = this.m_TsMsg + this.m_TsConnectorBase + this.m_TsConnectorWebSocket + this.m_TsApplicationBase;
 
 
@@ -293,30 +308,43 @@ class AllJoynTsApp {
                 self.onExploreConnectorEvent(e, d);
             });
 
-        this.m_ExploreConnector.SetAnnouncementListener(this.onExploreAnnouncement);
+        this.m_ExploreConnector.SetAnnouncementListener(function (sender: string, q1: number, q2: number, o1: any, o2: any) {
+            self.onExploreAnnouncement(sender, q1, q2, o1, o2);
+        });
         this.m_ExploreConnector.ConnectAndAuthenticate();
-
-        // XXX - create some html
-        var p: Generator.IntrospectionXmlParser = new Generator.IntrospectionXmlParser();
-
-        // first, parse introspection xml
-        try {
-            p.ParseXml(this.m_CreateIntrospectionXml);
-
-        } catch (e) {
-            this.AppendLog("log-explore", "<br/>" + e);
-        }
-
-        this.AppendLog("log-explore", "<br/>PARSER FINISHED: " + p.m_ObjectPath + " " + p.m_Interface);
-
-        // create code generator
-        var gen: Generator.CodeGeneratorHTML = new Generator.CodeGeneratorHTML(p.m_Methods);
-
-        var el: HTMLDivElement = window.document.getElementById("explore-form") as HTMLDivElement;
-        gen.GenerateForm(el, window.document);
     }
 
-    public onExploreAnnouncement(introspection: string) {
+    public onExploreAnnouncement(sender: string, q1: number, q2: number, o1: any, o2: any): void {
+        var self = this;
+        this.AppendLog("log-explore", "<br/>ANNOUNCEMENT RECEIVED FROM: " + sender);
+
+        var device: ExploreDeviceData = new ExploreDeviceData();
+        device.m_NodeId = sender;
+        device.m_DeviceName = sender; // XXX - for timebeing
+
+        for (var o of o1) {
+            var iface: ExploreDeviceInterface = new ExploreDeviceInterface();
+
+            this.AppendLog("log-explore", "<br/>" + o[0] + " - " + o[1][0]);
+
+            iface.m_ObjectPath = o[0];
+            iface.m_Interface = o[0][1];
+            iface.m_IntrospectionXml = "";
+
+            AJ.org_freedesktop_dbus_introspectable.method__Introspect(self.m_ExploreConnector, sender, o[0] as string, function (connection: AJ.ConnectorBase, xml: string) {
+
+                self.AppendLog("log-explore", "<br/>XML RECEIVED");
+                iface.m_IntrospectionXml = xml;
+                self.ExploreUpdateView();
+            });
+
+            device.m_Interfaces.push(iface);
+        }
+
+        this.m_ExploreDeviceData.push(device);
+        this.ExploreUpdateView();
+
+        return;
     }
 
     private onExploreConnectorEvent(e: AJ.ConnectorEventType, d: any) {
@@ -338,6 +366,92 @@ class AllJoynTsApp {
         }
         else if (e == AJ.ConnectorEventType.ConnectorEventMsgReceived) {
             this.AppendLog("log-explore", "<br/>Message Received: " + d.hdr_GetMsgType() + " " + d.hdr_GetMember());
+        }
+    }
+
+    private onMethodSignalCall(iface: string, ms: string) {
+        this.AppendLog("log-explore", "<br/>CALLING METHOD/SIGNAL: " + iface + " " + ms);
+
+
+        // create code generator
+        var gen: Generator.CodeGeneratorHTML = new Generator.CodeGeneratorHTML(null);
+
+
+        var data: any = gen.CreateDataFromFields(window.document, iface, "ss");
+
+        this.AppendLog("log-explore", "<br/>DATA: " + data[0] + " " + data[1]);
+
+    }
+
+    private onExploreDeviceSelected(nodeId: string) {
+        this.AppendLog("log-explore", "<br/> DEVICE SELECTED " + nodeId);
+        for (var d of this.m_ExploreDeviceData) {
+            if (d.m_NodeId == nodeId) {
+                this.AppendLog("log-explore", "<br/>FOUND");
+                this.m_ExploreCurrentDevice = d;
+                this.ExploreUpdateView();
+                break;
+            }
+        }
+    }
+
+    private ExploreUpdateView() {
+        this.AppendLog("log-explore", "<br/>UPDATING VIEW");
+        if (this.m_ExploreCurrentDevice == null) {
+            this.ExploreUpdateDeviceList();
+        } else {
+            this.ExploreUpdateDevice();
+        }
+    }
+
+    private ExploreUpdateDeviceList() {
+        var parent: HTMLDivElement = window.document.getElementById("explore-form") as HTMLDivElement;
+        parent.innerHTML = "";
+        this.AppendLog("log-explore", "<br/>UPDATING DEVICE LIST");
+
+        for (var d of this.m_ExploreDeviceData) {
+            var name: string = d.m_DeviceName;
+
+            var div: HTMLDivElement = window.document.createElement("div");
+
+            var btn: HTMLButtonElement = window.document.createElement("button");
+            btn.style.width = "100px";
+            btn.style.height = "100px";
+            btn.setAttribute("onclick", "app.onExploreDeviceSelected('" + d.m_NodeId + "');");
+            parent.appendChild(btn);
+            btn.appendChild(div);
+            div.innerHTML = name;
+        }
+    }
+
+    private ExploreUpdateDevice() {
+        var parent: HTMLDivElement = window.document.getElementById("explore-form") as HTMLDivElement;
+        parent.innerHTML = "";
+        this.AppendLog("log-explore", "<br/>UPDATING INTERFACES");
+
+        for (var i of this.m_ExploreCurrentDevice.m_Interfaces) {
+            this.AppendLog("log-explore", "<br/>UPDATING INTERFACE");
+
+            if (i.m_IntrospectionXml != "") {
+
+                this.AppendLog("log-explore", "<br/>INTROSPECTION IN PLACE");
+                var p: Generator.IntrospectionXmlParser = new Generator.IntrospectionXmlParser();
+
+                // first, parse introspection xml
+                try {
+                    p.ParseXml(i.m_IntrospectionXml);
+
+                } catch (e) {
+                    this.AppendLog("log-explore", "<br/>" + e);
+                }
+
+                this.AppendLog("log-explore", "<br/>PARSER FINISHED: " + p.m_ObjectPath + " " + p.m_Interface);
+
+                // create code generator
+                var gen: Generator.CodeGeneratorHTML = new Generator.CodeGeneratorHTML(p.m_Methods);
+
+                gen.GenerateForm(parent, window.document);
+            }
         }
     }
 
@@ -445,6 +559,8 @@ class AllJoynTsApp {
 
     // explore variables
     private m_ExploreConnector: AJ.ConnectorWebSocket = null;
+    private m_ExploreDeviceData: Array<ExploreDeviceData> = [];
+    private m_ExploreCurrentDevice: ExploreDeviceData = null;
 
     // setup variables
     private m_ConnectionType: ConnectionType = ConnectionType.CONNECTION_WEBSOCKET;

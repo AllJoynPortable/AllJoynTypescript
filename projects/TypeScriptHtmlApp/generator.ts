@@ -304,7 +304,7 @@
             this.m_IntrospectionXml = data;
         }
 
-        public SetDeviceData(app_id: Uint8Array, app_name: string, device_id: string, device_name: string, manufacturer: string, model_number: string)
+        public SetDeviceData(app_id: Uint8Array, app_name: string, device_id: string, device_name: string, manufacturer: string, model_number: string, object_path: string, interface_name:string)
         {
             this.m_AppId = app_id;
             this.m_AppName = app_name;
@@ -312,6 +312,8 @@
             this.m_DeviceName = device_name;
             this.m_Manufacturer = manufacturer;
             this.m_ModelNumber = model_number;
+            this.m_NodeName = object_path;
+            this.m_InterfaceName = interface_name;
         }
 
         public SetIconData(mimeType: string, url: string, data: Uint8Array)
@@ -520,6 +522,8 @@
         protected m_IconMimeType: string = "";
         protected m_IconUrl: string = "";
         protected m_IconData: Uint8Array = null;
+        protected m_NodeName: string = "";
+        protected m_InterfaceName: string = "";
 
         // required functions
         protected m_ObjectWriters: Array<ObjectHandler> = new Array<ObjectHandler>();
@@ -557,6 +561,8 @@
                 o += "        public GetDeviceName(): string { return \"" + this.m_DeviceName + "\"; }\r\n";
                 o += "        public GetManufacturer(): string { return \"" + this.m_Manufacturer + "\"; }\r\n";
                 o += "        public GetModelNumber(): string { return \"" + this.m_ModelNumber + "\"; }\r\n";
+                o += "        public GetNodeName(): string { return \"" + this.m_NodeName + "\"; }\r\n";
+                o += "        public GetInterfaceName(): string { return \"" + this.m_InterfaceName + "\"; }\r\n";
                 o += "\r\n";
 
                 var xml: string = this.m_IntrospectionXml.replace(/\"/g, "\\\"");
@@ -660,10 +666,10 @@
 
             if ("void" != tstype) {
 
-                o += "            var ret: " + tstype + " = " + this.CreateHandlerFunctionName(m) + "(connection";
+                o += "            var ret: " + tstype + " = this." + this.CreateHandlerFunctionName(m) + "(connection";
             }
             else {
-                o += "            " + this.CreateHandlerFunctionName(m) + "(connection";
+                o += "            this." + this.CreateHandlerFunctionName(m) + "(connection";
             }
 
             for (var p of m.m_ParametersIn)

@@ -55,6 +55,11 @@ var AJ;
         ConnectorBase.prototype.SetAnnouncementListener = function (listener) {
             this.m_AnnouncementListener = listener;
         };
+        ConnectorBase.prototype.NotifyAnnouncement = function (sender, q1, q2, o1, o2) {
+            if (this.m_AnnouncementListener != null) {
+                this.m_AnnouncementListener(sender, q1, q2, o1, o2);
+            }
+        };
         ConnectorBase.prototype.OnTransportConnected = function (ok) {
             if (ok) {
                 this.m_State = ConnectorState.StateAuthAnonumousSent;
@@ -153,12 +158,13 @@ var AJ;
                             this.m_AssignedBusName = msg.hdr_GetSender();
                         }
                         while (i < this.m_CalledMethods.length) {
-                            sent = this.m_CalledMethods[i];
-                            if (sent.hdr_GetSerialNumber() == msg.hdr_GetReplySerial()) {
+                            if (this.m_CalledMethods[i].hdr_GetSerialNumber() == msg.hdr_GetReplySerial()) {
+                                sent = this.m_CalledMethods[i];
                                 this.m_CalledMethods[i] = this.m_CalledMethods[this.m_CalledMethods.length - 1];
                                 this.m_CalledMethods.pop();
                                 break;
                             }
+                            i++;
                         }
                         if ((null != sent) && (null != sent.m_ReplyCb)) {
                             sent.m_Reply = msg;
@@ -291,7 +297,7 @@ var AJ;
             var q2 = msg.body_Read_Q();
             var o1 = msg.body_ReadObject("a(oas)");
             var o2 = msg.body_ReadObject("a{sv}");
-            this.handle__Announce(connection, q1, q2, o1, o2);
+            this.handle__Announce(connection, msg.hdr_GetSender(), q1, q2, o1, o2);
             return true;
         };
         org_alljoyn_about.signal__Announce = function (connection, q1, q2, o1, o2) {
@@ -312,7 +318,7 @@ var AJ;
             msg.body_Write_AROAS([
                 ["/About", ["org.alljoyn.About"]],
                 ["/About/DeviceIcon", ["org.alljoyn.Icon"]],
-                ["/TestInterface", ["org.allmake.TestInterface"]]]);
+                [application.GetNodeName(), [application.GetInterfaceName()]]]);
             msg.body_Write_A_Start();
             msg.body_Write_R_Start();
             msg.body_Write_S("AppId");
@@ -350,7 +356,8 @@ var AJ;
         org_alljoyn_about.handle__GetObjectDescription = function (connection) {
             return 0;
         };
-        org_alljoyn_about.handle__Announce = function (connection, q1, q2, o1, o2) {
+        org_alljoyn_about.handle__Announce = function (connection, sender, q1, q2, o1, o2) {
+            connection.NotifyAnnouncement(sender, q1, q2, o1, o2);
         };
         return org_alljoyn_about;
     }());
@@ -569,8 +576,27 @@ var AJ;
             }
             return ret;
         };
+        org_freedesktop_dbus_introspectable.method__Introspect = function (connection, target, iface, cb) {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.freedesktop.DBus.Introspectable");
+            msg.hdr_SetObjectPath(iface);
+            msg.hdr_SetDestination(target);
+            msg.hdr_SetMember("Introspect");
+            if (null != connection.GetLocalNodeId())
+                msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            connection.SendMsgWithCallback(msg, function () {
+                msg = msg.m_Reply;
+                msg.body_StartReading();
+                var xml = msg.body_Read_S();
+                if (null != cb)
+                    cb(connection, xml);
+            });
+        };
+        ;
         return org_freedesktop_dbus_introspectable;
     }());
+    AJ.org_freedesktop_dbus_introspectable = org_freedesktop_dbus_introspectable;
     //==============================================================================================================
     // org.allseen.Introspectable - producer
     //==============================================================================================================

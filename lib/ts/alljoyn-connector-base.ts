@@ -52,8 +52,14 @@
             return this.m_LocalNodeId;
         }
 
-        public SetAnnouncementListener(listener: any) {
+        public SetAnnouncementListener(listener: (sender: string, q1: number, q2: number, o1: any, o2: any) => void) {
             this.m_AnnouncementListener = listener;
+        }
+
+        public NotifyAnnouncement(sender: string, q1: number, q2: number, o1: number, o2: number) {
+            if (this.m_AnnouncementListener != null) {
+                this.m_AnnouncementListener(sender, q1, q2, o1, o2);
+            }
         }
 
         protected OnTransportConnected(ok: boolean) {
@@ -165,13 +171,14 @@
                         }
 
                         while (i < this.m_CalledMethods.length) {
-                            sent = this.m_CalledMethods[i];
 
-                            if (sent.hdr_GetSerialNumber() == msg.hdr_GetReplySerial()) {
+                            if (this.m_CalledMethods[i].hdr_GetSerialNumber() == msg.hdr_GetReplySerial()) {
+                                sent = this.m_CalledMethods[i];
                                 this.m_CalledMethods[i] = this.m_CalledMethods[this.m_CalledMethods.length - 1];
                                 this.m_CalledMethods.pop();
                                 break;
                             }
+                            i++;
                         }
 
                         if ((null != sent) && (null != sent.m_ReplyCb)) {
@@ -291,7 +298,7 @@
         private m_EventHandler: (e: ConnectorEventType, d: any) => void = null;
         private m_CalledMethods: Array<MsgGeneric> = new Array<MsgGeneric>();
         private m_Application: ApplicationBase = null;
-        private m_AnnouncementListener: any = null;
+        private m_AnnouncementListener: (sender: string, q1: number, q2: number, o1: any, o2: any) => void = null;
     };
 
     //==============================================================================================================
@@ -345,7 +352,7 @@
             var q2: number = msg.body_Read_Q();
             var o1: any = msg.body_ReadObject("a(oas)");
             var o2: any = msg.body_ReadObject("a{sv}");
-            this.handle__Announce(connection, q1, q2, o1, o2);
+            this.handle__Announce(connection, msg.hdr_GetSender(), q1, q2, o1, o2);
 
             return true;
         }
@@ -363,14 +370,14 @@
             msg.body_Write_Q(q1);
             msg.body_Write_Q(q2);
 
-
+            
             // at this time we will write array elements manually
             //msg.body_WriteObject("a(oas)", [
             msg.body_Write_AROAS([
                 ["/About", ["org.alljoyn.About"]],
                 ["/About/DeviceIcon", ["org.alljoyn.Icon"]],
-                ["/TestInterface", ["org.allmake.TestInterface"]]]);
-
+                [application.GetNodeName(), [application.GetInterfaceName()]]]);
+            
             msg.body_Write_A_Start();
 
             msg.body_Write_R_Start();
@@ -414,7 +421,7 @@
             connection.SendMsg(msg);
         }
 
-        private static handle__GetAboutData(connection, s1: string): any {
+        private static handle__GetAboutData(connection: ConnectorBase, s1: string): any {
             return 0;
         }
 
@@ -422,7 +429,8 @@
             return 0;
         }
 
-        private static handle__Announce(connection, q1: number, q2: number, o1: any, o2: any): void {
+        private static handle__Announce(connection: ConnectorBase, sender: string, q1: number, q2: number, o1: any, o2: any): void {
+            connection.NotifyAnnouncement(sender, q1, q2, o1, o2);
         }
     }
 
@@ -542,7 +550,7 @@
             return true;
         }
 
-        private static handle__Get(connection, s1: string, s2: string): any {
+        private static handle__Get(connection: ConnectorBase, s1: string, s2: string): any {
             var application: ApplicationBase = connection.GetApplication();
 
             if (s1 == "org.alljoyn.Icon") {
@@ -557,10 +565,10 @@
             return 0;
         }
 
-        private static handle__Set(connection, s1: string, s2: string, v1: any): void {
+        private static handle__Set(connection: ConnectorBase, s1: string, s2: string, v1: any): void {
         }
 
-        private static handle__GetAll(connection, s1: string): any {
+        private static handle__GetAll(connection: ConnectorBase, s1: string): any {
             return 0;
         }
     }
@@ -569,7 +577,7 @@
     // org.freedesktop.DBus.Introspectable - producer
     //==============================================================================================================
 
-    class org_freedesktop_dbus_introspectable {
+    export class org_freedesktop_dbus_introspectable {
         public static _ProcessMsg(connection: AJ.ConnectorBase, msg: AJ.MsgGeneric): boolean {
             var member: string = msg.hdr_GetMember();
 
@@ -592,7 +600,7 @@
             return true;
         }
 
-        public static handle__Introspect(connection, op: string): string {
+        public static handle__Introspect(connection: ConnectorBase, op: string): string {
             var ret: string = "";
             if (op == "/About") {
                 ret =
@@ -669,6 +677,26 @@
 
             return ret;
         }
+
+        public static method__Introspect(connection: ConnectorBase, target: string, iface: string, cb): void {
+            var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
+            msg.hdr_SetInterface("org.freedesktop.DBus.Introspectable");
+            msg.hdr_SetObjectPath(iface);
+            msg.hdr_SetDestination(target);
+            msg.hdr_SetMember("Introspect");
+            if (null != connection.GetLocalNodeId()) msg.hdr_SetSender(connection.GetLocalNodeId());
+            msg.body_StartWriting();
+            connection.SendMsgWithCallback(msg,
+                function () {
+                    msg = msg.m_Reply;
+                    msg.body_StartReading();
+                    var xml: string = msg.body_Read_S();
+                    if (null != cb) cb(connection, xml);
+                }
+            );
+        };
+
+
     }
 
     //==============================================================================================================
@@ -689,7 +717,7 @@
             return false;
         }
 
-        private static __process__GetDescriptionLanguages(connection, msg) {
+        private static __process__GetDescriptionLanguages(connection: ConnectorBase, msg) {
             msg.body_StartReading();
             var ret = this.handle__GetDescriptionLanguages(connection);
 
@@ -701,7 +729,7 @@
             return true;
         }
 
-        private static __process__IntrospectWithDescription(connection, msg) {
+        private static __process__IntrospectWithDescription(connection: ConnectorBase, msg) {
             msg.body_StartReading();
             var languageTag = msg.body_ReadString();
             var ret = this.handle__IntrospectWithDescription(connection, msg.hdr_GetObjectPath(), languageTag);
@@ -718,7 +746,7 @@
             return ["en"];
         }
 
-        private static handle__IntrospectWithDescription(connection, op: string, languageTag) {
+        private static handle__IntrospectWithDescription(connection: ConnectorBase, op: string, languageTag) {
             // ignore language tag
             return org_freedesktop_dbus_introspectable.handle__Introspect(connection, op);
         }
@@ -819,7 +847,7 @@
             return true;
         }
 
-        public static method__RequestName(connection, s1: string, u1: number, cb): void {
+        public static method__RequestName(connection: ConnectorBase, s1: string, u1: number, cb): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
             msg.hdr_SetInterface("org.freedesktop.DBus");
             msg.hdr_SetObjectPath("/org/freedesktop/DBus");
@@ -860,7 +888,7 @@
             );
         };
 
-        public static method__Hello(connection, cb): void {
+        public static method__Hello(connection: ConnectorBase, cb): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
             msg.hdr_SetInterface("org.freedesktop.DBus");
             msg.hdr_SetObjectPath("/org/freedesktop/DBus");
@@ -878,7 +906,7 @@
             );
         };
 
-        public static method__NameHasOwner(connection, s1: string, cb): void {
+        public static method__NameHasOwner(connection: ConnectorBase, s1: string, cb): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
             msg.hdr_SetInterface("org.freedesktop.DBus");
             msg.hdr_SetObjectPath("/org/freedesktop/DBus");
@@ -898,7 +926,7 @@
             );
         };
 
-        public static method__AddMatch(connection, iface: string, member: string, cb): void {
+        public static method__AddMatch(connection: ConnectorBase, iface: string, member: string, cb): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
             msg.hdr_SetInterface("org.freedesktop.DBus");
             msg.hdr_SetObjectPath("/org/freedesktop/DBus");
@@ -917,7 +945,7 @@
             );
         };
 
-        public static method__RemoveMatch(connection, s1: string, cb): void {
+        public static method__RemoveMatch(connection: ConnectorBase, s1: string, cb): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
             msg.hdr_SetInterface("org.freedesktop.DBus");
             msg.hdr_SetObjectPath("/org/freedesktop/DBus");
@@ -936,7 +964,7 @@
             );
         };
 
-        public static signal__NameOwnerChanged(connection, s1: string, s2: string, s3: string): void {
+        public static signal__NameOwnerChanged(connection: ConnectorBase, s1: string, s2: string, s3: string): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
             msg.hdr_SetInterface("org.freedesktop.DBus");
             msg.hdr_SetObjectPath("/org/freedesktop/DBus");
@@ -951,7 +979,7 @@
             connection.SendMsg(msg);
         };
 
-        public static signal__NameLost(connection, s1: string): void {
+        public static signal__NameLost(connection: ConnectorBase, s1: string): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
             msg.hdr_SetInterface("org.freedesktop.DBus");
             msg.hdr_SetObjectPath("/org/freedesktop/DBus");
@@ -964,7 +992,7 @@
             connection.SendMsg(msg);
         };
 
-        public static signal__NameAcquired(connection, s1: string): void {
+        public static signal__NameAcquired(connection: ConnectorBase, s1: string): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
             msg.hdr_SetInterface("org.freedesktop.DBus");
             msg.hdr_SetObjectPath("/org/freedesktop/DBus");
@@ -977,13 +1005,13 @@
             connection.SendMsg(msg);
         };
 
-        private static handle__NameOwnerChanged(connection, s1: string, s2: string, s3: string): void {
+        private static handle__NameOwnerChanged(connection: ConnectorBase, s1: string, s2: string, s3: string): void {
         };
 
-        private static handle__NameLost(connection, s1: string): void {
+        private static handle__NameLost(connection: ConnectorBase, s1: string): void {
         };
 
-        private static handle__NameAcquired(connection, s1: string): void {
+        private static handle__NameAcquired(connection: ConnectorBase, s1: string): void {
         };
     };
 
@@ -1108,7 +1136,7 @@
             );
         };
 
-        public static method__AliasUnixUser(connection, aliasUID: number, cb): void {
+        public static method__AliasUnixUser(connection: ConnectorBase, aliasUID: number, cb): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1128,7 +1156,7 @@
             );
         };
 
-        public static method__BindSessionPort(connection, portIn: number, opts: any, cb): void {
+        public static method__BindSessionPort(connection: ConnectorBase, portIn: number, opts: any, cb): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1157,7 +1185,7 @@
             );
         };
 
-        public static method__BusHello(connection, GUIDC: string, protoVerC: number, cb): void {
+        public static method__BusHello(connection: ConnectorBase, GUIDC: string, protoVerC: number, cb): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1180,7 +1208,7 @@
             );
         };
 
-        public static method__CancelAdvertiseName(connection, name: string, transports: number, cb): void {
+        public static method__CancelAdvertiseName(connection: ConnectorBase, name: string, transports: number, cb): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1201,7 +1229,7 @@
             );
         };
 
-        public static method__CancelFindAdvertisedName(connection, name: string, cb): void {
+        public static method__CancelFindAdvertisedName(connection: ConnectorBase, name: string, cb): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1221,7 +1249,7 @@
             );
         };
 
-        public static method__CancelFindAdvertisedNameByTransport(connection, name: string, transports: number, cb): void {
+        public static method__CancelFindAdvertisedNameByTransport(connection: ConnectorBase, name: string, transports: number, cb): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1242,7 +1270,7 @@
             );
         };
 
-        public static method__CancelFindAdvertisementByTransport(connection, matching: string, transports: number, cb): void {
+        public static method__CancelFindAdvertisementByTransport(connection: ConnectorBase, matching: string, transports: number, cb): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1263,7 +1291,7 @@
             );
         };
 
-        public static method__CancelSessionlessMessage(connection, serialNum: number, cb): void {
+        public static method__CancelSessionlessMessage(connection: ConnectorBase, serialNum: number, cb): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1283,7 +1311,7 @@
             );
         };
 
-        public static method__FindAdvertisedName(connection, name: string, cb): void {
+        public static method__FindAdvertisedName(connection: ConnectorBase, name: string, cb): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1303,7 +1331,7 @@
             );
         };
 
-        public static method__FindAdvertisedNameByTransport(connection, name: string, transports: number, cb): void {
+        public static method__FindAdvertisedNameByTransport(connection: ConnectorBase, name: string, transports: number, cb): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1324,7 +1352,7 @@
             );
         };
 
-        public static method__FindAdvertisementByTransport(connection, matching: string, transports: number, cb): void {
+        public static method__FindAdvertisementByTransport(connection: ConnectorBase, matching: string, transports: number, cb): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1345,7 +1373,7 @@
             );
         };
 
-        public static signal__FoundAdvertisedName(connection, name: string, transport: number, prefix: string): void {
+        public static signal__FoundAdvertisedName(connection: ConnectorBase, name: string, transport: number, prefix: string): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1360,7 +1388,7 @@
             connection.SendMsg(msg);
         };
 
-        public static method__GetHostInfo(connection, sessionId: number, cb): void {
+        public static method__GetHostInfo(connection: ConnectorBase, sessionId: number, cb): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1382,7 +1410,7 @@
             );
         };
 
-        public static method__JoinSession(connection, sessionHost: string, port: number, opts: any, cb): void {
+        public static method__JoinSession(connection: ConnectorBase, sessionHost: string, port: number, opts: any, cb): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1406,7 +1434,7 @@
             );
         };
 
-        public static method__LeaveHostedSession(connection, sessionId: number, cb): void {
+        public static method__LeaveHostedSession(connection: ConnectorBase, sessionId: number, cb): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1446,7 +1474,7 @@
             );
         };
 
-        public static method__LeaveSession(connection, sessionId: number, cb): void {
+        public static method__LeaveSession(connection: ConnectorBase, sessionId: number, cb): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1466,7 +1494,7 @@
             );
         };
 
-        public static signal__LostAdvertisedName(connection, name: string, transport: number, prefix: string): void {
+        public static signal__LostAdvertisedName(connection: ConnectorBase, name: string, transport: number, prefix: string): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1481,7 +1509,7 @@
             connection.SendMsg(msg);
         };
 
-        public static signal__MPSessionChanged(connection, sessionId: number, name: string, isAdded: boolean): void {
+        public static signal__MPSessionChanged(connection: ConnectorBase, sessionId: number, name: string, isAdded: boolean): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1496,7 +1524,7 @@
             connection.SendMsg(msg);
         };
 
-        public static signal__MPSessionChangedWithReason(connection, sessionId: number, name: string, isAdded: boolean, reason: number): void {
+        public static signal__MPSessionChangedWithReason(connection: ConnectorBase, sessionId: number, name: string, isAdded: boolean, reason: number): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1512,7 +1540,7 @@
             connection.SendMsg(msg);
         };
 
-        public static method__OnAppResume(connection, cb): void {
+        public static method__OnAppResume(connection: ConnectorBase, cb): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1530,7 +1558,7 @@
             );
         };
 
-        public static method__OnAppSuspend(connection, cb): void {
+        public static method__OnAppSuspend(connection: ConnectorBase, cb): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1548,7 +1576,7 @@
             );
         };
 
-        public static method__Ping(connection, name: string, timeout: number, cb): void {
+        public static method__Ping(connection: ConnectorBase, name: string, timeout: number, cb): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1569,7 +1597,7 @@
             );
         };
 
-        public static method__ReloadConfig(connection, cb): void {
+        public static method__ReloadConfig(connection: ConnectorBase, cb): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1587,7 +1615,7 @@
             );
         };
 
-        public static method__RemoveSessionMember(connection, sessionId: number, name: string, cb): void {
+        public static method__RemoveSessionMember(connection: ConnectorBase, sessionId: number, name: string, cb): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1608,7 +1636,7 @@
             );
         };
 
-        public static signal__SessionLost(connection, sessionId: number): void {
+        public static signal__SessionLost(connection: ConnectorBase, sessionId: number): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1621,7 +1649,7 @@
             connection.SendMsg(msg);
         };
 
-        public static signal__SessionLostWithReason(connection, sessionId: number, reason: number): void {
+        public static signal__SessionLostWithReason(connection: ConnectorBase, sessionId: number, reason: number): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1635,7 +1663,7 @@
             connection.SendMsg(msg);
         };
 
-        public static signal__SessionLostWithReasonAndDisposition(connection, sessionId: number, reason: number, disposition: number): void {
+        public static signal__SessionLostWithReasonAndDisposition(connection: ConnectorBase, sessionId: number, reason: number, disposition: number): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.Signal);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1650,7 +1678,7 @@
             connection.SendMsg(msg);
         };
 
-        public static method__SetIdleTimeouts(connection, reqLinkTO: number, reqProbeTO: number, cb): void {
+        public static method__SetIdleTimeouts(connection: ConnectorBase, reqLinkTO: number, reqProbeTO: number, cb): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1673,7 +1701,7 @@
             );
         };
 
-        public static method__SetLinkTimeout(connection, sessionId: number, inLinkTO: number, cb): void {
+        public static method__SetLinkTimeout(connection: ConnectorBase, sessionId: number, inLinkTO: number, cb): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1695,7 +1723,7 @@
             );
         };
 
-        public static method__UnbindSessionPort(connection, port: number, cb): void {
+        public static method__UnbindSessionPort(connection: ConnectorBase, port: number, cb): void {
             var msg = new AJ.MsgGeneric(AJ.MsgType.MethodCall);
             msg.hdr_SetInterface("org.alljoyn.Bus");
             msg.hdr_SetObjectPath("/org/alljoyn/Bus");
@@ -1715,25 +1743,25 @@
             );
         };
 
-        private static handle__FoundAdvertisedName(connection, name: string, transport: number, prefix: string): void {
+        private static handle__FoundAdvertisedName(connection: ConnectorBase, name: string, transport: number, prefix: string): void {
         };
 
         private static handle__LostAdvertisedName(connection, name: string, transport: number, prefix: string): void {
         };
 
-        private static handle__MPSessionChanged(connection, sessionId: number, name: string, isAdded: boolean): void {
+        private static handle__MPSessionChanged(connection: ConnectorBase, sessionId: number, name: string, isAdded: boolean): void {
         };
 
-        private static handle__MPSessionChangedWithReason(connection, sessionId: number, name: string, isAdded: boolean, reason: number): void {
+        private static handle__MPSessionChangedWithReason(connection: ConnectorBase, sessionId: number, name: string, isAdded: boolean, reason: number): void {
         };
 
-        private static handle__SessionLost(connection, sessionId: number): void {
+        private static handle__SessionLost(connection: ConnectorBase, sessionId: number): void {
         };
 
-        private static handle__SessionLostWithReason(connection, sessionId: number, reason: number): void {
+        private static handle__SessionLostWithReason(connection: ConnectorBase, sessionId: number, reason: number): void {
         };
 
-        private static handle__SessionLostWithReasonAndDisposition(connection, sessionId: number, reason: number, disposition: number): void {
+        private static handle__SessionLostWithReasonAndDisposition(connection: ConnectorBase, sessionId: number, reason: number, disposition: number): void {
         };
     };
 
@@ -1781,11 +1809,11 @@
             return true;
         }
 
-        private static handle__AcceptSession(connection, port: number, id: number, src: string, opts: any): boolean {
+        private static handle__AcceptSession(connection: ConnectorBase, port: number, id: number, src: string, opts: any): boolean {
             return true;
         }
 
-        private static handle__SessionJoined(connection, port: number, id: number, src: string): void {
+        private static handle__SessionJoined(connection: ConnectorBase, port: number, id: number, src: string): void {
         }
     };
 
@@ -2008,39 +2036,39 @@
             return true;
         }
 
-        private static handle__AuthChallenge(connection, challenge: string): string {
+        private static handle__AuthChallenge(connection: ConnectorBase, challenge: string): string {
             return "default-string";
         }
 
-        private static handle__ExchangeGroupKeys(connection, localKeyMatter: Uint8Array): Uint8Array {
+        private static handle__ExchangeGroupKeys(connection: ConnectorBase, localKeyMatter: Uint8Array): Uint8Array {
             return null; //[1, 2, 3];
         }
 
-        private static handle__ExchangeGuids(connection, localGuid: string, localVersion: number): string {
+        private static handle__ExchangeGuids(connection: ConnectorBase, localGuid: string, localVersion: number): string {
             return "default-string";
         }
 
-        private static handle__ExchangeSuites(connection, localAuthList: Uint32Array): Uint32Array {
+        private static handle__ExchangeSuites(connection: ConnectorBase, localAuthList: Uint32Array): Uint32Array {
             return null; //[1, 2, 3];
         }
 
-        private static handle__GenSessionKey(connection, localGuid: string, remoteGuid: string, localNonce: string): string {
+        private static handle__GenSessionKey(connection: ConnectorBase, localGuid: string, remoteGuid: string, localNonce: string): string {
             return "default-string";
         }
 
-        private static handle__KeyAuthentication(connection, localVerifier: any): any {
+        private static handle__KeyAuthentication(connection: ConnectorBase, localVerifier: any): any {
             return 0;
         }
 
-        private static handle__KeyExchange(connection, localAuthMask: number, localPublicKey: any): number {
+        private static handle__KeyExchange(connection: ConnectorBase, localAuthMask: number, localPublicKey: any): number {
             return 0;
         }
 
-        private static handle__SendManifest(connection, manifest: any): any {
+        private static handle__SendManifest(connection: ConnectorBase, manifest: any): any {
             return 0;
         }
 
-        private static handle__SendMemberships(connection, sendCode: number, memberships: any): number {
+        private static handle__SendMemberships(connection: ConnectorBase, sendCode: number, memberships: any): number {
             return 0;
         }
     }

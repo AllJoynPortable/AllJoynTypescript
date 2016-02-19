@@ -23,6 +23,8 @@ var AJ;
         Application.prototype.GetIconVersion = function () { return 1; };
         Application.prototype.GetIconMimeType = function () { return ""; };
         Application.prototype.GetIntrospectionXml = function () { return ""; };
+        Application.prototype.GetInterfaceName = function () { return ""; };
+        Application.prototype.GetNodeName = function () { return ""; };
         return Application;
     }(AJ.ApplicationBase));
     AJ.Application = Application;

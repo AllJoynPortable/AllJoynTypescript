@@ -13,5 +13,7 @@
         public GetIconVersion(): number { return 1; }
         public GetIconMimeType(): string { return ""; }
         public GetIntrospectionXml(): string { return ""; }
+        public GetInterfaceName(): string { return ""; }
+        public GetNodeName(): string { return ""; }
     };
 }

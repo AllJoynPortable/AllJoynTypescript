@@ -42,7 +42,7 @@
                     var btn: HTMLButtonElement = this.m_Document.createElement("button");
                     this.m_BodyElement.appendChild(btn);
                     btn.innerText = "Send";
-                    btn.setAttribute("onclick", "___" + wrapper_name + "()");
+                    btn.setAttribute("onclick", "app.onMethodSignalCall('" + wrapper_name + "', '" + m.m_Name + "');");
 
                     // create horizontal line
                     hr = this.m_Document.createElement("hr");
@@ -208,7 +208,10 @@
 
             try
             {
-                v = (this.m_Document.getElementById(fld) as HTMLTextAreaElement).value;
+                var el: HTMLTextAreaElement = this.m_Document.getElementById(fld) as HTMLTextAreaElement;
+                console.log(el);
+                v = el.value;
+                console.log(v);
             }
             catch (Exception) { };
 
@@ -315,11 +318,13 @@
         //    CreateFieldsFromSignature(signature, prefix, cnt);
         //}
 
-        private CreateDataFromFields(signature: string): Array<any>
+        public CreateDataFromFields(document: Document, prefix: string, signature: string): Array<any>
         {
             var fld_idx: number = 0;
             var idx: number = 0;
             var flds: Array<any> = new Array<any>();
+
+            this.m_Document = document;
 
             while (idx < signature.length)
             {
@@ -328,7 +333,7 @@
                 if (null == subSignature)
                     break;
 
-                var fld: any = this.CreateDataFromField(subSignature, "xparamsx", fld_idx++);
+                var fld: any = this.CreateDataFromField(subSignature, prefix, fld_idx++);
                 idx += subSignature.length;
 
                 if (null != fld)
