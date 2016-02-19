@@ -376,7 +376,7 @@
             msg.body_Write_AROAS([
                 ["/About", ["org.alljoyn.About"]],
                 ["/About/DeviceIcon", ["org.alljoyn.Icon"]],
-                ["/" + application.GetNodeName(), ["org.allmake." + application.GetInterfaceName()]]]);
+                [application.GetNodeName(), [application.GetInterfaceName()]]]);
             
             msg.body_Write_A_Start();
 

@@ -12,7 +12,7 @@ var ExploreDeviceInterface = (function () {
     function ExploreDeviceInterface() {
     }
     return ExploreDeviceInterface;
-})();
+}());
 var ExploreDeviceData = (function () {
     function ExploreDeviceData() {
         this.m_DeviceName = "";
@@ -20,7 +20,7 @@ var ExploreDeviceData = (function () {
         this.m_Interfaces = [];
     }
     return ExploreDeviceData;
-})();
+}());
 var AllJoynTsApp = (function () {
     function AllJoynTsApp() {
         //----------------------------------------------------------------------------------------------------------
@@ -298,8 +298,8 @@ var AllJoynTsApp = (function () {
         var device = new ExploreDeviceData();
         device.m_NodeId = sender;
         device.m_DeviceName = sender; // XXX - for timebeing
-        for (var _i = 0; _i < o1.length; _i++) {
-            var o = o1[_i];
+        for (var _i = 0, o1_1 = o1; _i < o1_1.length; _i++) {
+            var o = o1_1[_i];
             var iface = new ExploreDeviceInterface();
             this.AppendLog("log-explore", "<br/>" + o[0] + " - " + o[1][0]);
             iface.m_ObjectPath = o[0];
@@ -459,7 +459,7 @@ var AllJoynTsApp = (function () {
         }
     };
     return AllJoynTsApp;
-})();
+}());
 var app = null;
 var editor = null;
 var editorScript = null;

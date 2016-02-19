@@ -342,7 +342,7 @@ var Generator;
             return ((m.m_InterfaceItemType == Generator.InterfaceItemType.Signal) ? "signal" : "method") + this.CreateItemName(m);
         };
         return CodeGeneratorHTML;
-    })();
+    }());
     Generator.CodeGeneratorHTML = CodeGeneratorHTML;
 })(Generator || (Generator = {}));
 //# sourceMappingURL=generator-html.js.map
