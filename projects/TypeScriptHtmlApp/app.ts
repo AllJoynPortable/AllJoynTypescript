@@ -340,7 +340,6 @@ class AllJoynTsApp {
             device.m_Interfaces.push(iface);
         }
 
-        this.m_ExploreCurrentDevice = device;
         this.m_ExploreDeviceData.push(device);
         this.ExploreUpdateView();
 
@@ -383,6 +382,18 @@ class AllJoynTsApp {
 
     }
 
+    private onExploreDeviceSelected(nodeId: string) {
+        this.AppendLog("log-explore", "<br/> DEVICE SELECTED " + nodeId);
+        for (var d of this.m_ExploreDeviceData) {
+            if (d.m_NodeId == nodeId) {
+                this.AppendLog("log-explore", "<br/>FOUND");
+                this.m_ExploreCurrentDevice = d;
+                this.ExploreUpdateView();
+                break;
+            }
+        }
+    }
+
     private ExploreUpdateView() {
         this.AppendLog("log-explore", "<br/>UPDATING VIEW");
         if (this.m_ExploreCurrentDevice == null) {
@@ -393,10 +404,25 @@ class AllJoynTsApp {
     }
 
     private ExploreUpdateDeviceList() {
+        var parent: HTMLDivElement = window.document.getElementById("explore-form") as HTMLDivElement;
+        parent.innerHTML = "";
         this.AppendLog("log-explore", "<br/>UPDATING DEVICE LIST");
+
+        for (var d of this.m_ExploreDeviceData) {
+            var name: string = d.m_DeviceName;
+
+            var btn: HTMLButtonElement = window.document.createElement("button");
+            btn.innerText = name;
+            btn.style.width = "100px";
+            btn.style.height = "100px";
+            btn.setAttribute("onclick", "app.onExploreDeviceSelected('" + d.m_NodeId + "');");
+            parent.appendChild(btn);
+        }
     }
 
     private ExploreUpdateDevice() {
+        var parent: HTMLDivElement = window.document.getElementById("explore-form") as HTMLDivElement;
+        parent.innerHTML = "";
         this.AppendLog("log-explore", "<br/>UPDATING INTERFACES");
 
         for (var i of this.m_ExploreCurrentDevice.m_Interfaces) {
@@ -420,8 +446,7 @@ class AllJoynTsApp {
                 // create code generator
                 var gen: Generator.CodeGeneratorHTML = new Generator.CodeGeneratorHTML(p.m_Methods);
 
-                var el: HTMLDivElement = window.document.getElementById("explore-form") as HTMLDivElement;
-                gen.GenerateForm(el, window.document);
+                gen.GenerateForm(parent, window.document);
             }
         }
     }

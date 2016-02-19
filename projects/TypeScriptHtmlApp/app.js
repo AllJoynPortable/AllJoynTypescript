@@ -311,7 +311,6 @@ var AllJoynTsApp = (function () {
             });
             device.m_Interfaces.push(iface);
         }
-        this.m_ExploreCurrentDevice = device;
         this.m_ExploreDeviceData.push(device);
         this.ExploreUpdateView();
         return;
@@ -343,6 +342,18 @@ var AllJoynTsApp = (function () {
         var data = gen.CreateDataFromFields(window.document, iface, "ss");
         this.AppendLog("log-explore", "<br/>DATA: " + data[0] + " " + data[1]);
     };
+    AllJoynTsApp.prototype.onExploreDeviceSelected = function (nodeId) {
+        this.AppendLog("log-explore", "<br/> DEVICE SELECTED " + nodeId);
+        for (var _i = 0, _a = this.m_ExploreDeviceData; _i < _a.length; _i++) {
+            var d = _a[_i];
+            if (d.m_NodeId == nodeId) {
+                this.AppendLog("log-explore", "<br/>FOUND");
+                this.m_ExploreCurrentDevice = d;
+                this.ExploreUpdateView();
+                break;
+            }
+        }
+    };
     AllJoynTsApp.prototype.ExploreUpdateView = function () {
         this.AppendLog("log-explore", "<br/>UPDATING VIEW");
         if (this.m_ExploreCurrentDevice == null) {
@@ -353,9 +364,23 @@ var AllJoynTsApp = (function () {
         }
     };
     AllJoynTsApp.prototype.ExploreUpdateDeviceList = function () {
+        var parent = window.document.getElementById("explore-form");
+        parent.innerHTML = "";
         this.AppendLog("log-explore", "<br/>UPDATING DEVICE LIST");
+        for (var _i = 0, _a = this.m_ExploreDeviceData; _i < _a.length; _i++) {
+            var d = _a[_i];
+            var name = d.m_DeviceName;
+            var btn = window.document.createElement("button");
+            btn.innerText = name;
+            btn.style.width = "100px";
+            btn.style.height = "100px";
+            btn.setAttribute("onclick", "app.onExploreDeviceSelected('" + d.m_NodeId + "');");
+            parent.appendChild(btn);
+        }
     };
     AllJoynTsApp.prototype.ExploreUpdateDevice = function () {
+        var parent = window.document.getElementById("explore-form");
+        parent.innerHTML = "";
         this.AppendLog("log-explore", "<br/>UPDATING INTERFACES");
         for (var _i = 0, _a = this.m_ExploreCurrentDevice.m_Interfaces; _i < _a.length; _i++) {
             var i = _a[_i];
@@ -373,8 +398,7 @@ var AllJoynTsApp = (function () {
                 this.AppendLog("log-explore", "<br/>PARSER FINISHED: " + p.m_ObjectPath + " " + p.m_Interface);
                 // create code generator
                 var gen = new Generator.CodeGeneratorHTML(p.m_Methods);
-                var el = window.document.getElementById("explore-form");
-                gen.GenerateForm(el, window.document);
+                gen.GenerateForm(parent, window.document);
             }
         }
     };
