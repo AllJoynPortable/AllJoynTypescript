@@ -297,6 +297,7 @@ var AllJoynTsApp = (function () {
         this.AppendLog("log-explore", "<br/>ANNOUNCEMENT RECEIVED FROM: " + sender);
         var device = new ExploreDeviceData();
         device.m_NodeId = sender;
+        device.m_DeviceName = sender; // XXX - for timebeing
         for (var _i = 0, o1_1 = o1; _i < o1_1.length; _i++) {
             var o = o1_1[_i];
             var iface = new ExploreDeviceInterface();
@@ -370,12 +371,14 @@ var AllJoynTsApp = (function () {
         for (var _i = 0, _a = this.m_ExploreDeviceData; _i < _a.length; _i++) {
             var d = _a[_i];
             var name = d.m_DeviceName;
+            var div = window.document.createElement("div");
             var btn = window.document.createElement("button");
-            btn.innerText = name;
             btn.style.width = "100px";
             btn.style.height = "100px";
             btn.setAttribute("onclick", "app.onExploreDeviceSelected('" + d.m_NodeId + "');");
             parent.appendChild(btn);
+            btn.appendChild(div);
+            div.innerHTML = name;
         }
     };
     AllJoynTsApp.prototype.ExploreUpdateDevice = function () {

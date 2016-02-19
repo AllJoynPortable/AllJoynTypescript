@@ -320,6 +320,7 @@ class AllJoynTsApp {
 
         var device: ExploreDeviceData = new ExploreDeviceData();
         device.m_NodeId = sender;
+        device.m_DeviceName = sender; // XXX - for timebeing
 
         for (var o of o1) {
             var iface: ExploreDeviceInterface = new ExploreDeviceInterface();
@@ -411,12 +412,15 @@ class AllJoynTsApp {
         for (var d of this.m_ExploreDeviceData) {
             var name: string = d.m_DeviceName;
 
+            var div: HTMLDivElement = window.document.createElement("div");
+
             var btn: HTMLButtonElement = window.document.createElement("button");
-            btn.innerText = name;
             btn.style.width = "100px";
             btn.style.height = "100px";
             btn.setAttribute("onclick", "app.onExploreDeviceSelected('" + d.m_NodeId + "');");
             parent.appendChild(btn);
+            btn.appendChild(div);
+            div.innerHTML = name;
         }
     }
 
