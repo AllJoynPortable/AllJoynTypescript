@@ -10,6 +10,21 @@ enum ConnectionType {
     CONNECTION_AZURE
 };
 
+class ExploreDeviceInterface {
+    public m_ObjectPath: string;
+    public m_Interface: string;
+    public m_IntrospectionXml: string;
+}
+
+class ExploreDeviceData {
+    // AllJoyn node name / identifier
+    public m_NodeId: string;
+
+    public m_DeviceName: string = "";
+    // XXX - other device details
+
+    public m_Interfaces: Array<ExploreDeviceInterface> = [];
+}
 
 class AllJoynTsApp {
 
@@ -306,11 +321,11 @@ class AllJoynTsApp {
         for (var o of o1) {
             this.AppendLog("log-explore", "<br/>" + o[0] + " - " + o[1][0]);
 
-            if (o[0] == "/About")
-                continue;
+            //if (o[0] == "/About")
+            //    continue;
 
-            if (o[0] == "/About/DeviceIcon")
-                continue;
+            //if (o[0] == "/About/DeviceIcon")
+            //    continue;
 
             AJ.org_freedesktop_dbus_introspectable.method__Introspect(self.m_ExploreConnector, sender, o[0] as string, function (connection: AJ.ConnectorBase, xml: string) {
 
@@ -480,6 +495,8 @@ class AllJoynTsApp {
 
     // explore variables
     private m_ExploreConnector: AJ.ConnectorWebSocket = null;
+    private m_ExploreDeviceData: Array<ExploreDeviceData> = [];
+    private m_ExploreCurrentDevice: ExploreDeviceData = null;
 
     // setup variables
     private m_ConnectionType: ConnectionType = ConnectionType.CONNECTION_WEBSOCKET;

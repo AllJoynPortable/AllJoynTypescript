@@ -8,6 +8,19 @@ var ConnectionType;
     ConnectionType[ConnectionType["CONNECTION_AZURE"] = 3] = "CONNECTION_AZURE";
 })(ConnectionType || (ConnectionType = {}));
 ;
+var ExploreDeviceInterface = (function () {
+    function ExploreDeviceInterface() {
+    }
+    return ExploreDeviceInterface;
+}());
+var ExploreDeviceData = (function () {
+    function ExploreDeviceData() {
+        this.m_DeviceName = "";
+        // XXX - other device details
+        this.m_Interfaces = [];
+    }
+    return ExploreDeviceData;
+}());
 var AllJoynTsApp = (function () {
     function AllJoynTsApp() {
         //----------------------------------------------------------------------------------------------------------
@@ -40,6 +53,8 @@ var AllJoynTsApp = (function () {
         this.m_TsApplicationBase = "";
         // explore variables
         this.m_ExploreConnector = null;
+        this.m_ExploreDeviceData = [];
+        this.m_ExploreCurrentDevice = null;
         // setup variables
         this.m_ConnectionType = ConnectionType.CONNECTION_WEBSOCKET;
         this.m_ConnectionAzureParam = "<azure connection string>";
@@ -283,10 +298,10 @@ var AllJoynTsApp = (function () {
         for (var _i = 0, o1_1 = o1; _i < o1_1.length; _i++) {
             var o = o1_1[_i];
             this.AppendLog("log-explore", "<br/>" + o[0] + " - " + o[1][0]);
-            if (o[0] == "/About")
-                continue;
-            if (o[0] == "/About/DeviceIcon")
-                continue;
+            //if (o[0] == "/About")
+            //    continue;
+            //if (o[0] == "/About/DeviceIcon")
+            //    continue;
             AJ.org_freedesktop_dbus_introspectable.method__Introspect(self.m_ExploreConnector, sender, o[0], function (connection, xml) {
                 self.AppendLog("log-explore", "<br/>XML RECEIVED");
                 // XXX - create some html

@@ -158,12 +158,13 @@ var AJ;
                             this.m_AssignedBusName = msg.hdr_GetSender();
                         }
                         while (i < this.m_CalledMethods.length) {
-                            sent = this.m_CalledMethods[i];
-                            if (sent.hdr_GetSerialNumber() == msg.hdr_GetReplySerial()) {
+                            if (this.m_CalledMethods[i].hdr_GetSerialNumber() == msg.hdr_GetReplySerial()) {
+                                sent = this.m_CalledMethods[i];
                                 this.m_CalledMethods[i] = this.m_CalledMethods[this.m_CalledMethods.length - 1];
                                 this.m_CalledMethods.pop();
                                 break;
                             }
+                            i++;
                         }
                         if ((null != sent) && (null != sent.m_ReplyCb)) {
                             sent.m_Reply = msg;
