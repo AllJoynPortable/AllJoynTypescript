@@ -19,7 +19,7 @@ var Generator;
             this.m_ParametersReply = new Array();
         }
         return InterfaceItemDescription;
-    }());
+    })();
     Generator.InterfaceItemDescription = InterfaceItemDescription;
     var ParamDescription = (function () {
         function ParamDescription(dt, name) {
@@ -29,7 +29,7 @@ var Generator;
             this.m_Name = name;
         }
         return ParamDescription;
-    }());
+    })();
     Generator.ParamDescription = ParamDescription;
     var IntrospectionXmlParser = (function () {
         function IntrospectionXmlParser() {
@@ -149,7 +149,7 @@ var Generator;
             }
         };
         return IntrospectionXmlParser;
-    }());
+    })();
     Generator.IntrospectionXmlParser = IntrospectionXmlParser;
     var ObjectHandler = (function () {
         function ObjectHandler(signature, code) {
@@ -157,7 +157,7 @@ var Generator;
             this.m_Code = code;
         }
         return ObjectHandler;
-    }());
+    })();
     var CodeGeneratorBase = (function () {
         function CodeGeneratorBase() {
             this.m_IsConsumer = false;
@@ -174,6 +174,8 @@ var Generator;
             this.m_IconMimeType = "";
             this.m_IconUrl = "";
             this.m_IconData = null;
+            this.m_NodeName = "";
+            this.m_InterfaceName = "";
             // required functions
             this.m_ObjectWriters = new Array();
             this.m_ObjectReaders = new Array();
@@ -273,13 +275,15 @@ var Generator;
         CodeGeneratorBase.prototype.SetIntrospectionXml = function (data) {
             this.m_IntrospectionXml = data;
         };
-        CodeGeneratorBase.prototype.SetDeviceData = function (app_id, app_name, device_id, device_name, manufacturer, model_number) {
+        CodeGeneratorBase.prototype.SetDeviceData = function (app_id, app_name, device_id, device_name, manufacturer, model_number, object_path, interface_name) {
             this.m_AppId = app_id;
             this.m_AppName = app_name;
             this.m_Deviceid = device_id;
             this.m_DeviceName = device_name;
             this.m_Manufacturer = manufacturer;
             this.m_ModelNumber = model_number;
+            this.m_NodeName = object_path;
+            this.m_InterfaceName = interface_name;
         };
         CodeGeneratorBase.prototype.SetIconData = function (mimeType, url, data) {
             this.m_IconMimeType = mimeType;
@@ -425,7 +429,7 @@ var Generator;
             this.m_ObjectWriters.push(new ObjectHandler(signature, code));
         };
         return CodeGeneratorBase;
-    }());
+    })();
     var CodeGeneratorTS = (function (_super) {
         __extends(CodeGeneratorTS, _super);
         function CodeGeneratorTS(def) {
@@ -450,6 +454,8 @@ var Generator;
                 o += "        public GetDeviceName(): string { return \"" + this.m_DeviceName + "\"; }\r\n";
                 o += "        public GetManufacturer(): string { return \"" + this.m_Manufacturer + "\"; }\r\n";
                 o += "        public GetModelNumber(): string { return \"" + this.m_ModelNumber + "\"; }\r\n";
+                o += "        public GetNodeName(): string { return \"" + this.m_NodeName + "\"; }\r\n";
+                o += "        public GetInterfaceName(): string { return \"" + this.m_InterfaceName + "\"; }\r\n";
                 o += "\r\n";
                 var xml = this.m_IntrospectionXml.replace(/\"/g, "\\\"");
                 xml = xml.replace(/</g, "\"<");
@@ -841,7 +847,7 @@ var Generator;
             return "0";
         };
         return CodeGeneratorTS;
-    }(CodeGeneratorBase));
+    })(CodeGeneratorBase);
     Generator.CodeGeneratorTS = CodeGeneratorTS;
     Generator.DEFAULT_APP_ID = new Uint8Array([0x12, 0x34]);
     Generator.DEFAULT_APP_NAME = "Test";

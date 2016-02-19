@@ -43,7 +43,7 @@ var AJ;
             // nothing to do in this implementation
         };
         return ConnectorWebSocket;
-    }(AJ.ConnectorBase));
+    })(AJ.ConnectorBase);
     AJ.ConnectorWebSocket = ConnectorWebSocket;
 })(AJ || (AJ = {}));
 //# sourceMappingURL=alljoyn-connector-websocket.js.map

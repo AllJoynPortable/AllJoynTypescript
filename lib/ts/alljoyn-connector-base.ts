@@ -370,14 +370,14 @@
             msg.body_Write_Q(q1);
             msg.body_Write_Q(q2);
 
-
+            
             // at this time we will write array elements manually
             //msg.body_WriteObject("a(oas)", [
             msg.body_Write_AROAS([
                 ["/About", ["org.alljoyn.About"]],
                 ["/About/DeviceIcon", ["org.alljoyn.Icon"]],
-                ["/TestInterface", ["org.allmake.TestInterface"]]]);
-
+                ["/" + application.GetNodeName(), ["org.allmake." + application.GetInterfaceName()]]]);
+            
             msg.body_Write_A_Start();
 
             msg.body_Write_R_Start();
